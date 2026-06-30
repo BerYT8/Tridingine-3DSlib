@@ -1,0 +1,9 @@
+build
+build_3ds
+.vscode
+romfs
+
+/*.cpp
+/*.json
+/*.atlas
+/*.pak
