@@ -1,0 +1,40 @@
+name: Build and Create Release 
+
+on:  
+push:  
+branches:  
+\- main 
+
+jobs:  
+build-and-release:  
+runs-on: windows-latest  
+permissions:  
+contents: write 
+
+steps:  
+\- name: Descargar el código del repositorio  
+uses: actions/checkout@v4 
+
+\- name: Ejecutar el script de compilación  
+run: |  
+.\\build.bat 
+
+\- name: Generar tag y nombre único para la Release  
+id: vars  
+run: |  
+$date = Get-Date -Format "yyyyMMdd-HHmmss"  
+echo "tag=v-date" >> env:GITHUB\_OUTPUT  
+shell: powershell 
+
+\- name: Crear Release de GitHub y subir ProjectMaker.exe  
+uses: softprops/action-gh-release@v2  
+with:  
+tag\_name: ${{ steps.vars.outputs.tag }}  
+name: Release ${{ steps.vars.outputs.tag }}  
+body: |  
+Compilación automática de Tridingine-3DSlib.  
+Ejecutable generado tras actualizar la rama `main`.  
+draft: false  
+prerelease: false  
+files: |  
+build/ProjectMaker.exe
