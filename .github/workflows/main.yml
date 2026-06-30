@@ -18,6 +18,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Instalar devkitPro
+        uses: devkitPro/action@v1
+
       - name: Compilar proyecto
         shell: cmd
         run: build.bat
