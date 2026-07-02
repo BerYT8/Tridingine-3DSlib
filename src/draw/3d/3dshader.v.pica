@@ -1,0 +1,39 @@
+; Uniforms
+.fvec mvpMtx[4]
+
+; Constants
+.constf common_const(0.0, 1.0, 0.5, 0.003921568393707275390625)
+
+.alias ones common_const.yyyy
+
+; Outputs
+.out oPosition position
+.out oTexCoord0 texcoord0
+.out oColor color
+
+; Inputs
+.in iPosition v0
+.in iTexCoord v1
+.in iColor    v2
+
+.entry main
+.proc main
+
+    ; r0 = vec4(position, 1.0)
+    mov r0.xyz, iPosition
+    mov r0.w,   ones
+
+    ; oPosition = MVP * r0
+    dp4 oPosition.x, mvpMtx[0], r0
+    dp4 oPosition.y, mvpMtx[1], r0
+    dp4 oPosition.z, mvpMtx[2], r0
+    dp4 oPosition.w, mvpMtx[3], r0
+
+    ; passthrough UV
+    mov oTexCoord0, iTexCoord
+
+    ; passthrough color
+    mov oColor, iColor
+
+    end
+.end
