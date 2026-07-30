@@ -1,8 +1,8 @@
-
 #if defined(PLATFORM_PC)
 
 #include <utils/save_system.h>
 #include "screensLoadingStart.h"
+#include <cstring> // 👈 SOLUCIÓN: Necesario para strdup, strcpy y funciones de memoria de C
 
 SaveForCArray *loadInitial()
 {
@@ -26,7 +26,7 @@ SaveForCArray *loadInitial()
     for(unsigned int i = 0; i < array->size; i++)
     {
         // Asignación segura del string (c_str() si name es std::string)
-        array->list[i].name = strdup(list[i].name.c_str());
+        array->list[i].name = strdup(list[i].name.c_str()); // 👈 Ahora compila gracias a <cstring>
         
         unsigned int size = 0;
         int type = -1;
@@ -65,7 +65,7 @@ SaveForCArray *loadInitial()
         {
             std::string str_val = list[i].value.as<std::string>();
             char* c_str = static_cast<char*>(malloc(str_val.length() + 1));
-            std::strcpy(c_str, str_val.c_str());
+            strcpy(c_str, str_val.c_str()); // 👈 SOLUCIÓN: Cambiado std::strcpy por strcpy estándar de C
             array->list[i].data = c_str; 
             type = SAVE_TYPE_STRING;
         }

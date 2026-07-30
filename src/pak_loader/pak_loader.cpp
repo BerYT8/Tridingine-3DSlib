@@ -5,10 +5,17 @@
 #include <io.h>
 #include <fcntl.h>
 #include <stdio.h>
+
+#elif defined(__linux__) || defined(__APPLE__)
+#include <sys/file.h> // 👈 Necesario para flock() y LOCK_EX
+#include <limits.h>   // 👈 Necesario para definir PATH_MAX en Linux
+#include <unistd.h>
+
 #endif
 
 #include <string>
 #include <cstring>
+#include <cstdint>
 #include <cstdio> // 👈 Añadido para dar soporte a printf
 
 typedef struct __PAK_FILE
@@ -253,10 +260,21 @@ void PAKL_SetPak(const char *path)
 
     PAKL_ClosePak();
     
+    std::string exe_dir = "";
+
+#if defined(_WIN32)
     char buffer[MAX_PATH];
     GetModuleFileNameA(NULL, buffer, MAX_PATH);
+    exe_dir = buffer;
+#elif defined(__linux__)
+    char buffer[PATH_MAX];
+    ssize_t len = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
+    if (len != -1) {
+        buffer[len] = '\0';
+        exe_dir = buffer;
+    }
+#endif
 
-    std::string exe_dir = buffer;
     size_t last_slash = exe_dir.find_last_of("\\/");
     if (last_slash != std::string::npos) {
         exe_dir = exe_dir.substr(0, last_slash + 1);
@@ -275,6 +293,7 @@ void PAKL_SetPak(const char *path)
 
     openedPak = true;
 }
+
 
 size_t PAKL_GetFileCount()
 {

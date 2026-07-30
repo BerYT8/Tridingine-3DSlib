@@ -1,7 +1,6 @@
 extern int app_main(int argc, char* argv[]);
-#if defined(PLATFORM_PC)
+#if defined(PLATFORM_PC) && defined(_WIN32)
 #include <windows.h>
-
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {

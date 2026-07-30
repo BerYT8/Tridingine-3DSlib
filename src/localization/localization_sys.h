@@ -1,10 +1,11 @@
-
+#pragma once
 
 #include <vector>
 #include <iostream>
 #include <algorithm>
 #include <cstdint>
 #include <cstdio>
+#include <cstring>
 #include <string.h>
 #include <ints_defs.h>
 #include <pak_loader/pak_loader.h>

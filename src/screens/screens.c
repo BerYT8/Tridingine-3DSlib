@@ -33,6 +33,7 @@ void SystemCallback(APT_HookType hook, void *param)
 #endif
 #include <color.h>
 #include <maths.h>
+#include <string.h>
 
 static bool running = false;
 static bool restoringWindowState = false;
