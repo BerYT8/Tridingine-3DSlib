@@ -18,6 +18,10 @@ set(SOURCES
 # 🖥️ PC BUILD
 # =====================================================
 if(NOT BUILD_3DS)
+    if(NOT DEFINED GAME_NAME)
+        # Asigna un valor por defecto si no se introduce en la terminal
+        set(GAME_NAME ${PROJECT_NAME} CACHE STRING "Nombre del proyecto")
+    endif()
 
     # 1. Buscar todas las dependencias requeridas del sistema
     find_package(OpenGL REQUIRED)
@@ -29,19 +33,30 @@ if(NOT BUILD_3DS)
     find_package(SDL2_image REQUIRED)
     find_package(SDL2_ttf REQUIRED)
 
-    add_executable(${PROJECT_NAME}
+    add_executable(${GAME_NAME}
         ${SOURCES}
         main.cpp
     )
 
-    target_include_directories(${PROJECT_NAME}
+    target_include_directories(${GAME_NAME}
         PRIVATE
             include
     )
 
-    target_link_libraries(${PROJECT_NAME}
+    target_link_libraries(${GAME_NAME}
         PRIVATE
             "${CMAKE_SOURCE_DIR}/lib/pc/lib3ds_libs.so"
+    )
+
+    # 2. Gestionar el título del juego y pasarlo como definición a C++
+    if(NOT DEFINED GAME_TITLE)
+        set(GAME_TITLE "Game")
+    endif()
+
+    # Se usan las comillas escapadas \\\" para que C++ lo reciba como un string literal
+    target_compile_definitions(${GAME_NAME}
+        PRIVATE
+            GAME_TITLE="${GAME_TITLE}"
     )
 
 else()

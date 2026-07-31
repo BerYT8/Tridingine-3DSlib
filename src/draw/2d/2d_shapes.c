@@ -10,53 +10,45 @@
 
 
 const char *vertexShader2D = "\
-#version 120 // <- Cambiado a compatibility\n\
+#version 120\n\
 \n\
-// Ya no necesitas layouts ni uniforms manuales,\n\
-// OpenGL rellena las variables integradas automáticamente.\n\
-\n\
-out vec4 oColor;\n\
+// En GLSL 1.20 se usa 'varying' en lugar de 'out'\n\
+varying vec4 oColor;\n\
 \n\
 void main()\n\
 {\n\
-    // gl_ModelViewProjectionMatrix junta tus glTranslate/glRotate y proyecciones\n\
-    // gl_Vertex lee directamente tus glVertex2f\n\
     gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n\
-\n\
-    // gl_Color lee directamente tus glColor4ub\n\
-    oColor = gl_Color; \n\
-    \n\
-    // Si necesitas texturas con glBegin, usarías gl_MultiTexCoord0\n\
+    oColor = gl_Color;\n\
 }\n\
 ";
 
 const char* fragmentShader2D = "\
 #version 120\n\
 \n\
-in vec2 oTexCoord0;\n\
-in vec2 oTexCoord1;\n\
-in vec4 oColor;\n\
+// En GLSL 1.20 se usa 'varying' en lugar de 'in'\n\
+varying vec2 oTexCoord0;\n\
+varying vec2 oTexCoord1;\n\
+varying vec4 oColor;\n\
 \n\
-out vec4 FragColor;\n\
+// No se declara una variable 'out' para el color final\n\
 \n\
 void main()\n\
 {\n\
-    FragColor = oColor;\n\
+    // Se escribe directamente en la variable interna gl_FragColor\n\
+    gl_FragColor = oColor;\n\
 }\n\
 ";
 
 const char *vertexShaderEllipse2D = "\
 #version 120\n\
 \n\
-out vec2 vLocal;\n\
-out vec4 vColor;\n\
+varying vec2 vLocal;\n\
+varying vec4 vColor;\n\
 \n\
 void main()\n\
 {\n\
     gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n\
     vColor = gl_Color;\n\
-\n\
-    // Convierte UV (0..1) -> (-1..1)\n\
     vLocal = gl_MultiTexCoord0.xy * 2.0 - 1.0;\n\
 }\n\
 ";
@@ -64,24 +56,22 @@ void main()\n\
 const char* fragmentShaderEllipse2D = "\
 #version 120\n\
 \n\
-in vec2 vLocal;\n\
-in vec4 vColor;\n\
-\n\
-out vec4 FragColor;\n\
+varying vec2 vLocal;\n\
+varying vec4 vColor;\n\
 \n\
 void main()\n\
 {\n\
     if(dot(vLocal, vLocal) > 1.0)\n\
         discard;\n\
 \n\
-    FragColor = vColor;\n\
+    gl_FragColor = vColor;\n\
 }\n\
 ";
 
 const char *vertexShaderQuad2D = "\
 #version 120\n\
 \n\
-out vec2 vUV;\n\
+varying vec2 vUV;\n\
 \n\
 void main()\n\
 {\n\
@@ -98,9 +88,7 @@ uniform vec4 c2;\n\
 uniform vec4 c3;\n\
 uniform vec4 c4;\n\
 \n\
-in vec2 vUV;\n\
-\n\
-out vec4 FragColor;\n\
+varying vec2 vUV;\n\
 \n\
 const float GAMMA = 1.3;\n\
 \n\
@@ -125,12 +113,10 @@ void main()\n\
     vec3 b = mix(ToLinear(c4.rgb), ToLinear(c3.rgb), u);\n\
     vec3 bilinear = mix(a, b, v);\n\
 \n\
-    // Interpolación como si fueran dos triángulos\n\
     vec3 triangle;\n\
 \n\
     if (u + v <= 1.0)\n\
     {\n\
-        // Triángulo c1-c2-c4\n\
         triangle =\n\
             ToLinear(c1.rgb) * (1.0 - u - v)\n\
             + ToLinear(c2.rgb) * u\n\
@@ -138,7 +124,6 @@ void main()\n\
     }\n\
     else\n\
     {\n\
-        // Triángulo c2-c3-c4\n\
         triangle =\n\
             ToLinear(c3.rgb) * (u + v - 1.0)\n\
             + ToLinear(c2.rgb) * (1.0 - v)\n\
@@ -148,8 +133,10 @@ void main()\n\
     vec3 rgb = mix(bilinear, triangle, triangleBlend);\n\
 \n\
     rgb *= colorStrength;\n\
-    FragColor.rgb = ToSRGB(rgb);\n\
-    FragColor.a = mix(mix(c1.a,c2.a,u), mix(c4.a,c3.a,u), v);\n\
+    \n\
+    // Asignación usando gl_FragColor\n\
+    gl_FragColor.rgb = ToSRGB(rgb);\n\
+    gl_FragColor.a = mix(mix(c1.a,c2.a,u), mix(c4.a,c3.a,u), v);\n\
 }\n\
 ";
 

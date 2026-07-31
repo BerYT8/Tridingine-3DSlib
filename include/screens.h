@@ -29,6 +29,7 @@ void S2S_SetGamePaused(bool paused);
 bool S2S_IsGamePaused();
 
 bool S2S_ScreensInit();
+void SetWindowTitle(const char* new_title);
 
 void S2S_StopRunning();
 bool S2S_ScreensRunning();

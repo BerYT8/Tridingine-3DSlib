@@ -22,8 +22,33 @@ CONTENT_DIR="content"
 ROMFS_DIR="romfs/pc"
 mkdir -p "$BUILD_DIR"
 
+# --- LEER DATOS DESDE GAME.JSON CON GREP (NATIVO) ---
+CMAKE_FLAGS=()
+JSON_FILE="game.json"
+
+if [ -f "$JSON_FILE" ]; then
+    # Extrae el valor de "title"
+    TITLE=$(grep -o '"title": "[^"]*' "$JSON_FILE" | grep -o '[^"]*$')
+    if [ ! -z "$TITLE" ]; then
+        echo "Título detectado en $JSON_FILE: '$TITLE'"
+        CMAKE_FLAGS+=(-DGAME_TITLE="$TITLE")
+    fi
+
+    # Extrae el valor de "file"
+    GAME_FILE=$(grep -o '"file": "[^"]*' "$JSON_FILE" | grep -o '[^"]*$')
+    if [ ! -z "$GAME_FILE" ]; then
+        # Reemplazar espacios por guiones bajos para evitar problemas en nombres de archivos/binarios
+        GAME_FILE="${GAME_FILE// /_}"
+        echo "Nombre de archivo detectado en $JSON_FILE: '$GAME_FILE'"
+        CMAKE_FLAGS+=(-DGAME_NAME="$GAME_FILE")
+    fi
+fi
+# -----------------------------------------------------
+
 cd "$BUILD_DIR" || exit 1
-cmake ..
+
+# Al usar "${CMAKE_FLAGS[@]}", Bash expande todas las flags añadidas con sus espacios protegidos
+cmake .. "${CMAKE_FLAGS[@]}"
 cmake --build . --config Release
 cp ../lib/pc/*.so Release/ 2>/dev/null
 cd ..

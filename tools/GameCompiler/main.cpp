@@ -3,6 +3,10 @@
 int app_main(int argc, char *argv[])
 {
     S2S_ScreensInit();
+#if defined(GAME_TITLE)
+    const char* title = GAME_TITLE;
+    SetWindowTitle(title);
+#endif
 
     // Inicializaciones
 
