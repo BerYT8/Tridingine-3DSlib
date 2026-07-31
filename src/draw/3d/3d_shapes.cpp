@@ -13,7 +13,7 @@ static bool initialized3D = false;
 #if defined(PLATFORM_PC)
 #define GLEW_STATIC
 #include <GL/glew.h>
-#include <GL/GLU.h>
+#include <GL/glu.h>
 #elif defined(PLATFORM_3DS)
 #include "../shaders/pica200/pica.shader.h"
 #include "3dshader_shbin.h"

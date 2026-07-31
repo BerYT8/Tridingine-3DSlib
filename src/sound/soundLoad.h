@@ -1,6 +1,6 @@
 
 #if defined(PLATFORM_PC)
-#include <SDL2/SDL_mixer.h>
+#include <SDL_mixer.h>
 #elif defined(PLATFORM_3DS)
 #include <3ds.h>
 #include "opusfile.h"

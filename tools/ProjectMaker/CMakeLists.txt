@@ -15,7 +15,6 @@ set(SOURCES
 add_executable(${PROJECT_NAME} 
     main.cpp
     ${SOURCES}
-    pak.rc
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE PLATFORM_PC)

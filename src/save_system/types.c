@@ -113,20 +113,26 @@ void crear_path_recursivo(const char *prefix, const char *ruta) {
             int len = p - inicio;
 
             if (len > 0) {
-
-                strncat(buffer, "\\", sizeof(buffer) - strlen(buffer) - 1);
+                // Inyectar el separador de carpetas correcto según el sistema operativo
+                char sep_str[2] = { PATH_SEP, '\0' };
+                strncat(buffer, sep_str, sizeof(buffer) - strlen(buffer) - 1);
                 strncat(buffer, inicio, len);
 
                 buffer[strlen(buffer)] = '\0';
 
+#if defined(_WIN32)
+                // Lógica exclusiva para Windows
                 DWORD attrs = GetFileAttributesA(buffer);
-
                 if (attrs == INVALID_FILE_ATTRIBUTES) {
-                    DWORD err = GetLastError();
-
                     CreateDirectoryA(buffer, NULL);
-
                 }
+#elif defined(__linux__) || defined(__APPLE__)
+                // Lógica limpia y nativa para Linux (Arch Linux) y macOS
+                struct stat st = {0};
+                if (stat(buffer, &st) == -1) {
+                    mkdir(buffer, 0755);
+                }
+#endif
             }
 
             if (*p == '\0') break;

@@ -31,28 +31,32 @@ mkdir -p "$LIB_DIR/lib/3ds"
 # =========================
 echo "[2/6] Copying engine assets..."
 
-cp -r "$ROOT/tools/GameCompiler" "$LIB_DIR/" 2>/dev/null || true
-cp -r "$ROOT/include" "$LIB_DIR/include"
-cp -r "$ROOT/examples" "$LIB_DIR/examples"
-cp -r "$ROOT/templates" "$LIB_DIR/templates"
-cp -r "$ROOT/content" "$LIB_DIR/content"
+# Asegurar que existan los orígenes
+mkdir -p "$ROOT/include"
+mkdir -p "$ROOT/examples"
+mkdir -p "$ROOT/templates"
+mkdir -p "$ROOT/content"
+
+# Copiar el contenido de las carpetas de forma limpia (evita rutas duplicadas)
+cp -r "$ROOT/tools/GameCompiler/"* "$LIB_DIR/" 2>/dev/null || true
+cp -r "$ROOT/include/"* "$LIB_DIR/include/" 2>/dev/null || true
+cp -r "$ROOT/examples/"* "$LIB_DIR/examples/" 2>/dev/null || true
+cp -r "$ROOT/templates/"* "$LIB_DIR/templates/" 2>/dev/null || true
+cp -r "$ROOT/content/"* "$LIB_DIR/content/" 2>/dev/null || true
 
 # =========================
 # PC libs
 # =========================
 echo "[3/6] Copying PC libs..."
 
-cp -f "$BUILD_DIR/Code/Release/3ds_libs.a" "$LIB_DIR/lib/pc/" 2>/dev/null || true
-cp -f "$ROOT/lib/x64/"*.so "$LIB_DIR/lib/pc/" 2>/dev/null || true
-cp -f "$ROOT/lib/x64/"*.a "$LIB_DIR/lib/pc/" 2>/dev/null || true
-cp -f "$ROOT/lib/glew/x64/glew32s.a" "$LIB_DIR/lib/pc/" 2>/dev/null || true
+cp -f "$BUILD_DIR/Code/lib3ds_libs.so" "$LIB_DIR/lib/pc/lib3ds_libs.so" 2>/dev/null || true
 
 # =========================
 # 3DS lib
 # =========================
 echo "[4/6] Copying 3DS libs..."
 
-cp -f "$ROOT/build_3ds/code/lib3ds_libs.a" "$LIB_DIR/lib/3ds/3ds_libs.a" 2>/dev/null || true
+cp -f "$ROOT/build_3ds/lib3ds_libs.a" "$LIB_DIR/lib/3ds/3ds_libs.a" 2>/dev/null || true
 
 # =========================
 # Tools build
@@ -71,11 +75,17 @@ for t in "${TOOLS[@]}"; do
   if [ -d "$ROOT/tools/$t" ]; then
     cmake -S "$ROOT/tools/$t" -B "$ROOT/tools/$t/build" -DCMAKE_BUILD_TYPE=Release
     cmake --build "$ROOT/tools/$t/build"
-    cp "$ROOT/tools/$t/build/Release/"* "$LIB_DIR/tools/" 2>/dev/null || true
+    cp "$ROOT/tools/$t/build/$t" "$LIB_DIR/tools/" 2>/dev/null || true
   fi
 done
 
+# Generar el paquete PAK indispensable
 "$LIB_DIR/tools/PakMaker" -c "$LIB_DIR" -o "$ROOT/tools/ProjectMaker/pak.pak"
+
+# Copia de seguridad del PAK para el entorno Linux modificado
+mkdir -p "$ROOT/tools/ProjectMaker/build"
+cp "$ROOT/tools/ProjectMaker/pak.pak" "$ROOT/tools/ProjectMaker/build/template.pak" 2>/dev/null || true
+cp "$ROOT/tools/ProjectMaker/pak.pak" "$ROOT/tools/ProjectMaker/template.pak" 2>/dev/null || true
 
 # =========================
 # ProjectMaker
@@ -88,7 +98,8 @@ cmake -S "$ROOT/tools/ProjectMaker" \
 
 cmake --build "$ROOT/tools/ProjectMaker/build"
 
-cp "$ROOT/tools/ProjectMaker/build/Release/ProjectMaker" "$ROOT/ProjectMaker" 2>/dev/null || \
-cp "$ROOT/tools/ProjectMaker/build/Release/ProjectMaker.exe" "$ROOT/ProjectMaker" 2>/dev/null || true
+# Corregido el cierre del comando de copia colgante
+cp "$ROOT/tools/ProjectMaker/build/ProjectMaker" "$BUILD_DIR/ProjectMaker" 2>/dev/null || true
+cp "$ROOT/tools/ProjectMaker/build/template.pak" "$BUILD_DIR/template.pak" 2>/dev/null || true
 
 echo "=== DONE ==="

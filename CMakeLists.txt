@@ -5,7 +5,7 @@ project(3ds_libs C CXX)
 # ---------------- OPCIÓN ----------------
 option(BUILD_3DS "Build for Nintendo 3DS" OFF)
 
-# ---------------- C++ ----------------
+# ---------------- C++ STANDARD ----------------
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -39,7 +39,6 @@ set(SOURCES
     src/draw/2d/2d_shapes.c
     src/draw/2d/2d_vals.h
     src/draw/2d/2d_text.cpp
-    #src/draw/3d/3dshader_shbin.h
     src/draw/3d/3d_shapes.cpp
 
     src/ui/definitions.h
@@ -48,7 +47,6 @@ set(SOURCES
 
     src/save_system/types.h
     src/save_system/types.c
-    #src/save_system/loadSysL.h
     src/save_system/saveSys.c
     src/save_system/loadSys.c
     src/save_system/asyncFuncs.cpp
@@ -77,50 +75,55 @@ set(SOURCES
     src/sound/sound_wrapper.cpp
     src/sound/sound.c
     src/animation/animation.c
-    #src/console/drawConsole.h
-    #src/console/drawConsole.cpp
-    #src/console/console.cpp
 )
 
 file(GLOB_RECURSE IMGUI_SRC "lib_include/imgui/*.cpp")
 
 # =====================================================
-# 🖥️ PC BUILD
+# 🖥️ PC BUILD CONFIGURATION
 # =====================================================
 if(NOT BUILD_3DS)
-    file(GLOB_RECURSE GLEW_LIB_DLL "lib/glew/x64/glew32.lib")
-    file(GLOB_RECURSE GLEW_LIB_STATIC "lib/glew/x64/glew32s.lib")
+    # Buscar OpenGL y GLU nativos del sistema operativo (Arch Linux)
+    
+    # 1. Buscar todas las dependencias requeridas del sistema
+    find_package(OpenGL REQUIRED)
+    find_package(GLEW REQUIRED)
+    find_package(SDL2 REQUIRED)
+    find_package(SDL2_mixer REQUIRED)
 
-    add_library(${PROJECT_NAME} 
+    # Nota: SDL2_image y SDL2_ttf a veces requieren buscarse mediante pkg-config o sus nombres exactos
+    find_package(SDL2_image REQUIRED)
+    find_package(SDL2_ttf REQUIRED)
+
+    add_library(${PROJECT_NAME} SHARED
         ${SOURCES}
-        #${IMGUI_SRC}
     )
 
     target_compile_definitions(${PROJECT_NAME} PRIVATE PLATFORM_PC)
 
+    # CORRECCIÓN DE RUTAS: Usamos los targets oficiales de CMake
     target_include_directories(${PROJECT_NAME} PRIVATE 
         include
-        lib_include
+        ${OPENGL_INCLUDE_DIR}
+        ${GLEW_INCLUDE_DIRS}
     )
 
-    file(GLOB_RECURSE libs "lib/x64/*.lib")
-
-    target_link_libraries(${PROJECT_NAME} PRIVATE 
-        ${libs}
-        opengl32.lib
-        ${GLEW_LIB_STATIC}
-        glu32.lib
-    )
-
-    set_target_properties(${PROJECT_NAME} PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+    # ENLACE DE LIBRERÍAS: Enlazar los targets nativos de Linux directamente
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+            GLEW::GLEW            # Luego sus dependencias de OpenGL/Glew
+            OpenGL::GLU
+            OpenGL::GL
+            SDL2::SDL2            # Luego SDL2 y sus extensionesç
+            SDL2_mixer::SDL2_mixer
+            SDL2_image::SDL2_image
+            SDL2_ttf::SDL2_ttf
     )
 
 # =====================================================
 # 🎮 3DS BUILD (OFICIAL)
 # =====================================================
 else()
-    
     set(LIBS_3DS
         ${CMAKE_SOURCE_DIR}/lib/3ds/libopusfile.a
         ${CMAKE_SOURCE_DIR}/lib/3ds/libopus.a
@@ -161,5 +164,4 @@ else()
         m
         ${LIBS_3DS}
     )
-
 endif()

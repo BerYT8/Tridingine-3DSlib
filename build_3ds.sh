@@ -24,8 +24,8 @@ HEADER="../src/draw/3d/3dshader_shbin.h"
 SHBIN="3dshader.shbin"
 ASM="3dshader.s"
 
-"$TOOLS/picasso.exe" "$PICA" -o "$SHBIN"
-"$TOOLS/bin2s.exe" "$SHBIN" -H "$HEADER"
+"$TOOLS/picasso" "$PICA" -o "$SHBIN"
+"$TOOLS/bin2s" "$SHBIN" -H "$HEADER"
 
 echo "[Shaders] OK"
 

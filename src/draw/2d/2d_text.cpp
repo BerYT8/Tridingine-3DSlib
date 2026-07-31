@@ -5,8 +5,8 @@
 #include <maths.h>
 
 #if defined(PLATFORM_PC)
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL.h>
+#include <SDL_ttf.h>
 #elif defined(PLATFORM_3DS)
 #include <3ds.h>
 #include <citro2d.h>

@@ -19,6 +19,8 @@ add_executable(${PROJECT_NAME}
     ${SOURCES_SRC}
 )
 
+target_link_libraries(${PROJECT_NAME} PRIVATE opusenc opus)
+
 target_include_directories(${PROJECT_NAME} PRIVATE 
     lib_include
     include

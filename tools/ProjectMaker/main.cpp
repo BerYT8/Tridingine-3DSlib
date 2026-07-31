@@ -8,8 +8,10 @@
 #include <vector>
 #include <algorithm>
 
+#if defined(_WIN32)
 #define NOMINMAX
 #include <windows.h>
+#endif
 
 #include <string>
 #include <ints_defs.h>
@@ -158,22 +160,47 @@ int main(int argc, char* argv[])
         }
     }
 
-    HRSRC res = FindResource(
-        nullptr,
-        TEXT("PAKFILE"),
-        RT_RCDATA
-    );
+    const void* ptr = nullptr;
+    size_t size = 0;
+    std::vector<char> bufferPakExterno;
 
-    if (!res)
+#if defined(_WIN32)
+    HRSRC res = FindResource(nullptr, TEXT("PAKFILE"), RT_RCDATA);
+    if (res)
     {
-        std::cout << "ERROR: recurso PAKFILE no encontrado\n";
-        return 1;
+        HGLOBAL data = LoadResource(nullptr, res);
+        ptr = LockResource(data);
+        size = SizeofResource(nullptr, res);
     }
+#endif
 
-    HGLOBAL data = LoadResource(nullptr, res);
+    // Si no estamos en Windows o falló el recurso integrado, buscamos el archivo físico en Linux
+    if (!ptr)
+    {
+        fs::path rutaPrograma = fs::absolute(argv[0]).parent_path();
+        fs::path rutaPak = rutaPrograma / "template.pak";
 
-    const void* ptr = LockResource(data);
-    size_t size = SizeofResource(nullptr, res);
+        if (!fs::exists(rutaPak))
+        {
+            // Intento secundario en el directorio de trabajo actual
+            rutaPak = "template.pak";
+        }
+
+        std::ifstream archivoPak(rutaPak, std::ios::binary | std::ios::ate);
+        if (!archivoPak.is_open())
+        {
+            std::cerr << "ERROR: No se encontró el recurso integrado ni el archivo externo 'template.pak'\n";
+            return 1;
+        }
+
+        size = archivoPak.tellg();
+        bufferPakExterno.resize(size);
+        archivoPak.seekg(0, std::ios::beg);
+        archivoPak.read(bufferPakExterno.data(), size);
+        archivoPak.close();
+
+        ptr = bufferPakExterno.data();
+    }
 
     PAKL_SetPakFromMem(ptr, size);
 

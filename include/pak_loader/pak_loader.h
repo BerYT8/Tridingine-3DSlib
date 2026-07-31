@@ -9,6 +9,7 @@ typedef struct __PAK_FILE __PAK_FILE;
 typedef __PAK_FILE PAK_FILE;
 
 #ifdef __cplusplus
+#include <cstddef>
 extern "C"
 {
 #endif

@@ -6,8 +6,8 @@
 #include <ints_defs.h>
 
 #if defined(PLATFORM_PC)
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <SDL.h>
+#include <SDL_image.h>
 #include <GL/glew.h>
 #elif defined(PLATFORM_3DS)
 #include <3ds.h>

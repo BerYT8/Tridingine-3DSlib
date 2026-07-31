@@ -1,11 +1,13 @@
 #include <sound/sound.h>
+#include <stdio.h>
 
+#include <string.h>
 #include <stdlib.h>
 
 #define AUDIO_SAMPLE_RATE 48000
 
 #if defined(PLATFORM_PC)
-#include <SDL2/SDl.h>
+#include <SDL.h>
 
 #elif defined(PLATFORM_3DS)
 #include <3ds.h>
