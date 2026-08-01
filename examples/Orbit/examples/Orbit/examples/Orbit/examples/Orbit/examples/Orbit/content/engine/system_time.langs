@@ -1,0 +1,300 @@
+{
+  "langs": [
+    {
+      "name": "spanish",
+      "locale": "es-ES",
+      "translations": [
+        { "id": "JAN", "text": "Enero" },
+        { "id": "FEB", "text": "Febrero" },
+        { "id": "MAR", "text": "Marzo" },
+        { "id": "APR", "text": "Abril" },
+        { "id": "MAY", "text": "Mayo" },
+        { "id": "JUN", "text": "Junio" },
+        { "id": "JUL", "text": "Julio" },
+        { "id": "AUG", "text": "Agosto" },
+        { "id": "SEP", "text": "Septiembre" },
+        { "id": "OCT", "text": "Octubre" },
+        { "id": "NOV", "text": "Noviembre" },
+        { "id": "DEC", "text": "Diciembre" },
+
+        { "id": "MON", "text": "Lunes" },
+        { "id": "TUE", "text": "Martes" },
+        { "id": "WED", "text": "Miércoles" },
+        { "id": "THU", "text": "Jueves" },
+        { "id": "FRI", "text": "Viernes" },
+        { "id": "SAT", "text": "Sábado" },
+        { "id": "SUN", "text": "Domingo" }
+      ]
+    },
+
+    {
+      "name": "english",
+      "locale": "en-US",
+      "translations": [
+        { "id": "JAN", "text": "January" },
+        { "id": "FEB", "text": "February" },
+        { "id": "MAR", "text": "March" },
+        { "id": "APR", "text": "April" },
+        { "id": "MAY", "text": "May" },
+        { "id": "JUN", "text": "June" },
+        { "id": "JUL", "text": "July" },
+        { "id": "AUG", "text": "August" },
+        { "id": "SEP", "text": "September" },
+        { "id": "OCT", "text": "October" },
+        { "id": "NOV", "text": "November" },
+        { "id": "DEC", "text": "December" },
+
+        { "id": "MON", "text": "Monday" },
+        { "id": "TUE", "text": "Tuesday" },
+        { "id": "WED", "text": "Wednesday" },
+        { "id": "THU", "text": "Thursday" },
+        { "id": "FRI", "text": "Friday" },
+        { "id": "SAT", "text": "Saturday" },
+        { "id": "SUN", "text": "Sunday" }
+      ]
+    },
+
+    {
+      "name": "french",
+      "locale": "fr-FR",
+      "translations": [
+        { "id": "JAN", "text": "Janvier" },
+        { "id": "FEB", "text": "Février" },
+        { "id": "MAR", "text": "Mars" },
+        { "id": "APR", "text": "Avril" },
+        { "id": "MAY", "text": "Mai" },
+        { "id": "JUN", "text": "Juin" },
+        { "id": "JUL", "text": "Juillet" },
+        { "id": "AUG", "text": "Août" },
+        { "id": "SEP", "text": "Septembre" },
+        { "id": "OCT", "text": "Octobre" },
+        { "id": "NOV", "text": "Novembre" },
+        { "id": "DEC", "text": "Décembre" },
+
+        { "id": "MON", "text": "Lundi" },
+        { "id": "TUE", "text": "Mardi" },
+        { "id": "WED", "text": "Mercredi" },
+        { "id": "THU", "text": "Jeudi" },
+        { "id": "FRI", "text": "Vendredi" },
+        { "id": "SAT", "text": "Samedi" },
+        { "id": "SUN", "text": "Dimanche" }
+      ]
+    },
+
+    {
+      "name": "german",
+      "locale": "de-DE",
+      "translations": [
+        { "id": "JAN", "text": "Januar" },
+        { "id": "FEB", "text": "Februar" },
+        { "id": "MAR", "text": "März" },
+        { "id": "APR", "text": "April" },
+        { "id": "MAY", "text": "Mai" },
+        { "id": "JUN", "text": "Juni" },
+        { "id": "JUL", "text": "Juli" },
+        { "id": "AUG", "text": "August" },
+        { "id": "SEP", "text": "September" },
+        { "id": "OCT", "text": "Oktober" },
+        { "id": "NOV", "text": "November" },
+        { "id": "DEC", "text": "Dezember" },
+
+        { "id": "MON", "text": "Montag" },
+        { "id": "TUE", "text": "Dienstag" },
+        { "id": "WED", "text": "Mittwoch" },
+        { "id": "THU", "text": "Donnerstag" },
+        { "id": "FRI", "text": "Freitag" },
+        { "id": "SAT", "text": "Samstag" },
+        { "id": "SUN", "text": "Sonntag" }
+      ]
+    },
+
+    {
+      "name": "italian",
+      "locale": "it-IT",
+      "translations": [
+        { "id": "JAN", "text": "Gennaio" },
+        { "id": "FEB", "text": "Febbraio" },
+        { "id": "MAR", "text": "Marzo" },
+        { "id": "APR", "text": "Aprile" },
+        { "id": "MAY", "text": "Maggio" },
+        { "id": "JUN", "text": "Giugno" },
+        { "id": "JUL", "text": "Luglio" },
+        { "id": "AUG", "text": "Agosto" },
+        { "id": "SEP", "text": "Settembre" },
+        { "id": "OCT", "text": "Ottobre" },
+        { "id": "NOV", "text": "Novembre" },
+        { "id": "DEC", "text": "Dicembre" },
+
+        { "id": "MON", "text": "Lunedì" },
+        { "id": "TUE", "text": "Martedì" },
+        { "id": "WED", "text": "Mercoledì" },
+        { "id": "THU", "text": "Giovedì" },
+        { "id": "FRI", "text": "Venerdì" },
+        { "id": "SAT", "text": "Sabato" },
+        { "id": "SUN", "text": "Domenica" }
+      ]
+    },
+
+    {
+      "name": "portuguese",
+      "locale": "pt-PT",
+      "translations": [
+        { "id": "JAN", "text": "Janeiro" },
+        { "id": "FEB", "text": "Fevereiro" },
+        { "id": "MAR", "text": "Março" },
+        { "id": "APR", "text": "Abril" },
+        { "id": "MAY", "text": "Maio" },
+        { "id": "JUN", "text": "Junho" },
+        { "id": "JUL", "text": "Julho" },
+        { "id": "AUG", "text": "Agosto" },
+        { "id": "SEP", "text": "Setembro" },
+        { "id": "OCT", "text": "Outubro" },
+        { "id": "NOV", "text": "Novembro" },
+        { "id": "DEC", "text": "Dezembro" },
+
+        { "id": "MON", "text": "Segunda-feira" },
+        { "id": "TUE", "text": "Terça-feira" },
+        { "id": "WED", "text": "Quarta-feira" },
+        { "id": "THU", "text": "Quinta-feira" },
+        { "id": "FRI", "text": "Sexta-feira" },
+        { "id": "SAT", "text": "Sábado" },
+        { "id": "SUN", "text": "Domingo" }
+      ]
+    },
+
+    {
+      "name": "russian",
+      "locale": "ru-RU",
+      "translations": [
+        { "id": "JAN", "text": "Январь" },
+        { "id": "FEB", "text": "Февраль" },
+        { "id": "MAR", "text": "Март" },
+        { "id": "APR", "text": "Апрель" },
+        { "id": "MAY", "text": "Май" },
+        { "id": "JUN", "text": "Июнь" },
+        { "id": "JUL", "text": "Июль" },
+        { "id": "AUG", "text": "Август" },
+        { "id": "SEP", "text": "Сентябрь" },
+        { "id": "OCT", "text": "Октябрь" },
+        { "id": "NOV", "text": "Ноябрь" },
+        { "id": "DEC", "text": "Декабрь" },
+
+        { "id": "MON", "text": "Понедельник" },
+        { "id": "TUE", "text": "Вторник" },
+        { "id": "WED", "text": "Среда" },
+        { "id": "THU", "text": "Четверг" },
+        { "id": "FRI", "text": "Пятница" },
+        { "id": "SAT", "text": "Суббота" },
+        { "id": "SUN", "text": "Воскресенье" }
+      ]
+    },
+
+    {
+      "name": "japanese",
+      "locale": "ja-JP",
+      "translations": [
+        { "id": "JAN", "text": "1月" },
+        { "id": "FEB", "text": "2月" },
+        { "id": "MAR", "text": "3月" },
+        { "id": "APR", "text": "4月" },
+        { "id": "MAY", "text": "5月" },
+        { "id": "JUN", "text": "6月" },
+        { "id": "JUL", "text": "7月" },
+        { "id": "AUG", "text": "8月" },
+        { "id": "SEP", "text": "9月" },
+        { "id": "OCT", "text": "10月" },
+        { "id": "NOV", "text": "11月" },
+        { "id": "DEC", "text": "12月" },
+
+        { "id": "MON", "text": "月曜日" },
+        { "id": "TUE", "text": "火曜日" },
+        { "id": "WED", "text": "水曜日" },
+        { "id": "THU", "text": "木曜日" },
+        { "id": "FRI", "text": "金曜日" },
+        { "id": "SAT", "text": "土曜日" },
+        { "id": "SUN", "text": "日曜日" }
+      ]
+    },
+
+    {
+      "name": "korean",
+      "locale": "ko-KR",
+      "translations": [
+        { "id": "JAN", "text": "1월" },
+        { "id": "FEB", "text": "2월" },
+        { "id": "MAR", "text": "3월" },
+        { "id": "APR", "text": "4월" },
+        { "id": "MAY", "text": "5월" },
+        { "id": "JUN", "text": "6월" },
+        { "id": "JUL", "text": "7월" },
+        { "id": "AUG", "text": "8월" },
+        { "id": "SEP", "text": "9월" },
+        { "id": "OCT", "text": "10월" },
+        { "id": "NOV", "text": "11월" },
+        { "id": "DEC", "text": "12월" },
+
+        { "id": "MON", "text": "월요일" },
+        { "id": "TUE", "text": "화요일" },
+        { "id": "WED", "text": "수요일" },
+        { "id": "THU", "text": "목요일" },
+        { "id": "FRI", "text": "금요일" },
+        { "id": "SAT", "text": "토요일" },
+        { "id": "SUN", "text": "일요일" }
+      ]
+    },
+
+    {
+      "name": "chinese_simplified",
+      "locale": "zh-CN",
+      "translations": [
+        { "id": "JAN", "text": "一月" },
+        { "id": "FEB", "text": "二月" },
+        { "id": "MAR", "text": "三月" },
+        { "id": "APR", "text": "四月" },
+        { "id": "MAY", "text": "五月" },
+        { "id": "JUN", "text": "六月" },
+        { "id": "JUL", "text": "七月" },
+        { "id": "AUG", "text": "八月" },
+        { "id": "SEP", "text": "九月" },
+        { "id": "OCT", "text": "十月" },
+        { "id": "NOV", "text": "十一月" },
+        { "id": "DEC", "text": "十二月" },
+
+        { "id": "MON", "text": "星期一" },
+        { "id": "TUE", "text": "星期二" },
+        { "id": "WED", "text": "星期三" },
+        { "id": "THU", "text": "星期四" },
+        { "id": "FRI", "text": "星期五" },
+        { "id": "SAT", "text": "星期六" },
+        { "id": "SUN", "text": "星期日" }
+      ]
+    },
+
+    {
+      "name": "chinese_traditional",
+      "locale": "zh-TW",
+      "translations": [
+        { "id": "JAN", "text": "一月" },
+        { "id": "FEB", "text": "二月" },
+        { "id": "MAR", "text": "三月" },
+        { "id": "APR", "text": "四月" },
+        { "id": "MAY", "text": "五月" },
+        { "id": "JUN", "text": "六月" },
+        { "id": "JUL", "text": "七月" },
+        { "id": "AUG", "text": "八月" },
+        { "id": "SEP", "text": "九月" },
+        { "id": "OCT", "text": "十月" },
+        { "id": "NOV", "text": "十一月" },
+        { "id": "DEC", "text": "十二月" },
+
+        { "id": "MON", "text": "星期一" },
+        { "id": "TUE", "text": "星期二" },
+        { "id": "WED", "text": "星期三" },
+        { "id": "THU", "text": "星期四" },
+        { "id": "FRI", "text": "星期五" },
+        { "id": "SAT", "text": "星期六" },
+        { "id": "SUN", "text": "星期日" }
+      ]
+    }
+  ]
+}

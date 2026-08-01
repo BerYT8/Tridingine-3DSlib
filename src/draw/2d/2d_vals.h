@@ -18,6 +18,11 @@ extern "C" {
 
 SHMEM_EXTD bool initialized SHMEM_INITD(false);
 
+void D2D_InitTexts();
+void D2D_TextsBegin();
+void D2D_TextsEnd();
+void D2D_TextsDeleteAllBuffers();
+
 #ifdef __cplusplus
 }
 #endif

@@ -160,7 +160,13 @@ bool D2D_Init()
     if(initialized)
         return false;
     initialized = true;
+    D2D_InitTexts();
 #if defined(PLATFORM_PC)
+    if (TTF_Init() == -1)
+    {
+        printf("TTF_Init: %s\n", TTF_GetError());
+        return false;
+    }
     shader2D = SPOGL_CreateShader();
     if(!SPOGL_CompileShader(shader2D, vertexShader2D) || !SPOGL_CompileFragmentShader(shader2D, fragmentShader2D))
     {    
@@ -198,7 +204,6 @@ bool D2D_Init()
         return false;
     }
     //glDisable(GL_FRAMEBUFFER_SRGB);
-    TTF_Init();
     return true;
 #elif defined(PLATFORM_3DS)
     return C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
@@ -257,7 +262,7 @@ D2D_Result D2D_DrawPoint(float x, float y, float rotation, float depth, float th
 #if defined(PLATFORM_PC)
     SPOGL_Use(shader);
     glPushMatrix();
-    glTranslatef(, 0, depth);
+    glTranslatef(, 0, 0);
 
 
     glPointSize(thickness);
@@ -265,7 +270,7 @@ D2D_Result D2D_DrawPoint(float x, float y, float rotation, float depth, float th
     glBegin(GL_POINTS);
 
     glColor4ub(color.r, color.g, color.b, color.a);
-    glVertex2f(x, y);
+    glVertex3f(x, y);
 
     glEnd();
 
@@ -296,7 +301,11 @@ D2D_Result D2D_DrawLine(float x0, float y0, Color c0,
     float pivotY = y0 + (y1 - y0) * align;
 #if defined(PLATFORM_PC)
     glDepthMask(GL_TRUE);
-    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     SPOGL_Use(shader2D);
 
     glMatrixMode(GL_PROJECTION);
@@ -314,7 +323,7 @@ D2D_Result D2D_DrawLine(float x0, float y0, Color c0,
     glLoadIdentity();
 
     glPushMatrix();
-    glTranslatef(pivotX, pivotY, depth);
+    glTranslatef(pivotX, pivotY, 0);
     glRotatef(rotation, 0.f, 0.f, 1.f);
 
     glLineWidth(thickness);
@@ -322,10 +331,10 @@ D2D_Result D2D_DrawLine(float x0, float y0, Color c0,
     glBegin(GL_LINES);
 
     glColor4ub(c0.r, c0.g, c0.b, c0.a);
-    glVertex2f(x0 - pivotX, y0 - pivotY);
+    glVertex3f(x0 - pivotX, y0 - pivotY, depth);
 
     glColor4ub(c1.r, c1.g, c1.b, c1.a);
-    glVertex2f(x1 - pivotX, y1 - pivotY);
+    glVertex3f(x1 - pivotX, y1 - pivotY, depth);
 
     glEnd();
 
@@ -368,7 +377,12 @@ D2D_Result D2D_DrawRectangle(float x, float y, float w, float h, float rotation,
 
 #if defined(PLATFORM_PC)
     glDepthMask(GL_TRUE);
-    glDisable(GL_DEPTH_TEST);
+    
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -404,7 +418,7 @@ D2D_Result D2D_DrawRectangle(float x, float y, float w, float h, float rotation,
 
     glPushMatrix();
 
-    glTranslatef(x, y, depth);
+    glTranslatef(x, y, 0);
     glRotatef(rotation, 0.f, 0.f, 1.f);
     glTranslatef(pivotOffsetX, pivotOffsetY, 0.f);
 
@@ -413,32 +427,32 @@ D2D_Result D2D_DrawRectangle(float x, float y, float w, float h, float rotation,
     // TL
     //glColor4ub(c1.r,c1.g,c1.b,c1.a);
     glTexCoord2f(0.f,0.f);
-    glVertex2f(-w*0.5f,-h*0.5f);
+    glVertex3f(-w*0.5f,-h*0.5f, depth);
 
     // BL
     //glColor4ub(c4.r,c4.g,c4.b,c4.a);
     glTexCoord2f(0.f,1.f);
-    glVertex2f(-w*0.5f, h*0.5f);
+    glVertex3f(-w*0.5f, h*0.5f, depth);
 
     // TR
     //glColor4ub(c2.r,c2.g,c2.b,c2.a);
     glTexCoord2f(1.f,0.f);
-    glVertex2f( w*0.5f,-h*0.5f);
+    glVertex3f( w*0.5f,-h*0.5f, depth);
 
     // TR
     //glColor4ub(c2.r,c2.g,c2.b,c2.a);
     glTexCoord2f(1.f,0.f);
-    glVertex2f( w*0.5f,-h*0.5f);
+    glVertex3f( w*0.5f,-h*0.5f, depth);
 
     // BL
     //glColor4ub(c4.r,c4.g,c4.b,c4.a);
     glTexCoord2f(0.f,1.f);
-    glVertex2f(-w*0.5f, h*0.5f);
+    glVertex3f(-w*0.5f, h*0.5f, depth);
 
     // BR
     //glColor4ub(c3.r,c3.g,c3.b,c3.a);
     glTexCoord2f(1.f,1.f);
-    glVertex2f( w*0.5f, h*0.5f);
+    glVertex3f( w*0.5f, h*0.5f, depth);
 
     glEnd();
 
@@ -508,7 +522,7 @@ void drawArc(float x, float y, float radius,
 */
 
 D2D_Result D2D_DrawBorderedRect(float x, float y, float w, float h, float radius, float depth, float alignX, float alignY, Color c1, Color c2, Color c3, Color c4)
-{
+{/*
     if(!initialized)
         return D2D_NOT_INITIALIZED;
 
@@ -529,7 +543,12 @@ D2D_Result D2D_DrawBorderedRect(float x, float y, float w, float h, float radius
     
 #if defined(PLATFORM_PC)
     glDepthMask(GL_TRUE);
-    glDisable(GL_DEPTH_TEST);
+    
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -553,7 +572,7 @@ D2D_Result D2D_DrawBorderedRect(float x, float y, float w, float h, float radius
     glPushMatrix();
 
     // Escalamos y trasladamos el origen local al pivote del rectángulo
-    glTranslatef((x * windowScale) + screenStartX, (y * windowScale) + screenStartY, depth);
+    glTranslatef((x * windowScale) + screenStartX, (y * windowScale) + screenStartY, 0);
     //glRotatef(rotation, 0.f, 0.f, 1.f);
     glScalef(windowScale, windowScale, 1.0f);
 
@@ -562,22 +581,22 @@ D2D_Result D2D_DrawBorderedRect(float x, float y, float w, float h, float radius
     glColor4ub(c1.r, c1.g, c1.b, c1.a);
 
     // Cuadrado superior
-    glVertex2f(pivotOffsetX + radius, pivotOffsetY);
-    glVertex2f(pivotOffsetX + radius, pivotOffsetY + radius);
-    glVertex2f(pivotOffsetX + w - radius, pivotOffsetY + radius);
-    glVertex2f(pivotOffsetX + w - radius, pivotOffsetY);
+    glVertex3f(pivotOffsetX + radius, pivotOffsetY, depth);
+    glVertex3f(pivotOffsetX + radius, pivotOffsetY + radius, depth);
+    glVertex3f(pivotOffsetX + w - radius, pivotOffsetY + radius, depth);
+    glVertex3f(pivotOffsetX + w - radius, pivotOffsetY, depth);
 
     // Cuadrado inferior (Corregida la altura h - radius)
-    glVertex2f(pivotOffsetX + radius, pivotOffsetY + h - radius);
-    glVertex2f(pivotOffsetX + radius, pivotOffsetY + h);
-    glVertex2f(pivotOffsetX + w - radius, pivotOffsetY + h);
-    glVertex2f(pivotOffsetX + w - radius, pivotOffsetY + h - radius);
+    glVertex3f(pivotOffsetX + radius, pivotOffsetY + h - radius, depth);
+    glVertex3f(pivotOffsetX + radius, pivotOffsetY + h, depth);
+    glVertex3f(pivotOffsetX + w - radius, pivotOffsetY + h, depth);
+    glVertex3f(pivotOffsetX + w - radius, pivotOffsetY + h - radius, depth);
 
     // Cuadrado medio central
-    glVertex2f(pivotOffsetX, pivotOffsetY + radius);
-    glVertex2f(pivotOffsetX + w, pivotOffsetY + radius);
-    glVertex2f(pivotOffsetX + w, pivotOffsetY + h - radius);
-    glVertex2f(pivotOffsetX, pivotOffsetY + h - radius);
+    glVertex3f(pivotOffsetX, pivotOffsetY + radius, depth);
+    glVertex3f(pivotOffsetX + w, pivotOffsetY + radius, depth);
+    glVertex3f(pivotOffsetX + w, pivotOffsetY + h - radius, depth);
+    glVertex3f(pivotOffsetX, pivotOffsetY + h - radius, depth);
     glEnd();
 
     // --- DIBUJAR CÍRCULOS BAJO LA MATRIZ DE ROTACIÓN ---
@@ -645,7 +664,7 @@ D2D_Result D2D_DrawBorderedRect(float x, float y, float w, float h, float radius
 
     return dc1 && dc2 && dc3 && dc4 && drt && drc && drb;
 #endif
-    
+    */
     return D2D_OK;
 }
 
@@ -666,7 +685,12 @@ D2D_Result D2D_DrawEllipse(float x, float y, float radiusX, float radiusY, float
 
 #if defined(PLATFORM_PC)
     glDepthMask(GL_TRUE);
-    glDisable(GL_DEPTH_TEST);
+    
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -699,7 +723,7 @@ D2D_Result D2D_DrawEllipse(float x, float y, float radiusX, float radiusY, float
     SPOGL_Use(shader2D);
     glPushMatrix();
 
-    glTranslatef(x, y, depth);
+    glTranslatef(x, y, 0);
 
     glRotatef(rotation, 0.f, 0.f, 1.f);
 
@@ -708,7 +732,7 @@ D2D_Result D2D_DrawEllipse(float x, float y, float radiusX, float radiusY, float
     glBegin(GL_TRIANGLE_FAN);
 
     AplicarColorBilineal(c0, c1, c2, c3, 0.5f, 0.5f);
-    glVertex2f(0, 0);
+    glVertex3f(0, 0);
 
     for (int i = 0; i <= segmentos; i++) { 
         float angulo = 2.0f * M_PI * (float)i / (float)segmentos;
@@ -722,7 +746,7 @@ D2D_Result D2D_DrawEllipse(float x, float y, float radiusX, float radiusY, float
         v = clampf(v, 0.f, 1.f);
 
         AplicarColorBilineal(c0, c1, c2, c3, u, v);
-        glVertex2f(tx, ty);
+        glVertex3f(tx, ty);
     }
     glEnd();
     glPopMatrix();*/
@@ -730,7 +754,7 @@ D2D_Result D2D_DrawEllipse(float x, float y, float radiusX, float radiusY, float
 
     glPushMatrix();
 
-    glTranslatef(x, y, depth);
+    glTranslatef(x, y, 0);
     glRotatef(rotation, 0.f, 0.f, 1.f);
     glTranslatef(pivotOffsetX, pivotOffsetY, 0.f);
 
@@ -739,29 +763,29 @@ D2D_Result D2D_DrawEllipse(float x, float y, float radiusX, float radiusY, float
     // Triángulo 1
     glColor4ub(c0.r,c0.g,c0.b,c0.a);
     glTexCoord2f(0.f,0.f);
-    glVertex2f(-radiusX,-radiusY);
+    glVertex3f(-radiusX,-radiusY, depth);
 
     glColor4ub(c2.r,c2.g,c2.b,c2.a);
     glTexCoord2f(0.f,1.f);
-    glVertex2f(-radiusX, radiusY);
+    glVertex3f(-radiusX, radiusY, depth);
 
     glColor4ub(c1.r,c1.g,c1.b,c1.a);
     glTexCoord2f(1.f,0.f);
-    glVertex2f( radiusX,-radiusY);
+    glVertex3f( radiusX,-radiusY, depth);
 
 
     // Triángulo 2
     glColor4ub(c1.r,c1.g,c1.b,c1.a);
     glTexCoord2f(1.f,0.f);
-    glVertex2f( radiusX,-radiusY);
+    glVertex3f( radiusX,-radiusY, depth);
 
     glColor4ub(c2.r,c2.g,c2.b,c2.a);
     glTexCoord2f(0.f,1.f);
-    glVertex2f(-radiusX, radiusY);
+    glVertex3f(-radiusX, radiusY, depth);
 
     glColor4ub(c3.r,c3.g,c3.b,c3.a);
     glTexCoord2f(1.f,1.f);
-    glVertex2f( radiusX, radiusY);
+    glVertex3f( radiusX, radiusY, depth);
 
     glEnd();
 
@@ -799,7 +823,12 @@ D2D_Result D2D_DrawTriangle(float x0, float y0, Color c0,
 
 #if defined(PLATFORM_PC)
     glDepthMask(GL_TRUE);
-    glDisable(GL_DEPTH_TEST);
+    
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -851,7 +880,7 @@ D2D_Result D2D_DrawTriangle(float x0, float y0, Color c0,
     glPushMatrix();
 
     // Trasladamos la matriz al pivote calculado y rotamos allí
-    glTranslatef(pivotX, pivotY, depth);
+    glTranslatef(pivotX, pivotY, 0);
     glRotatef(rotation, 0.f, 0.f, 1.f);
 
     glBegin(GL_TRIANGLES);
@@ -862,13 +891,13 @@ D2D_Result D2D_DrawTriangle(float x0, float y0, Color c0,
     float offsetY = height * alignY;
 
     glColor4ub(c0.r, c0.g, c0.b, c0.a);
-    glVertex2f((x0 - minX) - offsetX, (y0 - minY) - offsetY);
+    glVertex3f((x0 - minX) - offsetX, (y0 - minY) - offsetY, depth);
 
     glColor4ub(c1.r, c1.g, c1.b, c1.a);
-    glVertex2f((x1 - minX) - offsetX, (y1 - minY) - offsetY);
+    glVertex3f((x1 - minX) - offsetX, (y1 - minY) - offsetY, depth);
 
     glColor4ub(c2.r, c2.g, c2.b, c2.a);
-    glVertex2f((x2 - minX) - offsetX, (y2 - minY) - offsetY);
+    glVertex3f((x2 - minX) - offsetX, (y2 - minY) - offsetY, depth);
 
     glEnd();
     glPopMatrix();
@@ -898,7 +927,7 @@ void D2D_Exit()
 {
     if(!initialized)
         return;
-    initialized = false;
+    D2D_TextsDeleteAllBuffers();
 #if defined(PLATFORM_PC)
     SPOGL_Destroy(shader2D);
     shader2D = NULL;
@@ -910,4 +939,5 @@ void D2D_Exit()
 #elif defined(PLATFORM_3DS)
     C2D_Fini();
 #endif
+    initialized = false;
 }

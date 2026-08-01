@@ -23,6 +23,8 @@ SHMEM_EXT bool usedTop SHMEM_INIT(false);
 SHMEM_EXT bool usedBottom SHMEM_INIT(false);
 SHMEM_EXT bool screensInitialized SHMEM_INIT(false);
 SHMEM_EXT bool gamePaused SHMEM_INIT(false);
+SHMEM_EXT bool consoleGamePaused SHMEM_INIT(false);
+SHMEM_EXT bool closedCover SHMEM_INIT(false);
 
 #if defined(PLATFORM_PC)
 #include <SDL2/SDL.h>

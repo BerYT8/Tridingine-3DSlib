@@ -6,9 +6,26 @@
 #include "../textures/textures_types.h"
 
 #include "screensLoadingStart.h"
+#undef ALLOCATE_SHMEM
+#include "../draw/2d/2d_vals.h"
+#define ALLOCATE_SHMEM
 
-static bool closedCover = false;
 static bool closedCoverHook = false;
+static bool consoleGamePausedHook = false;
+
+void S2S_WaitTime(float seconds)
+{
+#if defined(PLATFORM_PC)
+    // 1 segundo = 1000 milisegundos (Convertimos float a entero Uint32)
+    Uint32 miliseconds = (Uint32)(seconds * 1000.0f);
+    SDL_Delay(miliseconds);
+
+#elif defined(PLATFORM_3DS)
+    // 1 segundo = 1,000,000,000 nanosegundos (Usamos un entero de 64 bits)
+    s64 nanoseconds = (s64)(seconds * 1000000000.0f);
+    svcSleepThread(nanoseconds); 
+#endif
+}
 
 #if defined(PLATFORM_3DS)
 #include <3ds.h>
@@ -19,14 +36,31 @@ static aptHookCookie hookCookie;
 
 void SystemCallback(APT_HookType hook, void *param)
 {
-    if(hook == APTHOOK_ONSUSPEND)
+    switch (hook)
     {
-        closedCoverHook = true;
-        closedCover = true;
-    }
-    else if(hook == APTHOOK_ONRESTORE)
-    {
-        closedCoverHook = false;
+        case APTHOOK_ONSUSPEND:
+            closedCoverHook = true;
+            closedCover = true;
+            consoleGamePausedHook = true;
+            consoleGamePaused = true;
+            break;
+
+        case APTHOOK_ONRESTORE:
+            closedCoverHook = false;
+            consoleGamePausedHook = false;
+            break;
+
+        case APTHOOK_ONSLEEP:
+            consoleGamePausedHook = true;
+            consoleGamePaused = true;
+            break;
+
+        case APTHOOK_ONWAKEUP:
+            consoleGamePausedHook = false;
+            break;
+
+        default:
+            break;
     }
 }
 
@@ -70,7 +104,7 @@ void S2S_SetGamePaused(bool paused)
 
 bool S2S_IsGamePaused()
 {
-    return gamePaused;
+    return gamePaused && !consoleGamePaused;
 }
 
 void S2S_ClearScreen(Color color)
@@ -237,6 +271,8 @@ bool S2S_ScreensInit()
         restoringWindowState = false;
     }
 
+    glEnable(GL_TEXTURE_2D);
+
 #elif defined(PLATFORM_3DS)
     gfxInitDefault();
     if(!C3D_Init(C3D_DEFAULT_CMDBUF_SIZE))
@@ -265,6 +301,9 @@ bool S2S_ScreensInit()
 
     closedCover = false;
     closedCoverHook = false;
+
+    consoleGamePaused = false;
+    consoleGamePausedHook = false;
 
     return true;
 }
@@ -572,6 +611,8 @@ void S2S_BeginFrame()
     currScreen = BOTTOM;
     S2S_ClearScreen(Color_Black);
 #endif
+
+    D2D_TextsBegin();
     currScreen = -1;
 }
 
@@ -593,6 +634,9 @@ void S2S_EndFrame()
 
     if(!closedCoverHook && closedCover)
         closedCover = false;
+    if(!consoleGamePausedHook && consoleGamePaused)
+        consoleGamePaused = false;
+    D2D_TextsEnd();
 }
 
 void S2S_SetCurrentScreen(S2S_Screen screen)

@@ -41,6 +41,7 @@ if(NOT BUILD_3DS)
     target_include_directories(${GAME_NAME}
         PRIVATE
             include
+            "${CMAKE_SOURCE_DIR}"
     )
 
     target_link_libraries(${GAME_NAME}

@@ -48,6 +48,10 @@ Todo proyecto debe tener, como mínimo, la siguiente estructura:
 int main(int argc, char *argv[])
 {
     S2S_ScreensInit();
+#if defined(GAME_TITLE)
+    const char* title = GAME_TITLE;
+    SetWindowTitle(title);
+#endif
 
     // Inicializaciones
 
@@ -117,6 +121,13 @@ Libera todos los recursos utilizados por el sistema de pantallas.
 Debe ejecutarse antes de terminar el programa.
 
 ---
+
+## SetWindowTitle()
+
+Únicamente como función de pc para asignar el nombre de la ventana con el que hay en game.json.
+
+---
+
 
 # Compilar el proyecto
 

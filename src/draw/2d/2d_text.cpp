@@ -4,6 +4,10 @@
 
 #include <maths.h>
 
+#ifndef INITIAL_FONT_SIZE
+#define INITIAL_FONT_SIZE 24
+#endif
+
 #if defined(PLATFORM_PC)
 #include <SDL.h>
 #include <SDL_ttf.h>
@@ -22,11 +26,19 @@ typedef struct D2D_Font
 {
 #if defined(PLATFORM_PC)
     TTF_Font *font;
+    void* buffer;
 #elif defined(PLATFORM_3DS)
+    C2D_Font font;
 #endif
 } D2D_Font;
 
-#if defined(PLATFORM_PC)
+#ifndef MAX_CHARACTERS_FT
+#define MAX_CHARACTERS_FT 4096
+#endif
+u8 currentCharactersCount = 0;
+
+#if defined(PLATFORM_3DS)
+C2D_TextBuf globalBuffer = nullptr;
 #endif
 
 D2D_Font *D2D_OpenFont(const char* path)
@@ -34,9 +46,8 @@ D2D_Font *D2D_OpenFont(const char* path)
     D2D_Font *ft = new D2D_Font();
     if(!ft)
         return nullptr;
-
 #if defined(PLATFORM_PC)
-    PAK_FILE* f = PAKL_LoadFile(path);
+    PAK_FILE* f = PAKL_LoadFile((std::string(path) + ".ttf").c_str());
     if (!f)
     {
         delete ft;
@@ -74,9 +85,22 @@ D2D_Font *D2D_OpenFont(const char* path)
         delete ft;
         return nullptr;
     }
-    ft->font = TTF_OpenFontRW(rw, 1, 24);
-    free(buffer);
+    ft->font = TTF_OpenFontRW(rw, 1, INITIAL_FONT_SIZE);
+    if(!ft->font)
+    {
+        delete ft;
+        free(buffer);
+        return nullptr;
+    }
+    ft->buffer = buffer;
 #elif defined(PLATFORM_3DS)
+    ft->font = C2D_FontLoad(("romfs:/" + std::string(path) + ".bcfnt").c_str());
+    
+    if(!ft->font)
+    {
+        delete ft;
+        return nullptr;
+    }
 #endif
     return ft;
 }
@@ -87,9 +111,11 @@ void D2D_CloseFont(D2D_Font *font)
         return;
 #if defined(PLATFORM_PC)
     TTF_CloseFont(font->font);
-    delete font;
+    free(font->buffer);
 #elif defined(PLATFORM_3DS)
+    C2D_FontFree(font->font);
 #endif
+    delete font;
 }
 
 D2D_Result D2D_DrawText(
@@ -107,6 +133,9 @@ D2D_Result D2D_DrawText(
     float alignX,
     float alignY,
 
+    float textAlignX,
+    float textAlignY,
+
     float letterSpacing,
     float lineSpacing,
 
@@ -116,14 +145,26 @@ D2D_Result D2D_DrawText(
     if(!initialized)
         return D2D_NOT_INITIALIZED;
 
-    if(depth < -1 || depth > 1 || !font)
+    if(depth < -1 || depth > 1 || !font || !font->font)
         return D2D_INVALID_ARGUMENT;
 
     if(!isValidScreen())
         return D2D_ERROR;
 
+    if(MAX_CHARACTERS_FT <= currentCharactersCount)
+        return D2D_ERROR;
+
+    std::string textString = text;
+    if(textString.length() >= MAX_CHARACTERS_FT - currentCharactersCount)
+    {
+        textString.erase(MAX_CHARACTERS_FT - 3); // Dejas espacio para los 3 puntos
+        textString += "...";
+    }
+
+    currentCharactersCount += textString.length();
+
     printf("[D2D_DrawText] ENTER\n");
-    printf("text: %s\n", text ? text : "NULL");
+    printf("text: %s\n", textString.c_str());
     printf("font: %p\n", font);
     printf("fontSize: %f\n", fontSize);
     printf("pos: (%f, %f)\n", x, y);
@@ -149,118 +190,227 @@ D2D_Result D2D_DrawText(
     if(h < 0)
         h = 0;
 
+    // Posición del campo según align
+    float fieldX = x - w * alignX;
+    float fieldY = y - h * alignY;
+
+    std::vector<std::string> lines;
+    std::vector<Vec2> linesSize;
+
+    float lineHeight = 0.0f;
+
+    auto MeasureText = [&](const std::string& str, float& tw, float& th)
+    {
 #if defined(PLATFORM_PC)
 
-    std::vector<SDL_Surface*> surfs = {};
+        int w = 0;
+        int h = 0;
+
+        TTF_SizeText(font->font, str.c_str(), &w, &h);
+
+        tw = (float)w;
+        th = (float)h;
+
+#elif defined(PLATFORM_3DS)
+
+        C2D_Text txt;
+
+        C2D_TextParse(&txt, globalBuffer, str.c_str());
+        C2D_TextOptimize(&txt);
+
+        float scale = fontSize / INITIAL_FONT_SIZE;
+
+        if(scale <= 0.0f)
+            scale = 1.0f;
+
+        C2D_TextGetDimensions(
+            &txt,
+            scale,
+            scale,
+            &tw,
+            &th
+        );
+
+#endif
+    };
+
+#if defined(PLATFORM_PC)
+
     SDL_Color c;
     c.r = color.r;
     c.g = color.g;
     c.b = color.b;
     c.a = color.a;
-    TTF_SetFontSize(font->font, fontSize*windowScale);
 
-    int height = TTF_FontHeight(font->font);
+    TTF_SetFontSize(font->font, fontSize * windowScale);
 
-    printf("[D2D_DrawText] splitting words...\n");
+    lineHeight = TTF_FontHeight(font->font);
 
-    std::vector<std::string> words = {};
-    std::istringstream iss(text);
+#elif defined(PLATFORM_3DS)
 
-    std::string word;
-    while (iss >> word) {
-        printf("word: %s\n", word.c_str());
-        words.push_back(word);
+    lineHeight = INITIAL_FONT_SIZE * (fontSize / INITIAL_FONT_SIZE);
+
+#endif
+
+    auto PushLine = [&](const std::string& str)
+    {
+        float tw;
+        float th;
+
+        MeasureText(
+            str,
+            tw,
+            th
+        );
+
+        lines.push_back(str);
+        linesSize.push_back(
+            vec2_create(
+                tw,
+                th
+            )
+        );
+    };
+
+    float totalHeight = 0;
+    float drawY = 0;
+
+#if defined(PLATFORM_PC)
+
+    if(wrap == WRAP_NONE)
+    {
+        std::stringstream ss(textString);
+        std::string line;
+
+        while(std::getline(ss, line, '\n'))
+            PushLine(line);
     }
-
-    std::vector<Vec2> linesSize;
-    std::vector<std::string> lines;
-
-    switch (wrap)
+    else if(wrap == WORD_WRAP_MODE)
     {
-    case WORD_WRAP_MODE:
-    {
-        printf("\n[D2D_DrawText] WORD_WRAP_MODE start\n");
+        std::stringstream ss(textString);
 
-        size_t offset = 0;
+        std::string paragraph;
 
-        while (offset < words.size())
+        while(std::getline(ss, paragraph, '\n'))
         {
-            printf("offset: %zu\n", offset);
+            std::istringstream iss(paragraph);
 
-            std::string line = "";
-            size_t count = 0;
+            std::string word;
+            std::string current;
 
-            int tw = 0, th = 0;
-            int lastValidW = 0, lastValidH = 0;
-
-            while (offset + count < words.size())
+            while(iss >> word)
             {
-                std::string testLine;
+                std::string test =
+                    current.empty()
+                        ? word
+                        : current + " " + word;
 
-                // construir línea candidata
-                for (size_t i = 0; i <= count; i++)
+                float tw;
+                float th;
+
+                MeasureText(
+                    test,
+                    tw,
+                    th
+                );
+
+                if(tw <= w || current.empty())
                 {
-                    if (i > 0) testLine += " ";
-                    testLine += words[offset + i];
+                    current = test;
                 }
-
-                printf("testLine: %s\n", testLine.c_str());
-
-                TTF_SizeText(font->font, testLine.c_str(), &tw, &th);
-
-                // si se pasa, paramos ANTES de incluir esta palabra
-                if (tw > w)
+                else
                 {
-                    printf("wrap break BEFORE word: tw=%d w=%f\n", tw, w);
-                    break;
+                    PushLine(current);
+                    current = word;
                 }
-
-                // aceptar palabra
-                line = testLine;
-                lastValidW = tw;
-                lastValidH = th;
-                count++;
             }
 
-            // si no se pudo añadir ninguna palabra, forzar 1 palabra
-            if (count == 0)
-            {
-                printf("FORCED SINGLE WORD LINE: %s\n", words[offset].c_str());
-
-                line = words[offset];
-                TTF_SizeText(font->font, line.c_str(), &lastValidW, &lastValidH);
-
-                count = 1;
-            }
-
-            printf("final line: %s\n", line.c_str());
-
-            lines.push_back(line);
-            linesSize.push_back(vec2_create(lastValidW, lastValidH));
-
-            offset += count;
+            PushLine(current);
         }
-
-        break;
     }
-    case LETTER_WRAP_MODE:
-        /* code */
-        break;
-    case WRAP_NONE:
-    default:
-        break;
+    else
+    {
+        std::stringstream ss(textString);
+
+        std::string paragraph;
+
+        while(std::getline(ss, paragraph, '\n'))
+        {
+            std::string current;
+
+            for(char ch : paragraph)
+            {
+                std::string test = current;
+                test += ch;
+
+                float tw;
+                float th;
+
+                MeasureText(
+                    test,
+                    tw,
+                    th
+                );
+
+                if(tw <= w || current.empty())
+                {
+                    current = test;
+                }
+                else
+                {
+                    PushLine(current);
+                    current.clear();
+                    current += ch;
+                }
+            }
+
+            PushLine(current);
+        }
     }
 
-    words.clear();
+    if(lines.empty())
+        return D2D_OK;
 
-    if(lines.size() < 1)
-        return D2D_ERROR;
+    //--------------------------------------------
+    // Altura total
+    //--------------------------------------------
+
+    for(size_t i = 0; i < linesSize.size(); i++)
+    {
+        totalHeight += linesSize[i].y;
+
+        if(i + 1 < linesSize.size())
+            totalHeight += lineSpacing;
+    }
+
+    //--------------------------------------------
+    // Recorte por altura
+    //--------------------------------------------
+
+    while(!lines.empty() && totalHeight > h)
+    {
+        totalHeight -= linesSize.back().y;
+
+        if(lines.size() > 1)
+            totalHeight -= lineSpacing;
+
+        lines.pop_back();
+        linesSize.pop_back();
+    }
+
+    std::vector<SDL_Surface*> surfs;
 
     for(size_t i = 0; i < lines.size(); i++)
     {
-        surfs.push_back(TTF_RenderText_Solid(font->font, lines[i].c_str(), c));
+        surfs.push_back(
+            TTF_RenderText_Solid(
+                font->font,
+                lines[i].c_str(),
+                c
+            )
+        );
     }
-
+    
     glDepthMask(GL_TRUE);
     glDisable(GL_DEPTH_TEST);
 
@@ -282,52 +432,187 @@ D2D_Result D2D_DrawText(
 
     glUseProgram(0);
 
-    for (size_t i = 0; i < surfs.size(); i++)
+    drawY = fieldY + (h - totalHeight) * textAlignY;
+    for(size_t i = 0; i < surfs.size(); i++)
     {
         SDL_Surface* conv = SDL_ConvertSurfaceFormat(
             surfs[i],
             SDL_PIXELFORMAT_RGBA32,
             0
         );
+
         SDL_FreeSurface(surfs[i]);
 
-        GLuint texture;
+        GLuint texture = 0;
+
+        glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-             conv->w, conv->h,
-             0, GL_RGBA, GL_UNSIGNED_BYTE,
-             conv->pixels);
-        printf("%x\n", glGetError());
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        // Coordenadas destino
-        float x1 = x - w*alignX + (w-linesSize[i].x);
-        float y1 = y - h*alignY + (h-linesSize[i].y);
-        float x2 = x1 + linesSize[i].x;
-        float y2 = y1 + linesSize[i].y;
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RGBA,
+            conv->w,
+            conv->h,
+            0,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            conv->pixels
+        );
 
-        //setDrawRegion(x1, y1, w, h);
-        // Render quad
-        glBindTexture(GL_TEXTURE_2D, texture);
+        //-----------------------------------------------------
+        // Alineación horizontal
+        //-----------------------------------------------------
 
-        glColor4ub(255, 255, 255, 255);
+        float lineWidth = linesSize[i].x;
 
-        glBegin(GL_QUADS);
-            glTexCoord2f(0, 0); glVertex2f(x1, y1);
-            glTexCoord2f(1, 0); glVertex2f(x2, y1);
-            glTexCoord2f(1, 1); glVertex2f(x2, y2);
-            glTexCoord2f(0, 1); glVertex2f(x1, y2);
-        glEnd();
+        // Si hay letterSpacing, el ancho real cambia
+        if(letterSpacing > 0.0f)
+        {
+            lineWidth = -letterSpacing;
 
-        //stopDrawRegion();
-        
+            for(char ch : lines[i])
+            {
+                int minx,maxx,miny,maxy,advance;
+
+                if(TTF_GlyphMetrics(font->font, ch,
+                    &minx,&maxx,&miny,&maxy,&advance) == 0)
+                {
+                    lineWidth += advance + letterSpacing;
+                }
+            }
+        }
+
+        float drawX = fieldX + (w - lineWidth) * textAlignX;
+
+        //-----------------------------------------------------
+        // Dibujar normalmente
+        //-----------------------------------------------------
+
+        if(letterSpacing <= 0.0f)
+        {
+            float x1 = drawX;
+            float y1 = drawY;
+
+            float x2 = x1 + conv->w;
+            float y2 = y1 + conv->h;
+
+            glEnable(GL_TEXTURE_2D);
+
+            glColor4ub(255,255,255,255);
+
+            glBegin(GL_QUADS);
+
+                glTexCoord2f(0,0); glVertex2f(x1,y1);
+                glTexCoord2f(1,0); glVertex2f(x2,y1);
+                glTexCoord2f(1,1); glVertex2f(x2,y2);
+                glTexCoord2f(0,1); glVertex2f(x1,y2);
+
+            glEnd();
+
+            glDisable(GL_TEXTURE_2D);
+        }
+        else
+        {
+            // Calcular el ancho total de la línea teniendo en cuenta el letterSpacing
+            float totalWidth = -letterSpacing;
+
+            for(char ch : lines[i])
+            {
+                int minx,maxx,miny,maxy,advance;
+
+                if(TTF_GlyphMetrics(font->font, ch, &minx, &maxx, &miny, &maxy, &advance) == 0)
+                    totalWidth += advance + letterSpacing;
+            }
+
+            float penX = drawX;
+            float penY = drawY;
+
+            for(char ch : lines[i])
+            {
+                char txt[2] = { ch, 0 };
+
+                SDL_Surface* glyph = TTF_RenderText_Solid(
+                    font->font,
+                    txt,
+                    c
+                );
+
+                if(!glyph)
+                    continue;
+
+                SDL_Surface* glyphConv = SDL_ConvertSurfaceFormat(
+                    glyph,
+                    SDL_PIXELFORMAT_RGBA32,
+                    0
+                );
+
+                SDL_FreeSurface(glyph);
+
+                GLuint glyphTex;
+
+                glGenTextures(1, &glyphTex);
+                glBindTexture(GL_TEXTURE_2D, glyphTex);
+
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+                glTexImage2D(
+                    GL_TEXTURE_2D,
+                    0,
+                    GL_RGBA,
+                    glyphConv->w,
+                    glyphConv->h,
+                    0,
+                    GL_RGBA,
+                    GL_UNSIGNED_BYTE,
+                    glyphConv->pixels
+                );
+
+                float x1 = penX;
+                float y1 = penY;
+
+                float x2 = x1 + glyphConv->w;
+                float y2 = y1 + glyphConv->h;
+
+                glEnable(GL_TEXTURE_2D);
+
+                glColor4ub(255,255,255,255);
+
+                glBegin(GL_QUADS);
+
+                    glTexCoord2f(0,0); glVertex2f(x1,y1);
+                    glTexCoord2f(1,0); glVertex2f(x2,y1);
+                    glTexCoord2f(1,1); glVertex2f(x2,y2);
+                    glTexCoord2f(0,1); glVertex2f(x1,y2);
+
+                glEnd();
+
+                glDisable(GL_TEXTURE_2D);
+
+                int minx,maxx,miny,maxy,advance;
+
+                if(TTF_GlyphMetrics(font->font, ch, &minx, &maxx, &miny, &maxy, &advance) == 0)
+                    penX += advance + letterSpacing;
+                else
+                    penX += glyphConv->w + letterSpacing;
+
+                glDeleteTextures(1, &glyphTex);
+
+                SDL_FreeSurface(glyphConv);
+            }
+        }
+
         glBindTexture(GL_TEXTURE_2D, 0);
 
-        // avanzar en Y
-        y += height + lineSpacing;
-
         glDeleteTextures(1, &texture);
+
         SDL_FreeSurface(conv);
+
+        drawY += linesSize[i].y + lineSpacing;
     }
 
     glPopMatrix();
@@ -335,7 +620,139 @@ D2D_Result D2D_DrawText(
     surfs.clear();
 
 #elif defined(PLATFORM_3DS)
+
+    float scale = fontSize / INITIAL_FONT_SIZE;   // tamaño base con el que cargaste la fuente
+    if(scale <= 0.0f)
+        scale = 1.0f;
+
+    u32 clr = C2D_Color32(color.r, color.g, color.b, color.a);
+
+    drawY = fieldY + (h - totalHeight) * textAlignY;
+    for(size_t i = 0; i < lines.size(); i++)
+    {
+        C2D_Text txt;
+
+        C2D_TextParse(&txt, globalBuffer, lines[i].c_str());
+        C2D_TextOptimize(&txt);
+
+        float tw, th;
+        C2D_TextGetDimensions(
+            &txt,
+            scale,
+            scale,
+            &tw,
+            &th
+        );
+
+        float lineWidth = tw;
+
+        if(letterSpacing > 0.0f)
+        {
+            // Aproximación: añadimos el spacing entre caracteres
+            lineWidth += (lines[i].size() > 1)
+                ? (lines[i].size() - 1) * letterSpacing
+                : 0.0f;
+        }
+
+        float drawX = fieldX + (w - lineWidth) * textAlignX;
+
+        if(letterSpacing <= 0.0f)
+        {
+            C2D_DrawText(
+                &txt,
+                C2D_WithColor,
+                drawX,
+                drawY,
+                depth,
+                scale,
+                scale,
+                clr
+            );
+        }
+        else
+        {
+            // Dibujado carácter a carácter
+            float penX = drawX;
+
+            for(char ch : lines[i])
+            {
+                char s[2] = { ch, 0 };
+
+                C2D_Text glyph;
+
+                C2D_TextParse(&glyph, globalBuffer, s);
+                C2D_TextOptimize(&glyph);
+
+                float gw, gh;
+
+                C2D_TextGetDimensions(
+                    &glyph,
+                    scale,
+                    scale,
+                    &gw,
+                    &gh
+                );
+
+                C2D_DrawText(
+                    &glyph,
+                    C2D_WithColor,
+                    penX,
+                    drawY,
+                    depth,
+                    scale,
+                    scale,
+                    clr
+                );
+
+                penX += gw + letterSpacing;
+            }
+        }
+
+        drawY += th + lineSpacing;
+    }
+
 #endif
 
     return D2D_OK;
+}
+
+void D2D_InitTexts()
+{
+    if(initialized)
+        return;
+    currentCharactersCount = 0;
+#if defined(PLATFORM_3DS)
+    if(globalBuffer)
+    {
+        C2D_TextBufDelete(globalBuffer);
+        globalBuffer = nullptr;
+    }
+    globalBuffer = C2D_TextBufNew(MAX_CHARACTERS_FT);
+#endif
+}
+
+void D2D_TextsBegin()
+{
+    if(!initialized)
+        return;
+    currentCharactersCount = 0;
+#if defined(PLATFORM_3DS)
+    C2D_TextBufClear(globalBuffer);
+#endif
+}
+
+void D2D_TextsEnd()
+{
+
+}
+
+void D2D_TextsDeleteAllBuffers()
+{
+    if(!initialized)
+        return;
+#if defined(PLATFORM_3DS)
+    C2D_TextBufDelete(globalBuffer);
+    globalBuffer = nullptr;
+#endif
+    currentCharactersCount = 0;
 }
