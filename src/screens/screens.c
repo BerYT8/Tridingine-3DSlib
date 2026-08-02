@@ -288,6 +288,8 @@ bool S2S_ScreensInit()
                 GFX_LEFT);
     aptInit();
     srvInit();
+    fsInit();
+    amInit();
     romfsInit();
     aptHook(&hookCookie, SystemCallback, NULL);
 #endif
@@ -706,6 +708,8 @@ void S2S_ScreensExit()
         MDS_ACTIVATED = false;
 #elif defined(PLATFORM_3DS)
     aptUnhook(&hookCookie);
+    amExit();
+    fsExit();
     srvExit();
     aptExit();
     C3D_Fini();

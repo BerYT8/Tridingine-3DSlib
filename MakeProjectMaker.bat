@@ -59,7 +59,7 @@ REM Tools build
 REM =========================
 echo [5/6] Building tools...
 
-set "TOOLS=PakMaker 3DModelsConverter SoundMaker3DS LocalizationMaker"
+set "TOOLS=PakMaker 3DModelsConverter SoundMaker3DS LocalizationMaker FontsConverter"
 
 for %%t in (%TOOLS%) do (
     echo  ^-^> %%t

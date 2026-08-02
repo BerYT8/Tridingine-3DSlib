@@ -32,7 +32,8 @@
         #endif
 
     #endif
-
+#elif defined(PLATFORM_3DS)
+#include <3ds.h>
 #endif
 
 #include <sys/stat.h>
@@ -142,27 +143,29 @@ void crear_path_recursivo(const char *prefix, const char *ruta) {
 }
 #endif
 
+#define PATH_MAX_BUFFER 512 // Tamaño máximo seguro para cualquier ruta
+
 const char* getPath(const char* path, bool create)
 {
+    // Búfer estático persistente: no necesita free() y es seguro de retornar
+    static char finalPath[PATH_MAX_BUFFER];
+    
+    // Limpiamos el búfer antes de usarlo
+    finalPath[0] = '\0';
+
 #if defined(PLATFORM_PC)
 
     char exeDir[MAX_PATH];
 
     if (!getExecutableDirectory(exeDir, sizeof(exeDir)))
-        return "";
+        return ""; // Ahora es seguro devolver "" porque nadie hará free()
 
     if (create)
         crear_path_recursivo(exeDir, prefijx);
 
-    int total = strlen(exeDir) + strlen(prefijx) + strlen(path) + 3;
-
-    char* final = (char*)malloc(total);
-
-    if (!final)
-        return "";
-
-    snprintf(final,
-             total,
+    // Copia segura en el búfer estático
+    snprintf(finalPath,
+             sizeof(finalPath),
              "%s%c%s%c%s",
              exeDir,
              PATH_SEP,
@@ -172,23 +175,44 @@ const char* getPath(const char* path, bool create)
 
 #if defined(_WIN32)
 
-    for (char* p = final; *p; ++p)
+    for (char* p = finalPath; *p; ++p)
         if (*p == '/')
             *p = '\\';
 
 #else
 
-    for (char* p = final; *p; ++p)
+    for (char* p = finalPath; *p; ++p)
         if (*p == '\\')
             *p = '/';
 
 #endif
 
-    return final;
+    return finalPath;
+
+#elif defined(PLATFORM_3DS)
+    const char* in = "sd:/";
+
+    if (envIsHomebrew()) 
+    {
+        in = "sdmc:/";
+    }
+
+    // Copia segura en el búfer estático
+    snprintf(finalPath,
+            sizeof(finalPath),
+            "%s%s%s",
+            in,
+            prefijx,
+            path);
+
+    // Opcional: Aquí puedes añadir mkdir() si 'create' es true para la 3DS
+
+    return finalPath;
 
 #else
 
-    return path;
+    // Si la plataforma no coincide, devuelve el path original de forma segura
+    return path; 
 
 #endif
 }

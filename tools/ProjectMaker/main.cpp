@@ -25,6 +25,7 @@ void mostrarUso(const char* nombrePrograma)
     std::cerr << "  " << nombrePrograma << " -o <CARPETA>\n";
     std::cerr << "  " << nombrePrograma << " [--only <patron> ...]\n";
     std::cerr << "  " << nombrePrograma << " [--exclude <patron> ...]\n";
+    std::cerr << "  " << nombrePrograma << " [--no-examples (optional)]\n";
 }
 
 std::string wildcardToRegex(const std::string& pattern)
@@ -112,6 +113,11 @@ int main(int argc, char* argv[])
         {
             updateMode = true;
             continue;
+        }
+
+        if(strcmp(argv[i], "--no-examples") == 0)
+        {
+            excludePatterns.emplace_back("examples/*");
         }
 
         if (strcmp(argv[i], "-o") == 0)
