@@ -648,7 +648,7 @@ D2D_Result D2D_DrawText(
         );
 
         float lineWidth = tw;
-
+        
         if(letterSpacing > 0.0f)
         {
             // Aproximación: añadimos el spacing entre caracteres

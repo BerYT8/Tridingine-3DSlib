@@ -32,7 +32,7 @@ Una vez inicializado el módulo, debe prepararse antes de comenzar a dibujar:
 D2D_Prepare();
 ```
 
-> `D2D_Prepare()` se llama **una única vez después de `D2D_Init()`**, no una vez por cada frame.
+> `D2D_Prepare()` se llama **una única vez después de `D2D_Init()`**.
 
 Al finalizar la aplicación:
 
@@ -49,10 +49,14 @@ Algunas primitivas aceptan un parámetro `rotation`.
 La API también proporciona utilidades para trabajar con rotaciones:
 
 ```c
-float rotation = D2D_ValueIsRotation(45.0f);
+float rotation = D2D_ValueIsRotation(395.0f); // Devuelve 35.0f
+```
+Devuelve un valor entre 0.0f y 360.0f de un valor float.
 
+```c
 D2D_AddRotation(&rotation, 15.0f);
 ```
+Añade el valor de rotación especificado pero manteniendo el valor entre 0.0f y 360.0f.
 
 ---
 
@@ -280,7 +284,7 @@ D2D_DrawCircleSolid(
 ## Abrir una fuente
 
 ```c
-D2D_Font* font = D2D_OpenFont("fonts/Roboto.ttf");
+D2D_Font* font = D2D_OpenFont("engine/fonts/arial");
 ```
 
 ## Liberarla
@@ -310,6 +314,9 @@ D2D_DrawText(
     0.5f,
     0.5f,
 
+    0.5f,
+    0.5f,
+
     0,
     0,
 
@@ -329,6 +336,8 @@ Parámetros principales:
 | `w`, `h` | Área de dibujo. |
 | `alignX` | Alineación horizontal. |
 | `alignY` | Alineación vertical. |
+| `textAlignX` | Alineación horizontal del texto. |
+| `textAlignY` | Alineación vertical del texto. |
 | `letterSpacing` | Espaciado entre letras. |
 | `lineSpacing` | Espaciado entre líneas. |
 | `wrap` | Tipo de ajuste de línea. |

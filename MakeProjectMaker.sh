@@ -80,6 +80,16 @@ for t in "${TOOLS[@]}"; do
   fi
 done
 
+cd "$ROOT/tools/bannertool" && make || true
+cd "$ROOT"
+
+cp "$ROOT/tools/bannertool/output/linux-x86_64/bannertool" "$LIB_DIR/tools/" 2>/dev/null \
+|| cp "$ROOT/tools/bannertool/output/linux-i686/bannertool" "$LIB_DIR/tools/" 2>/dev/null \
+|| cp "$ROOT/tools/bannertool/output/macos/bannertool" "$LIB_DIR/tools/" 2>/dev/null \
+|| cp "$ROOT/tools/bannertool/output/macos-x86_64/bannertool" "$LIB_DIR/tools/" 2>/dev/null \
+|| cp "$ROOT/tools/bannertool/output/macos-arm64/bannertool" "$LIB_DIR/tools/" 2>/dev/null \
+|| true
+
 cd "$ROOT/tools/Project_CTR/makerom"
 make deps
 make

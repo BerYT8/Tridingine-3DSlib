@@ -8,6 +8,7 @@ chmod +x ./tools/3DModelsConverter
 chmod +x ./tools/SoundMaker3DS
 chmod +x ./tools/LocalizationMaker
 chmod +x ./tools/PakMaker
+chmod +x ./tools/bannertool
 chmod +x ./tools/makerom
 chmod +x ./tools/3dstool
 

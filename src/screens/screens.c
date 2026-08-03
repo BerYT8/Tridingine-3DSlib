@@ -279,10 +279,6 @@ bool S2S_ScreensInit()
     bottom = C2D_CreateScreenTarget(
                 GFX_BOTTOM,
                 GFX_LEFT);
-    aptInit();
-    srvInit();
-    fsInit();
-    amInit();
     romfsInit();
     aptHook(&hookCookie, SystemCallback, NULL);
 #endif

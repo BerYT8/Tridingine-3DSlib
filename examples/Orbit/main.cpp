@@ -40,17 +40,12 @@ int app_main(int argc, char* argv[])
 
         S2S_BeginFrame();
 
-        if(input_isKeyPressed(INPUT_KEY_DDOWN))
+        if(input_isKeyPressed(INPUT_KEY_SELECT) || input_isKeyPressed(INPUT_KEY_TOUCH))
         {
             S2S_SetGamePaused(!S2S_IsGamePaused());
         }
 
         S2S_SetCurrentScreen(TOP);
-
-        if(input_isKeyPressed(INPUT_KEY_SELECT))
-        {
-            S2S_SetGamePaused(!S2S_IsGamePaused());
-        }
 
         if(!S2S_IsGamePaused())
         {

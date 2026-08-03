@@ -10,6 +10,8 @@ static float floatTime = 0.0f;
 const float amplitude = 10.0f;
 const float speed = 2.2f;
 
+static AsyncSaveData data;
+
 Game::Game()
 {
     enemySpawnTimer = 0.0f;
@@ -38,6 +40,12 @@ bool Game::Init()
 
     font = D2D_OpenFont("engine/fonts/PopHappinessStd-EB");
 
+    bool l = loadSimple("gameData.sav", data);
+    if(l)
+    {
+        bestScore = data.getUint32Value("bestScore", 0);
+    }
+
     return true;
 }
 
@@ -46,7 +54,9 @@ void Game::Exit()
     enemies.clear();
     pickups.clear();
 
-    //D2D_CloseFont(font);
+    D2D_CloseFont(font);
+
+    bool s = saveSimple("gameData.sav", data);
 }
 
 void Game::Restart()
@@ -61,8 +71,6 @@ void Game::Restart()
     enemySpawnTimer = 0.0f;
     pickupSpawnTimer = 0.0f;
 
-    if(score > bestScore)
-        bestScore = score;
     score = 0;
     wave = 1;
 
@@ -144,6 +152,12 @@ void Game::Update()
             pickups.erase(pickups.begin() + i);
 
             score++;
+
+            if(bestScore < score)
+                bestScore = score;
+
+            if(data.getUint32Value("bestScore", 0) < bestScore)
+                data.addValue("bestScore", bestScore);
 
             enemies.clear();
 

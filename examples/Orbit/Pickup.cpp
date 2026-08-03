@@ -36,6 +36,16 @@ void Pickup::Update()
 void Pickup::Draw()
 {
     float r = radius + sinf(pulse) * 1.5f;
+    
+    D2D_DrawCircleSolid(
+        x,
+        y,
+        r,
+        0.0f,
+        0.2f,
+        0.5f,
+        0.5f,
+        Color_MakeColor(50,255,120,255));
 
     D2D_DrawCircleSolid(
         x,
@@ -46,17 +56,6 @@ void Pickup::Draw()
         0.5f,
         0.5f,
         Color_MakeColor(50,255,120,60)
-    );
-    
-    D2D_DrawCircleSolid(
-        x,
-        y,
-        r,
-        0.0f,
-        0.2f,
-        0.5f,
-        0.5f,
-        Color_MakeColor(50,255,120,255)
     );
 }
 

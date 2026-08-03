@@ -42,8 +42,8 @@ private:
 
     float enemySpawnDelay;
 
-    int score;
-    int bestScore;
+    u32 score;
+    u32 bestScore;
     int wave;
 
     bool gameOver;

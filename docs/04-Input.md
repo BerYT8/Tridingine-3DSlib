@@ -235,7 +235,7 @@ Estas constantes solo están disponibles cuando se compila para la plataforma PC
 ```c
 input_init();
 
-while (running)
+while (S2S_ScreensRunning())
 {
     input_read();
 

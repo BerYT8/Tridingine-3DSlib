@@ -35,6 +35,7 @@ Para utilizar la API simplemente incluye:
 ```
 
 Toda la API está diseñada para utilizarse desde **C**, aunque también puede utilizarse sin problemas desde **C++**.
+> Hay alguna wrap API específica para c++.
 
 ---
 
