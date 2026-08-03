@@ -47,6 +47,11 @@ int app_main(int argc, char* argv[])
 
         S2S_SetCurrentScreen(TOP);
 
+        if(input_isKeyPressed(INPUT_KEY_SELECT))
+        {
+            S2S_SetGamePaused(!S2S_IsGamePaused());
+        }
+
         if(!S2S_IsGamePaused())
         {
             game.Update();

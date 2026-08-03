@@ -10,9 +10,6 @@
 #include "../draw/2d/2d_vals.h"
 #define ALLOCATE_SHMEM
 
-static bool closedCoverHook = false;
-static bool consoleGamePausedHook = false;
-
 void S2S_WaitTime(float seconds)
 {
 #if defined(PLATFORM_PC)
@@ -39,26 +36,22 @@ void SystemCallback(APT_HookType hook, void *param)
     switch (hook)
     {
         case APTHOOK_ONSUSPEND:
-            closedCoverHook = true;
-            closedCover = true;
-            consoleGamePausedHook = true;
             consoleGamePaused = true;
             break;
 
         case APTHOOK_ONRESTORE:
-            closedCoverHook = false;
-            consoleGamePausedHook = false;
+            consoleGamePaused = false;
             break;
 
         case APTHOOK_ONSLEEP:
-            consoleGamePausedHook = true;
+            closedCover = true;
             consoleGamePaused = true;
             break;
 
         case APTHOOK_ONWAKEUP:
-            consoleGamePausedHook = false;
+            closedCover = false;
+            consoleGamePaused = false;
             break;
-
         default:
             break;
     }
@@ -302,10 +295,8 @@ bool S2S_ScreensInit()
     currScreen = -1;
 
     closedCover = false;
-    closedCoverHook = false;
 
     consoleGamePaused = false;
-    consoleGamePausedHook = false;
 
     return true;
 }
@@ -633,11 +624,6 @@ void S2S_EndFrame()
     usedTop = false;
     usedBottom = false;
     currScreen = -1;
-
-    if(!closedCoverHook && closedCover)
-        closedCover = false;
-    if(!consoleGamePausedHook && consoleGamePaused)
-        consoleGamePaused = false;
     D2D_TextsEnd();
 }
 

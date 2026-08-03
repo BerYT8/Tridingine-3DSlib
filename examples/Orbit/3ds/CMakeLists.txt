@@ -344,14 +344,10 @@ add_custom_command(
     COMMAND
         ${MAKEROM_EXE}
         -f cia
-        -v
-        -target t
-        -desc app:2
-        -o "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.cia"
         -rsf "${RSF_PATH}"
         -elf "${CODE}"
-        -romfs "${BINARY_ROMFS_FILE}"
         -icon "${CMAKE_SOURCE_DIR}/../icon.png"
+        -o "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.cia"
 
     COMMENT "Generando RomFS IVFC y creando CIA..."
 )

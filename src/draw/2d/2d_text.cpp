@@ -22,6 +22,8 @@
 #include <sstream>
 #include <pak_loader/pak_loader.h>
 
+bool textsInitialized = false;
+
 typedef struct D2D_Font
 {
 #if defined(PLATFORM_PC)
@@ -35,7 +37,7 @@ typedef struct D2D_Font
 #ifndef MAX_CHARACTERS_FT
 #define MAX_CHARACTERS_FT 4096
 #endif
-u8 currentCharactersCount = 0;
+u32 currentCharactersCount = 0;
 
 #if defined(PLATFORM_3DS)
 C2D_TextBuf globalBuffer = nullptr;
@@ -142,16 +144,19 @@ D2D_Result D2D_DrawText(
     D2D_WrapMode wrap
 )
 {
-    if(!initialized)
+    if(!initialized || !textsInitialized)
         return D2D_NOT_INITIALIZED;
 
-    if(depth < -1 || depth > 1 || !font || !font->font)
+    if(depth < -1 || depth > 1 || !font)
+        return D2D_INVALID_ARGUMENT;
+
+    if(!font->font)
         return D2D_INVALID_ARGUMENT;
 
     if(!isValidScreen())
         return D2D_ERROR;
 
-    if(MAX_CHARACTERS_FT <= currentCharactersCount)
+    if(currentCharactersCount >= MAX_CHARACTERS_FT - 3)
         return D2D_ERROR;
 
     std::string textString = text;
@@ -162,13 +167,6 @@ D2D_Result D2D_DrawText(
     }
 
     currentCharactersCount += textString.length();
-
-    printf("[D2D_DrawText] ENTER\n");
-    printf("text: %s\n", textString.c_str());
-    printf("font: %p\n", font);
-    printf("fontSize: %f\n", fontSize);
-    printf("pos: (%f, %f)\n", x, y);
-    printf("size: (%f, %f)\n", w, h);
 
 #if defined(PLATFORM_PC)
     w *= windowScale;
@@ -274,8 +272,6 @@ D2D_Result D2D_DrawText(
 
     float totalHeight = 0;
     float drawY = 0;
-
-#if defined(PLATFORM_PC)
 
     if(wrap == WRAP_NONE)
     {
@@ -398,6 +394,8 @@ D2D_Result D2D_DrawText(
         linesSize.pop_back();
     }
 
+#if defined(PLATFORM_PC)
+
     std::vector<SDL_Surface*> surfs;
 
     for(size_t i = 0; i < lines.size(); i++)
@@ -506,10 +504,10 @@ D2D_Result D2D_DrawText(
 
             glBegin(GL_QUADS);
 
-                glTexCoord2f(0,0); glVertex2f(x1,y1);
-                glTexCoord2f(1,0); glVertex2f(x2,y1);
-                glTexCoord2f(1,1); glVertex2f(x2,y2);
-                glTexCoord2f(0,1); glVertex2f(x1,y2);
+                glTexCoord2f(0,0); glVertex3f(x1,y1, depth);
+                glTexCoord2f(1,0); glVertex3f(x2,y1, depth);
+                glTexCoord2f(1,1); glVertex3f(x2,y2, depth);
+                glTexCoord2f(0,1); glVertex3f(x1,y2, depth);
 
             glEnd();
 
@@ -584,10 +582,10 @@ D2D_Result D2D_DrawText(
 
                 glBegin(GL_QUADS);
 
-                    glTexCoord2f(0,0); glVertex2f(x1,y1);
-                    glTexCoord2f(1,0); glVertex2f(x2,y1);
-                    glTexCoord2f(1,1); glVertex2f(x2,y2);
-                    glTexCoord2f(0,1); glVertex2f(x1,y2);
+                    glTexCoord2f(0,0); glVertex3f(x1,y1, depth);
+                    glTexCoord2f(1,0); glVertex3f(x2,y1, depth);
+                    glTexCoord2f(1,1); glVertex3f(x2,y2, depth);
+                    glTexCoord2f(0,1); glVertex3f(x1,y2, depth);
 
                 glEnd();
 
@@ -632,7 +630,12 @@ D2D_Result D2D_DrawText(
     {
         C2D_Text txt;
 
-        C2D_TextParse(&txt, globalBuffer, lines[i].c_str());
+        C2D_TextFontParse(
+            &txt,
+            font->font,
+            globalBuffer,
+            lines[i].c_str()
+        );
         C2D_TextOptimize(&txt);
 
         float tw, th;
@@ -680,7 +683,12 @@ D2D_Result D2D_DrawText(
 
                 C2D_Text glyph;
 
-                C2D_TextParse(&glyph, globalBuffer, s);
+                C2D_TextFontParse(
+                    &txt,
+                    font->font,
+                    globalBuffer,
+                    lines[i].c_str()
+                );
                 C2D_TextOptimize(&glyph);
 
                 float gw, gh;
@@ -718,7 +726,7 @@ D2D_Result D2D_DrawText(
 
 void D2D_InitTexts()
 {
-    if(initialized)
+    if(!initialized || textsInitialized)
         return;
     currentCharactersCount = 0;
 #if defined(PLATFORM_3DS)
@@ -729,11 +737,12 @@ void D2D_InitTexts()
     }
     globalBuffer = C2D_TextBufNew(MAX_CHARACTERS_FT);
 #endif
+    textsInitialized = true;
 }
 
 void D2D_TextsBegin()
 {
-    if(!initialized)
+    if(!initialized || !textsInitialized)
         return;
     currentCharactersCount = 0;
 #if defined(PLATFORM_3DS)
@@ -748,11 +757,12 @@ void D2D_TextsEnd()
 
 void D2D_TextsDeleteAllBuffers()
 {
-    if(!initialized)
+    if(!textsInitialized)
         return;
 #if defined(PLATFORM_3DS)
     C2D_TextBufDelete(globalBuffer);
     globalBuffer = nullptr;
 #endif
     currentCharactersCount = 0;
+    textsInitialized = false;
 }

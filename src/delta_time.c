@@ -68,14 +68,11 @@ void dt_update(void)
     last_tick = current_tick;
 #endif
 
-    if(!S2S_IsGamePaused())
-        total_time += delta_time;
+    total_time += delta_time;
 }
 
 double dt_get(void)
 {
-    if(S2S_IsGamePaused())
-        return 0;
     return delta_time;
 }
 

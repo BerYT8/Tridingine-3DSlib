@@ -60,5 +60,6 @@ cmake --build . || exit 1
 
 # Mover el resultado final con su nombre dinámico a la raíz de build_3ds
 cp "${VAL_GAME3DS}.3dsx" "../${VAL_GAME3DS}.3dsx"
+cp "${VAL_GAME3DS}.cia" "../${VAL_GAME3DS}.cia"
 
 echo "¡Compilación de 3DS finalizada con éxito!"

@@ -2,6 +2,14 @@
 
 #include <Tridingine.h>
 
+#include <cmath>
+
+static float posY = 0.0f;
+static float floatTime = 0.0f;
+
+const float amplitude = 10.0f;
+const float speed = 2.2f;
+
 Game::Game()
 {
     enemySpawnTimer = 0.0f;
@@ -38,7 +46,7 @@ void Game::Exit()
     enemies.clear();
     pickups.clear();
 
-    D2D_CloseFont(font);
+    //D2D_CloseFont(font);
 }
 
 void Game::Restart()
@@ -208,7 +216,7 @@ void Game::DrawTop()
             400,
             240,
             0,
-            1.0f,
+            0.7f,
             0,
             0,
             Color_MakeColor(180,0,0,150)
@@ -216,7 +224,7 @@ void Game::DrawTop()
 
         D2D_DrawText((std::string("Your score: ") + std::to_string(score)).c_str(), 
                         font, 30, Color_White, 
-                        0, 0, 0, 
+                        0, 0, 0.8f, 
                         sSize.x, sSize.y, 
                         0, 0, 
                         0.5f, 0.5f,
@@ -226,11 +234,27 @@ void Game::DrawTop()
     {
         D2D_DrawText((std::string("Score: ") + std::to_string(score)).c_str(), 
                         font, 30, Color_Red, 
-                        0, 0, 0, 
+                        0, 0, 0.8f, 
                         sSize.x, sSize.y, 
                         0, 0, 
                         0, 0,
                         0, 0, WORD_WRAP_MODE);
+    }
+
+    if(S2S_IsGamePaused())
+    {
+        D2D_DrawRectSolid(0, 0, sSize.x, sSize.y, 0, 1.0f, 0, 0, Color_MakeColor(0,0,0,230));
+
+        D2D_DrawText(std::string("GAME PAUSED").c_str(), 
+                        font, 40, Color_Red, 
+                        0, posY, 1.0f, 
+                        sSize.x, sSize.y, 
+                        0, 0, 
+                        0.5f, 0.5f,
+                        0, 0, WORD_WRAP_MODE);
+
+        floatTime += (float)dt_get();
+        posY = std::sin(floatTime * speed) * amplitude;
     }
 }
 
@@ -239,7 +263,7 @@ void Game::DrawBot()
     Vec2 sSize = S2S_GetScreenSize(BOTTOM);
     D2D_DrawText((std::string("Best score: ") + std::to_string(bestScore)).c_str(), 
                     font, 20, Color_Green, 
-                    0, 0, 0, 
+                    0, 0, 0.8f, 
                     sSize.x, sSize.y, 
                     0, 0, 
                     0, 0,
@@ -248,7 +272,20 @@ void Game::DrawBot()
     {
         D2D_DrawText(std::string("Pulse START to restart the game.").c_str(), 
                         font, 25, Color_White, 
-                        0, 0, 0, 
+                        0, 0, 0.8f, 
+                        sSize.x, sSize.y, 
+                        0, 0, 
+                        0.5f, 0.5f,
+                        0, 0, WORD_WRAP_MODE);
+    }
+
+    if(S2S_IsGamePaused())
+    {
+        D2D_DrawRectSolid(0, 0, sSize.x, sSize.y, 0, 1.0f, 0, 0, Color_MakeColor(0,0,0,230));
+
+        D2D_DrawText(std::string("Pulse SELECT to replay the game.").c_str(), 
+                        font, 30, Color_White, 
+                        0, 0, 1.0f, 
                         sSize.x, sSize.y, 
                         0, 0, 
                         0.5f, 0.5f,

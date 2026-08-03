@@ -160,7 +160,6 @@ bool D2D_Init()
     if(initialized)
         return false;
     initialized = true;
-    D2D_InitTexts();
 #if defined(PLATFORM_PC)
     if (TTF_Init() == -1)
     {
@@ -204,9 +203,14 @@ bool D2D_Init()
         return false;
     }
     //glDisable(GL_FRAMEBUFFER_SRGB);
+    D2D_InitTexts();
     return true;
 #elif defined(PLATFORM_3DS)
-    return C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
+    bool r = C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
+    if(!r)
+        initialized = false;
+    D2D_InitTexts();
+    return r;
 #endif
     return true;
 }
