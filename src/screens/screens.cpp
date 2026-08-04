@@ -8,6 +8,7 @@
 #include "screensLoadingStart.h"
 #undef ALLOCATE_SHMEM
 #include "../draw/2d/2d_vals.h"
+#include "../console/drawConsole.h"
 #define ALLOCATE_SHMEM
 
 void S2S_WaitTime(float seconds)
@@ -279,16 +280,23 @@ bool S2S_ScreensInit()
     bottom = C2D_CreateScreenTarget(
                 GFX_BOTTOM,
                 GFX_LEFT);
+    aptInit();
+    srvInit();
+    fsInit();
+    
+    amInit();
     romfsInit();
     aptHook(&hookCookie, SystemCallback, NULL);
 #endif
+    DrawConsole::InitConsole();
+
     screensInitialized = true;
     running = true;
 
     usedTop = false;
     usedBottom = false;
 
-    currScreen = -1;
+    currScreen = (S2S_Screen)-1;
 
     closedCover = false;
 
@@ -470,7 +478,6 @@ bool isFullscreen = false;
 
 void S2S_BeginFrame()
 {
-
 #if defined(PLATFORM_PC)
     if(MDS_ACTIVATED)
         return;
@@ -486,8 +493,8 @@ void S2S_BeginFrame()
                 // Capturar eventos de la ventana (Resize y Move)
                 switch (event.window.event) {
                     case SDL_WINDOWEVENT_RESIZED: {
-                        int32_t *width = malloc(sizeof(int32_t));
-                        int32_t *height = malloc(sizeof(int32_t));
+                        int32_t *width = new int32_t();
+                        int32_t *height = new int32_t();
                         *width = event.window.data1;
                         *height = event.window.data2;
                         printf("[WINDOW] Width: %d, Height: %d.\n", *width, *height);
@@ -500,8 +507,8 @@ void S2S_BeginFrame()
                         break;
                     }
                     case SDL_WINDOWEVENT_MOVED: {
-                        int32_t *posX = malloc(sizeof(int32_t));
-                        int32_t *posY = malloc(sizeof(int32_t));
+                        int32_t *posX = new int32_t();
+                        int32_t *posY = new int32_t();
                         *posX = event.window.data1;
                         *posY = event.window.data2;
 
@@ -532,7 +539,7 @@ void S2S_BeginFrame()
                     case SDLK_F11:
                         isFullscreen = !isFullscreen; // Alternar estado
 
-                        bool *fs = malloc(sizeof(bool));
+                        bool *fs = new bool();
                         *fs = isFullscreen;
                         
                         // 3. Cambiar el modo de la ventana de forma segura
@@ -602,7 +609,7 @@ void S2S_BeginFrame()
 #endif
 
     D2D_TextsBegin();
-    currScreen = -1;
+    currScreen = (S2S_Screen)-1;
 }
 
 void S2S_EndFrame()
@@ -619,7 +626,11 @@ void S2S_EndFrame()
 #endif
     usedTop = false;
     usedBottom = false;
-    currScreen = -1;
+    currScreen = (S2S_Screen)-1;
+    DrawConsole::DrawTheConsole(TOP_CONSOLE);
+    DrawConsole::ClearConsole(TOP_CONSOLE);
+    DrawConsole::DrawTheConsole(BOTTOM_CONSOLE);
+    DrawConsole::ClearConsole(BOTTOM_CONSOLE);
     D2D_TextsEnd();
 }
 
@@ -633,7 +644,7 @@ void S2S_SetCurrentScreen(S2S_Screen screen)
         
     if(screen == TOP ? (usedTop) : (usedBottom))
     {
-        currScreen = -1;
+        currScreen = (S2S_Screen)-1;
         return;
     }
     currScreen = screen;
@@ -656,8 +667,8 @@ void S2S_SetCurrentScreen(S2S_Screen screen)
     C2D_SceneTarget(currScreen == TOP ? top : bottom);
     C2D_SceneBegin(currScreen == TOP ? top : bottom);
 #endif
-
     t3da_set_screen_size(currScreen == TOP ? SCREEN_TOP_WIDTH : SCREEN_BOT_WIDTH, SCREEN_HEIGHT);
+    DrawConsole::SetConsole(screen == TOP ? TOP_CONSOLE : BOTTOM_CONSOLE);
 }
 
 Vec2 S2S_GetScreenSize(S2S_Screen screen)
@@ -674,6 +685,7 @@ void S2S_ScreensExit()
 {
     if(!screensInitialized)
         return;
+    DrawConsole::EndConsole();
 #if defined(PLATFORM_PC)
     PAKL_ClosePak();
     if(!MDS_ACTIVATED)
@@ -700,7 +712,7 @@ void S2S_ScreensExit()
 #endif
     screensInitialized = false;
     running = false;
-    currScreen = -1;
+    currScreen = (S2S_Screen)-1;
 }
 
 

@@ -4,6 +4,10 @@
 #include <string.h>
 #include "types.h"
 
+#if defined(PLATFORM_3DS)
+#include <3ds.h>
+#endif
+
 /* ========================================================= */
 /* ====================== CRC32 ============================ */
 /* ========================================================= */
@@ -42,56 +46,6 @@ static uint32_t crc32_compute(
     }
 
     return crc ^ 0xFFFFFFFF;
-}
-
-/* ========================================================= */
-/* ===================== ENDIAN ============================ */
-/* ========================================================= */
-
-static void write_u16(
-    FILE *f,
-    uint16_t v,
-    bool be)
-{
-    uint8_t b[2];
-
-    if (be)
-    {
-        b[0] = (v >> 8) & 0xFF;
-        b[1] = v & 0xFF;
-    }
-    else
-    {
-        b[1] = (v >> 8) & 0xFF;
-        b[0] = v & 0xFF;
-    }
-
-    fwrite(b, 1, 2, f);
-}
-
-static void write_u32(
-    FILE *f,
-    uint32_t v,
-    bool be)
-{
-    uint8_t b[4];
-
-    if (be)
-    {
-        b[0] = (v >> 24) & 0xFF;
-        b[1] = (v >> 16) & 0xFF;
-        b[2] = (v >> 8) & 0xFF;
-        b[3] = v & 0xFF;
-    }
-    else
-    {
-        b[3] = (v >> 24) & 0xFF;
-        b[2] = (v >> 16) & 0xFF;
-        b[1] = (v >> 8) & 0xFF;
-        b[0] = v & 0xFF;
-    }
-
-    fwrite(b, 1, 4, f);
 }
 
 /* ========================================================= */
@@ -417,8 +371,8 @@ bool save_write_file(
     SaveContext *ctx,
     const char *path)
 {
-    FILE *f =
-        fopen(getPath(path, true), "wb+");
+    SVFILE *f =
+        svOpen(getPath(path, true), "wb+");
 
     if (!f)
         return false;
@@ -479,34 +433,32 @@ bool save_write_file(
     uint8_t flags = 0;
 
     if (ctx->bigEndian)
-    {
         flags |= SAVE_FLAG_BIG_ENDIAN;
-    }
 
-    fwrite(&flags, 1, 1, f);
+    svWrite(&flags, 1, 1, f);
 
-    fwrite(
+    svWrite(
         SAVE_SIGNATURE,
         1,
         4,
         f);
 
-    write_u16(
+    svWriteU16(
         f,
         ctx->version.major,
         ctx->bigEndian);
 
-    write_u16(
+    svWriteU16(
         f,
         ctx->version.minor,
         ctx->bigEndian);
 
-    write_u16(
+    svWriteU16(
         f,
         ctx->version.sub,
         ctx->bigEndian);
 
-    write_u32(
+    svWriteU32(
         f,
         indexSize,
         ctx->bigEndian);
@@ -519,29 +471,29 @@ bool save_write_file(
         uint16_t nameLen =
             strlen(e->name);
 
-        write_u16(
+        svWriteU16(
             f,
             nameLen,
             ctx->bigEndian);
 
-        fwrite(
+        svWrite(
             e->name,
             1,
             nameLen,
             f);
 
-        fwrite(
+        svWrite(
             &e->type,
             1,
             1,
             f);
 
-        write_u32(
+        svWriteU32(
             f,
             e->dataSizeBits,
             ctx->bigEndian);
 
-        write_u32(
+        svWriteU32(
             f,
             e->relativeBitOffset,
             ctx->bigEndian);
@@ -550,18 +502,21 @@ bool save_write_file(
     uint32_t dataBytes =
         (bitwriter_total_bits(&bw) + 7) / 8;
 
-    fwrite(
+    svWrite(
         bw.data,
         1,
         dataBytes,
         f);
 
-    fflush(f);
+    svFlush(f);
 
     long endPos =
-        ftell(f);
+        svTell(f);
 
-    rewind(f);
+    svSeek(
+        f,
+        0,
+        SEEK_SET);
 
     uint8_t *allData =
         malloc(endPos);
@@ -569,16 +524,16 @@ bool save_write_file(
     if (!allData)
     {
         free(bw.data);
-        fclose(f);
+        svClose(f);
         return false;
     }
 
-    if (fread(allData, 1, endPos, f) !=
+    if (svRead(allData, 1, endPos, f) !=
         (size_t)endPos)
     {
         free(allData);
         free(bw.data);
-        fclose(f);
+        svClose(f);
         return false;
     }
 
@@ -589,16 +544,19 @@ bool save_write_file(
 
     free(allData);
 
-    fseek(f, 0, SEEK_END);
+    svSeek(
+        f,
+        0,
+        SEEK_END);
 
-    write_u32(
+    svWriteU32(
         f,
         crc,
         ctx->bigEndian);
 
     free(bw.data);
 
-    fclose(f);
+    svClose(f);
 
     return true;
 }

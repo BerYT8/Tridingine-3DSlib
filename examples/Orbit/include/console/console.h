@@ -1,34 +1,33 @@
 #pragma once
 
-#include <cstdarg>
+#include <stdarg.h>
 
-#ifndef GSP_SCREEN_TOP
-#define GSP_SCREEN_TOP 0
-#endif
-
-#ifndef GSP_SCREEN_BOTTOM
-#define GSP_SCREEN_BOTTOM 1
-#endif
-
-enum LogType
+typedef enum LogType
 {
     LOG,
     WARNING,
     ERROR
-};
+} LogType;
 
-void setCurrentConsole(int console);
+typedef enum ScreenConsole
+{
+    TOP_CONSOLE,
+    BOTTOM_CONSOLE,
+} ScreenConsole;
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 void printLog(const char *format, ...);
 void printWarn(const char *format, ...);
 void printError(const char *format, ...);
 
-void printOnConsole(int console, LogType type, const char *format, ...);
+void printOnConsole(ScreenConsole console, LogType type, const char *format, ...);
 
-void drawConsole(int console);
+void clearConsole(ScreenConsole console);
 
-void consoleInit();
-
-void consoleEnd();
-
-void clearConsole(int console);
+#ifdef __cplusplus
+}
+#endif

@@ -298,40 +298,21 @@ D2D_Result D2D_DrawPoint(float x, float y, float rotation, float depth, float th
 }
 
 D2D_Result D2D_DrawLine(float x0, float y0, Color c0,
-                        float x1, float y1, Color c1,
-                        float thickness, float rotation, float depth, float align)
+                    float x1, float y1, Color c1,
+                    float thickness, float rotation, float depth, float align)
 {
     if(!initialized)
         return D2D_NOT_INITIALIZED;
 
-    if(depth < -1.f || depth > 1.f)
+    if(depth < -1 || depth > 1)
         return D2D_INVALID_ARGUMENT;
 
     if(!isValidScreen())
         return D2D_ERROR;
 
     align = clampf(align, 0.f, 1.f);
-
-    // 1. Calcular el vector director, la longitud y el ángulo original de la línea
-    float dx = x1 - x0;
-    float dy = y1 - y0;
-    float length = sqrtf(dx * dx + dy * dy);
-    
-    // Evitar divisiones por cero si los puntos son idénticos
-    if(length < 0.0001f) 
-        return D2D_OK; 
-
-    float baseAngle = atan2f(dy, dx) * (180.f / M_PI); // Ángulo en grados
-    float finalRotation = baseAngle + rotation;        // Añadir la rotación extra solicitada
-
-    // 2. Calcular el punto pivote exacto en el espacio del mundo
-    float pivotX = x0 + dx * align;
-    float pivotY = y0 + dy * align;
-
-    // 3. Definir los extremos en el espacio local (donde el pivote es el origen 0,0)
-    float localX0 = -length * align;
-    float localX1 = length * (1.f - align);
-
+    float pivotX = x0 + (x1 - x0) * align;
+    float pivotY = y0 + (y1 - y0) * align;
 #if defined(PLATFORM_PC)
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
@@ -343,49 +324,46 @@ D2D_Result D2D_DrawLine(float x0, float y0, Color c0,
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, wwidth, wheight, 0, -1, 1);
+
+    glOrtho(
+        0,
+        wwidth,
+        wheight,
+        0,
+        -1,
+        1);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
     glPushMatrix();
-    // Trasladar al pivote y aplicar la rotación final combinada
-    glTranslatef(pivotX, pivotY, 0.f);
-    glRotatef(finalRotation, 0.f, 0.f, 1.f);
+    glTranslatef(pivotX, pivotY, 0);
+    glRotatef(rotation, 0.f, 0.f, 1.f);
 
     glLineWidth(thickness);
 
     glBegin(GL_LINES);
-    // Dibujamos sobre el eje X local
+
     glColor4ub(c0.r, c0.g, c0.b, c0.a);
-    glVertex3f(localX0, 0.f, depth);
+    glVertex3f(x0 - pivotX, y0 - pivotY, depth);
 
     glColor4ub(c1.r, c1.g, c1.b, c1.a);
-    glVertex3f(localX1, 0.f, depth);
+    glVertex3f(x1 - pivotX, y1 - pivotY, depth);
+
     glEnd();
 
     glPopMatrix();
-
 #elif defined(PLATFORM_3DS)
     C3D_Mtx mtx;
     C2D_ViewSave(&mtx);
-    
-    // Aplicar transformaciones en la vista de Citro2D
     C2D_ViewTranslate(pivotX, pivotY);
-    C2D_ViewRotateDegrees(finalRotation);
-    
-    // Citromed/C2D renderiza la línea usando coordenadas locales
-    bool r = C2D_DrawLine(localX0, 0.f, Color_ToUInt32_Default(c0), 
-                          localX1, 0.f, Color_ToUInt32_Default(c1), 
-                          thickness, depth);
-    
+    C2D_ViewRotateDegrees(rotation);
+    bool r = C2D_DrawLine(x0 - pivotX, y0 - pivotY, Color_ToUInt32_Default(c0), x1 - pivotX, y1 - pivotY, Color_ToUInt32_Default(c1), thickness, depth);
     C2D_ViewRestore(&mtx);
-    if(!r) return D2D_ERROR;
+    return r;
 #endif
-
     return D2D_OK;
 }
-
 
 D2D_Result D2D_DrawRectangle(float x, float y, float w, float h, float rotation, float depth, float alignX, float alignY, Color c1, Color c2, Color c3, Color c4)
 {

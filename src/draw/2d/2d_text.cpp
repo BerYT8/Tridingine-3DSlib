@@ -21,6 +21,7 @@
 #include <string>
 #include <sstream>
 #include <pak_loader/pak_loader.h>
+#include "../../romfs_path.h"
 
 bool textsInitialized = false;
 
@@ -96,7 +97,7 @@ D2D_Font *D2D_OpenFont(const char* path)
     }
     ft->buffer = buffer;
 #elif defined(PLATFORM_3DS)
-    ft->font = C2D_FontLoad(("romfs:/" + std::string(path) + ".bcfnt").c_str());
+    ft->font = C2D_FontLoad(getRomfsPath((std::string(path) + ".bcfnt").c_str()));
     
     if(!ft->font)
     {
@@ -159,6 +160,69 @@ D2D_Result D2D_DrawText(
     if(currentCharactersCount >= MAX_CHARACTERS_FT - 3)
         return D2D_ERROR;
 
+    auto res = D2D_DrawText_Buf(text, font, fontSize, color, x, y, depth, w, h, alignX, alignY, textAlignX, textAlignY, letterSpacing, lineSpacing, wrap, false, TOP_CONSOLE);
+    return res.drawed ? D2D_OK : D2D_ERROR;
+}
+
+void InitConsoleBuffs()
+{
+#if defined(PLATFORM_3DS)
+    consoleTopBuffer = C2D_TextBufNew(MAX_CHARACTERS_FT);
+    consoleBotBuffer = C2D_TextBufNew(MAX_CHARACTERS_FT);
+#endif
+}
+void EndConsoleBuffs()
+{
+#if defined(PLATFORM_3DS)
+    if(consoleTopBuffer)
+        C2D_TextBufDelete(consoleTopBuffer);
+    if(consoleBotBuffer)
+        C2D_TextBufDelete(consoleBotBuffer);
+    consoleTopBuffer = nullptr;
+    consoleBotBuffer = nullptr;
+#endif
+}
+
+void ClearConsoleBuf(ScreenConsole console)
+{
+    if(console != TOP_CONSOLE && console != BOTTOM_CONSOLE)
+        return;
+#if defined(PLATFORM_3DS)
+    C2D_TextBufClear(console == TOP_CONSOLE ? consoleTopBuffer : consoleBotBuffer);
+#endif
+}
+
+D2D_Text D2D_DrawText_Buf(
+    const char* text,
+    D2D_Font* font,
+    float fontSize,
+    Color color,
+
+    float x,
+    float y,
+    float depth,
+    float w,
+    float h,
+
+    float alignX,
+    float alignY,
+
+    float textAlignX,
+    float textAlignY,
+
+    float letterSpacing,
+    float lineSpacing,
+
+    D2D_WrapMode wrap,
+    bool console,
+    ScreenConsole consoleN
+)
+{
+    D2D_Text textResult;
+    textResult.drawed = false;
+    textResult.height = 0;
+    textResult.width = 0;
+
     std::string textString = text;
     if(textString.length() >= MAX_CHARACTERS_FT - currentCharactersCount)
     {
@@ -197,6 +261,10 @@ D2D_Result D2D_DrawText(
 
     float lineHeight = 0.0f;
 
+#if defined(PLATFORM_3DS)
+    C2D_TextBuf textBuffer = console ? (consoleN == TOP_CONSOLE ? consoleTopBuffer : consoleBotBuffer) : globalBuffer;
+#endif
+
     auto MeasureText = [&](const std::string& str, float& tw, float& th)
     {
 #if defined(PLATFORM_PC)
@@ -210,10 +278,9 @@ D2D_Result D2D_DrawText(
         th = (float)h;
 
 #elif defined(PLATFORM_3DS)
-
         C2D_Text txt;
 
-        C2D_TextParse(&txt, globalBuffer, str.c_str());
+        C2D_TextParse(&txt, textBuffer, str.c_str());
         C2D_TextOptimize(&txt);
 
         float scale = fontSize / INITIAL_FONT_SIZE;
@@ -365,7 +432,7 @@ D2D_Result D2D_DrawText(
     }
 
     if(lines.empty())
-        return D2D_OK;
+        return textResult;
 
     //--------------------------------------------
     // Altura total
@@ -393,6 +460,9 @@ D2D_Result D2D_DrawText(
         lines.pop_back();
         linesSize.pop_back();
     }
+
+    textResult.height = totalHeight;
+    textResult.width =  w;
 
 #if defined(PLATFORM_PC)
 
@@ -633,7 +703,7 @@ D2D_Result D2D_DrawText(
         C2D_TextFontParse(
             &txt,
             font->font,
-            globalBuffer,
+            textBuffer,
             lines[i].c_str()
         );
         C2D_TextOptimize(&txt);
@@ -721,7 +791,9 @@ D2D_Result D2D_DrawText(
 
 #endif
 
-    return D2D_OK;
+    textResult.drawed = true;
+
+    return textResult;
 }
 
 void D2D_InitTexts()

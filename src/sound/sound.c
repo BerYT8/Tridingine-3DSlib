@@ -17,6 +17,8 @@
 #include <stdbool.h>
 #include <pak_loader/pak_loader.h>
 
+#include "../romfs_path.h"
+
 #define MAX_VOLUME 100
 
 static bool initialized = false;
@@ -607,14 +609,14 @@ S3D_Sound *s3d_make_any_of(const char *path){
 #if defined(PLATFORM_PC)
     int n = snprintf(p, sizeof(p), "%s", path);
 #elif defined(PLATFORM_3DS)
-    int n =snprintf(p, sizeof(p), "romfs:/%s.opus", path);
+    int n =snprintf(p, sizeof(p), "%s.opus", path);
 #else
     int n = -1;
 #endif
     if (n >= sizeof(p)) {
         return NULL;
     }
-    S3D_Sound *s = MakeAny(p, 2, 16);
+    S3D_Sound *s = MakeAny(getRomfsPath(p), 2, 16);
     if (!s)
         return NULL;
     s->type = SOUND_TYPE;

@@ -12,6 +12,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ---------------- SOURCES ----------------
 set(SOURCES
+    src/console/drawConsole.h
+    src/console/drawConsole.cpp
+    src/console/console.cpp
+
     src/system_language.cpp
     src/system_time.cpp
 
@@ -30,7 +34,7 @@ set(SOURCES
     src/screens/screensLoadingStart.cpp
     src/screens/screensValues.h
     src/screens/modfiy_screens.cpp
-    src/screens/screens.c
+    src/screens/screens.cpp
 
     src/draw/shaders/opengl/opengl.shader.h
     src/draw/shaders/opengl/opengl.shader.cpp

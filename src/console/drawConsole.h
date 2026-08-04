@@ -10,22 +10,17 @@
 #include <citro2d.h>
 #endif
 
+    
 struct ConsoleText
 {
-#if defined(PLATFORM_3DS)
-    C2D_Text *text = nullptr;
-#elif defined(PLATFORM_PC)
     std::string text = "";
-#endif
     LogType type = LOG;
-    float width = 0;
-    float height = 0;
 };
 
 class DrawConsole
 {
 private:
-    static int c;
+    static ScreenConsole c;
     static float sx, sy;
     static std::vector<ConsoleText> textsTop;
     static std::vector<ConsoleText> textsBottom;
@@ -36,18 +31,18 @@ public:
     DrawConsole() = default;
     ~DrawConsole() = default;
 
-    static int GetCurrentConsole()
+    static ScreenConsole GetCurrentConsole()
     {
         return c;
     }
 
-    static void SetConsole(int console);
+    static void SetConsole(ScreenConsole console);
 
     static void InitConsole();
 
-    static void Print(int console, LogType log, std::string text);
-    static void DrawTheConsole(int console);
-    static void ClearConsole(int console);
+    static void Print(ScreenConsole console, LogType log, std::string text);
+    static void DrawTheConsole(ScreenConsole console);
+    static void ClearConsole(ScreenConsole console);
 
     static void EndConsole();
 };

@@ -1,5 +1,6 @@
 #include <localization.h>
 #include "localization_sys.h"
+#include "../romfs_path.h"
 
 typedef struct LOCALIZATION {
     Localization *content;
@@ -33,13 +34,7 @@ int Loc_LoadLocalization(LOCALIZATION *localization, const char* filePath)
 {
     if(localization && localization->content)
     {
-        char p[512];
-#if defined(PLATFORM_PC)
-        snprintf(p, sizeof(p), "%s", filePath);
-#elif defined(PLATFORM_3DS)
-        snprintf(p, sizeof(p), "romfs:/%s", filePath);
-#endif
-        return localization->content->cargarArchivo(p) ? 1 : 0;
+        return localization->content->cargarArchivo(getRomfsPath(filePath)) ? 1 : 0;
     }
     return 0;
 }
@@ -50,16 +45,10 @@ int Loc_AddLocale(LOCALIZATION *localization, const char* filePath)
     if(!localization)
         return 0;
     char localeOut[9] = {};
-    char p[512];
-#if defined(PLATFORM_PC)
-    snprintf(p, sizeof(p), "%s", filePath);
-#elif defined(PLATFORM_3DS)
-    snprintf(p, sizeof(p), "romfs:/%s", filePath);
-#endif
-    bool c = localization->content->obtenerLocaleDeArchivo(p, localeOut);
+    bool c = localization->content->obtenerLocaleDeArchivo(getRomfsPath(filePath), localeOut);
     if(!c)
         return 0;
-    localization->content->addLocaleToList(calcular_hash(localeOut), p);
+    localization->content->addLocaleToList(calcular_hash(localeOut), getRomfsPath(filePath));
     return 1;
 }
 

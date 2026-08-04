@@ -4,6 +4,10 @@
 #include <string.h>
 #include "types.h"
 
+#if defined(PLATFORM_3DS)
+#include <3ds.h>
+#endif
+
 /* ========================================================= */
 /* ===================== ENDIAN ============================ */
 /* ========================================================= */
@@ -115,22 +119,24 @@ bool load_file(
 {
     memset(out, 0, sizeof(*out));
 
-    FILE *f = fopen(getPath(path, false), "rb");
+    SVFILE *f =
+        svOpen(getPath(path, false), "rb");
 
     if (!f)
         return false;
 
     /* obtener tamaño total */
 
-    fseek(f, 0, SEEK_END);
+    svSeek(f, 0, SEEK_END);
 
-    long fileSize = ftell(f);
+    long fileSize =
+        svTell(f);
 
-    rewind(f);
+    svSeek(f, 0, SEEK_SET);
 
     if (fileSize <= 0)
     {
-        fclose(f);
+        svClose(f);
         return false;
     }
 
@@ -138,9 +144,9 @@ bool load_file(
 
     uint8_t flags = 0;
 
-    if (fread(&flags, 1, 1, f) != 1)
+    if (svRead(&flags, 1, 1, f) != 1)
     {
-        fclose(f);
+        svClose(f);
         return false;
     }
 
@@ -155,49 +161,49 @@ bool load_file(
 
     memset(sig, 0, sizeof(sig));
 
-    if (fread(sig, 1, 4, f) != 4)
+    if (svRead(sig, 1, 4, f) != 4)
     {
-        fclose(f);
+        svClose(f);
         return false;
     }
 
     if (strcmp(sig, SAVE_SIGNATURE) != 0)
     {
-        fclose(f);
+        svClose(f);
         return false;
     }
 
     /* version */
 
     out->version.major =
-        read_u16(f, be);
+        svReadU16(f, be);
 
     out->version.minor =
-        read_u16(f, be);
+        svReadU16(f, be);
 
     out->version.sub =
-        read_u16(f, be);
+        svReadU16(f, be);
 
     /* index size */
 
     uint32_t indexSize =
-        read_u32(f, be);
+        svReadU32(f, be);
 
     long indexStart =
-        ftell(f);
+        svTell(f);
 
     if (indexSize == 0)
     {
-        fclose(f);
+        svClose(f);
         return false;
     }
 
     /* read index */
 
-    while ((uint32_t)(ftell(f) - indexStart) < indexSize)
+    while ((uint32_t)(svTell(f) - indexStart) < indexSize)
     {
         long current =
-            ftell(f) - indexStart;
+            svTell(f) - indexStart;
 
         /* mínimo:
            2 nameLen
@@ -217,7 +223,7 @@ bool load_file(
 
         if (!newEntries)
         {
-            fclose(f);
+            svClose(f);
             return false;
         }
 
@@ -229,19 +235,19 @@ bool load_file(
         memset(e, 0, sizeof(*e));
 
         uint16_t nameLen =
-            read_u16(f, be);
+            svReadU16(f, be);
 
         if (nameLen == 0)
         {
-            fclose(f);
+            svClose(f);
             return false;
         }
 
-        if ((uint32_t)(ftell(f) - indexStart) +
+        if ((uint32_t)(svTell(f) - indexStart) +
                 nameLen + 9 >
             indexSize)
         {
-            fclose(f);
+            svClose(f);
             return false;
         }
 
@@ -250,40 +256,40 @@ bool load_file(
 
         if (!e->name)
         {
-            fclose(f);
+            svClose(f);
             return false;
         }
 
-        if (fread(e->name, 1, nameLen, f) != nameLen)
+        if (svRead(e->name, 1, nameLen, f) != nameLen)
         {
-            fclose(f);
+            svClose(f);
             return false;
         }
 
         e->name[nameLen] = '\0';
 
-        if (fread(&e->type, 1, 1, f) != 1)
+        if (svRead(&e->type, 1, 1, f) != 1)
         {
-            fclose(f);
+            svClose(f);
             return false;
         }
 
         e->dataSizeBits =
-            read_u32(f, be);
+            svReadU32(f, be);
 
         e->relativeBitOffset =
-            read_u32(f, be);
+            svReadU32(f, be);
     }
 
     long dataStart =
-        ftell(f);
+        svTell(f);
 
     long dataSize =
         fileSize - dataStart - 4;
 
     if (dataSize <= 0)
     {
-        fclose(f);
+        svClose(f);
         return false;
     }
 
@@ -292,22 +298,22 @@ bool load_file(
 
     if (!out->data)
     {
-        fclose(f);
+        svClose(f);
         return false;
     }
 
     out->size =
         (uint32_t)dataSize;
 
-    if (fread(out->data, 1, dataSize, f) !=
+    if (svRead(out->data, 1, dataSize, f) !=
         (size_t)dataSize)
     {
-        fclose(f);
+        svClose(f);
         free(out->data);
         return false;
     }
 
-    fclose(f);
+    svClose(f);
 
     return true;
 }

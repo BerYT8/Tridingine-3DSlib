@@ -11,6 +11,8 @@
 
 #include <pak_loader/pak_loader.h>
 
+#include "../romfs_path.h"
+
 #if defined(PLATFORM_PC)
 
 #include <SDL.h>
@@ -369,9 +371,9 @@ T3DA_AtlasTexture *t3da_get_atlas(const char *path)
 #elif defined(PLATFORM_3DS)
 
     char p[512];
-    snprintf(p, sizeof(p), "romfs:/%s.t3x", path);
+    snprintf(p, sizeof(p), "%s.t3x", path);
 
-    FILE *f = fopen(p, "rb");
+    FILE *f = fopen(getRomfsPath(p), "rb");
 
     if (!f)
     {

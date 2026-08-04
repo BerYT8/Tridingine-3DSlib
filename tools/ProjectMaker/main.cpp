@@ -240,7 +240,10 @@ int main(int argc, char* argv[])
 
             if (name == "CMakeLists.txt" ||
                 name == "game.json" ||
-                name == "main.cpp")
+                name == "main.cpp" ||
+                name == "icon.png" ||
+                name == "banner_def.png" ||
+                name == "banner_audio.wav")
             {
                 continue;
             }
