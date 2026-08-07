@@ -27,7 +27,7 @@ void DrawConsole::InitConsole()
 {
     if(cInitialized)
         return;
-    font = D2D_OpenFont("engine/fonts/arial");
+    font = System_GetDefaultFont();
     if(font)
     {
         cInitialized = true;
@@ -52,6 +52,18 @@ void DrawConsole::Print(ScreenConsole console, LogType log, std::string text)
     std::vector<ConsoleText> &texts = console == TOP_CONSOLE ? textsTop : textsBottom;
 
     texts.push_back(t);
+    switch (log)
+    {
+    case ERROR:
+        printf("[%s] \033[31m%s\033[0m\n", console == TOP_CONSOLE ? "TOP ERROR" : "BOTTOM ERROR", t);
+        break;
+    case WARNING:
+        printf("[%s] \033[33m%s\033[0m\n", console == TOP_CONSOLE ? "TOP WARN" : "BOTTOM WARN", t);
+        break;
+    default:
+        printf("[%s] \033[0m%s\033[0m\n", console == TOP_CONSOLE ? "TOP LOG" : "BOTTOM LOG", t);
+        break;
+    }
 
     if (texts.size() >= 10)
         texts.erase(texts.begin());
@@ -115,8 +127,7 @@ void DrawConsole::EndConsole()
         return;
     ClearConsole(TOP_CONSOLE);
     ClearConsole(BOTTOM_CONSOLE);
-    if(font)
-        D2D_CloseFont(font);
+    font = nullptr;
     EndConsoleBuffs();
     cInitialized = false;
 }

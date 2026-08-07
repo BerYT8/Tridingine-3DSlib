@@ -12,12 +12,17 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ---------------- SOURCES ----------------
 set(SOURCES
+    src/romfs_path.h
+    src/romfs_path.cpp
+
     src/console/drawConsole.h
     src/console/drawConsole.cpp
     src/console/console.cpp
 
     src/system_language.cpp
     src/system_time.cpp
+    src/sys_fonts_gen_funcs.h
+    src/system_fonts.cpp
 
     src/entrypoint.cpp
     src/pak_loader/pak_loader.cpp
@@ -44,6 +49,10 @@ set(SOURCES
     src/draw/2d/2d_vals.h
     src/draw/2d/2d_text.cpp
     src/draw/3d/3d_shapes.cpp
+
+    src/html/html.h
+    src/html/html.cpp
+    src/html/html-ds.cpp
 
     src/ui/definitions.h
     src/ui/canvas/canvas.c

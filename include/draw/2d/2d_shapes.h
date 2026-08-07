@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sys/system_fonts.h>
+
 #include "../../color.h"
 
 #include <stdbool.h>
@@ -10,8 +12,6 @@ typedef enum D2D_WrapMode
     WORD_WRAP_MODE,
     WRAP_NONE,
 } D2D_WrapMode;
-
-typedef struct D2D_Font D2D_Font;
 
 typedef enum D2D_Result
 {

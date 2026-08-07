@@ -397,6 +397,30 @@ size_t PAKL_GetFileSize(PAK_FILE* file)
     return file->size;
 }
 
+int PAKL_fgetc(PAK_FILE* f)
+{
+    if (!f)
+        return EOF;
+    
+    if (f->pos >= f->size)
+        return EOF;
+
+    return (int)f->data[f->pos++];
+}
+
+int PAKL_ungetc(int c, PAK_FILE* f)
+{
+    if (f == nullptr)
+        return EOF;
+
+    if (f->pos == 0)
+        return EOF;
+
+    --f->pos;
+
+    return c;
+}
+
 long PAKL_ftell(PAK_FILE* f)
 {
     if (!f)

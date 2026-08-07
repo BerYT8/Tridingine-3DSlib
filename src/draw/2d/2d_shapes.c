@@ -218,7 +218,7 @@ bool D2D_Init()
         GPU_SRC_ALPHA,              // Factor alfa fuente
         GPU_ONE_MINUS_SRC_ALPHA     // Factor alfa destino
     );
-    C3D_AlphaTest(false, GPU_ALWAYS, 0);
+    //C3D_AlphaTest(false, GPU_ALWAYS, 0);
     D2D_InitTexts();
     return r;
 #endif

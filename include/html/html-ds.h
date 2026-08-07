@@ -6,9 +6,7 @@ HTML_PAGE *HTML_LoadPage(const char *path);
 
 void DrawHtmlPage(HTML_PAGE *page, 
             float x, float y, float depth, 
-            float tw, float th, 
-            float bw, float bh, 
-            float topAlignX, float topAlignY, 
-            float botAlignX, float botAlignY);
+            float w, float h, 
+            float alignX, float alignY);
 
 void HTML_ClosePage(HTML_PAGE *page);

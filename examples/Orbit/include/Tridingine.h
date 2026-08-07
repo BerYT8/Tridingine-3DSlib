@@ -14,3 +14,4 @@
 #include "ui/user_interface.h"
 #include "utils/random.h"
 #include "utils/save_system.h"
+#include "html/html-ds.h"

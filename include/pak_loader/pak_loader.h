@@ -5,7 +5,9 @@
 #define SEEK_SET 0
 #define SEEK_CUR 1
 #define SEEK_END 2
+
 typedef struct __PAK_FILE __PAK_FILE;
+
 typedef __PAK_FILE PAK_FILE;
 
 #ifdef __cplusplus
@@ -22,6 +24,8 @@ const char* PAKL_GetFileName(size_t index);
 
 PAK_FILE *PAKL_LoadFile(const char *file);
 size_t PAKL_GetFileSize(PAK_FILE* f);
+int PAKL_fgetc(PAK_FILE* f);
+int PAKL_ungetc(int c, PAK_FILE* f);
 long PAKL_ftell(PAK_FILE *f);
 void PAKL_rewind(PAK_FILE *f);
 size_t PAKL_fread(void *buff, size_t _size, size_t _n, PAK_FILE *f);
@@ -48,6 +52,9 @@ typedef FILE PAK_FILE;
 /* fopen/fclose wrapper */
 #define PAKL_LoadFile(file)          fopen(file, "rb")
 #define PAKL_CloseFile(f)            fclose(f)
+
+#define PAKL_fgetc(f)                fgetc(f)
+#define PAKL_ungetc(c, f)            ungetc(c, f)
 
 #define PAKL_ftell(f)                ftell(f)
 #define PAKL_rewind(f)               rewind(f)

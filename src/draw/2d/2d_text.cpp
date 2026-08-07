@@ -22,18 +22,10 @@
 #include <sstream>
 #include <pak_loader/pak_loader.h>
 #include "../../romfs_path.h"
+#include "../../console/drawConsole.h"
+#include "../../sys_fonts_gen_funcs.h"
 
-bool textsInitialized = false;
-
-typedef struct D2D_Font
-{
-#if defined(PLATFORM_PC)
-    TTF_Font *font;
-    void* buffer;
-#elif defined(PLATFORM_3DS)
-    C2D_Font font;
-#endif
-} D2D_Font;
+static bool textsInitialized = false;
 
 #ifndef MAX_CHARACTERS_FT
 #define MAX_CHARACTERS_FT 4096
@@ -44,7 +36,7 @@ u32 currentCharactersCount = 0;
 C2D_TextBuf globalBuffer = nullptr;
 #endif
 
-D2D_Font *D2D_OpenFont(const char* path)
+D2D_Font *D2D_OpenFont_Buf(const char* path, bool del)
 {
     D2D_Font *ft = new D2D_Font();
     if(!ft)
@@ -97,7 +89,9 @@ D2D_Font *D2D_OpenFont(const char* path)
     }
     ft->buffer = buffer;
 #elif defined(PLATFORM_3DS)
-    ft->font = C2D_FontLoad(getRomfsPath((std::string(path) + ".bcfnt").c_str()));
+    std::string full = getRomfsPath((std::string(path) + ".bcfnt").c_str());
+    printf("%s\n", full.c_str());
+    ft->font = C2D_FontLoad(full.c_str());
     
     if(!ft->font)
     {
@@ -105,12 +99,20 @@ D2D_Font *D2D_OpenFont(const char* path)
         return nullptr;
     }
 #endif
+    ft->deletable = del;
     return ft;
 }
 
-void D2D_CloseFont(D2D_Font *font)
+D2D_Font *D2D_OpenFont(const char* path)
+{
+    return D2D_OpenFont_Buf(path, true);
+}
+
+void D2D_CloseFont_Buf(D2D_Font *font, bool del)
 {
     if(!font)
+        return;
+    if(!font->deletable && del)
         return;
 #if defined(PLATFORM_PC)
     TTF_CloseFont(font->font);
@@ -119,6 +121,11 @@ void D2D_CloseFont(D2D_Font *font)
     C2D_FontFree(font->font);
 #endif
     delete font;
+}
+
+void D2D_CloseFont(D2D_Font *font)
+{
+    D2D_CloseFont_Buf(font, true);
 }
 
 D2D_Result D2D_DrawText(
@@ -147,12 +154,6 @@ D2D_Result D2D_DrawText(
 {
     if(!initialized || !textsInitialized)
         return D2D_NOT_INITIALIZED;
-
-    if(depth < -1 || depth > 1 || !font)
-        return D2D_INVALID_ARGUMENT;
-
-    if(!font->font)
-        return D2D_INVALID_ARGUMENT;
 
     if(!isValidScreen())
         return D2D_ERROR;
@@ -188,7 +189,10 @@ void ClearConsoleBuf(ScreenConsole console)
     if(console != TOP_CONSOLE && console != BOTTOM_CONSOLE)
         return;
 #if defined(PLATFORM_3DS)
-    C2D_TextBufClear(console == TOP_CONSOLE ? consoleTopBuffer : consoleBotBuffer);
+    auto buf = console == TOP_CONSOLE ? consoleTopBuffer : consoleBotBuffer;
+    if(buf)
+        C2D_TextBufClear(buf);
+    buf = nullptr;
 #endif
 }
 
@@ -223,14 +227,19 @@ D2D_Text D2D_DrawText_Buf(
     textResult.height = 0;
     textResult.width = 0;
 
+    if(depth < -1 || depth > 1 || !font)
+        return textResult;
+
+    if(!font->font)
+        return textResult;
+        
+
     std::string textString = text;
     if(textString.length() >= MAX_CHARACTERS_FT - currentCharactersCount)
     {
         textString.erase(MAX_CHARACTERS_FT - 3); // Dejas espacio para los 3 puntos
         textString += "...";
     }
-
-    currentCharactersCount += textString.length();
 
 #if defined(PLATFORM_PC)
     w *= windowScale;
@@ -245,7 +254,9 @@ D2D_Text D2D_DrawText_Buf(
     alignX = clampf(alignX, 0.f, 1.f);
     alignY = clampf(alignY, 0.f, 1.f);
 
-    if(fontSize < 0)
+    bool autoFontSize = (fontSize < 0.0f);
+
+    if(!autoFontSize && fontSize < 0)
         fontSize = 0;
     if(w < 0)
         w = 0;
@@ -263,7 +274,12 @@ D2D_Text D2D_DrawText_Buf(
 
 #if defined(PLATFORM_3DS)
     C2D_TextBuf textBuffer = console ? (consoleN == TOP_CONSOLE ? consoleTopBuffer : consoleBotBuffer) : globalBuffer;
+
+    if(!textBuffer)
+        return textResult;
 #endif
+
+    float currentFontSize = fontSize;
 
     auto MeasureText = [&](const std::string& str, float& tw, float& th)
     {
@@ -283,7 +299,7 @@ D2D_Text D2D_DrawText_Buf(
         C2D_TextParse(&txt, textBuffer, str.c_str());
         C2D_TextOptimize(&txt);
 
-        float scale = fontSize / INITIAL_FONT_SIZE;
+        float scale = currentFontSize / INITIAL_FONT_SIZE;
 
         if(scale <= 0.0f)
             scale = 1.0f;
@@ -340,125 +356,205 @@ D2D_Text D2D_DrawText_Buf(
     float totalHeight = 0;
     float drawY = 0;
 
-    if(wrap == WRAP_NONE)
+    auto CalculateTextSize = [&]() -> bool
     {
-        std::stringstream ss(textString);
-        std::string line;
+        #if defined(PLATFORM_3DS)
+        if(textBuffer)
+            C2D_TextBufClear(textBuffer);
+        #endif
+        lines.clear();
+        linesSize.clear();
+        totalHeight = 0.0f;
 
-        while(std::getline(ss, line, '\n'))
-            PushLine(line);
-    }
-    else if(wrap == WORD_WRAP_MODE)
-    {
-        std::stringstream ss(textString);
-
-        std::string paragraph;
-
-        while(std::getline(ss, paragraph, '\n'))
+        if(wrap == WRAP_NONE)
         {
-            std::istringstream iss(paragraph);
+            std::stringstream ss(textString);
+            std::string line;
 
-            std::string word;
-            std::string current;
+            while(std::getline(ss, line, '\n'))
+                PushLine(line);
+        }
+        else if(wrap == WORD_WRAP_MODE)
+        {
+            std::stringstream ss(textString);
 
-            while(iss >> word)
+            std::string paragraph;
+
+            while(std::getline(ss, paragraph, '\n'))
             {
-                std::string test =
-                    current.empty()
-                        ? word
-                        : current + " " + word;
+                std::istringstream iss(paragraph);
 
-                float tw;
-                float th;
+                std::string word;
+                std::string current;
 
-                MeasureText(
-                    test,
-                    tw,
-                    th
-                );
-
-                if(tw <= w || current.empty())
+                while(iss >> word)
                 {
-                    current = test;
+                    std::string test =
+                        current.empty()
+                            ? word
+                            : current + " " + word;
+
+                    float tw;
+                    float th;
+
+                    MeasureText(
+                        test,
+                        tw,
+                        th
+                    );
+
+                    if(tw <= w || current.empty())
+                    {
+                        current = test;
+                    }
+                    else
+                    {
+                        PushLine(current);
+                        current = word;
+                    }
                 }
-                else
+
+                PushLine(current);
+            }
+        }
+        else
+        {
+            std::stringstream ss(textString);
+
+            std::string paragraph;
+
+            while(std::getline(ss, paragraph, '\n'))
+            {
+                std::string current;
+
+                for(char ch : paragraph)
                 {
-                    PushLine(current);
-                    current = word;
+                    std::string test = current;
+                    test += ch;
+
+                    float tw;
+                    float th;
+
+                    MeasureText(
+                        test,
+                        tw,
+                        th
+                    );
+
+                    if(tw <= w || current.empty())
+                    {
+                        current = test;
+                    }
+                    else
+                    {
+                        PushLine(current);
+                        current.clear();
+                        current += ch;
+                    }
                 }
+
+                PushLine(current);
+            }
+        }
+
+        if(lines.empty())
+            return false;
+
+        return true;
+    };
+
+    if(autoFontSize)
+    {
+        float minSize = 0.1f;
+        float maxSize = std::min(w, h);   // o algún límite como 256
+        float bestSize = minSize;
+
+        while(maxSize - minSize > 0.5f)
+        {
+            totalHeight = 0;
+            float testSize = (minSize + maxSize) * 0.5f;
+            currentFontSize = testSize;
+
+#if defined(PLATFORM_PC)
+            TTF_SetFontSize(font->font, testSize * windowScale);
+            lineHeight = TTF_FontHeight(font->font);
+#else
+            lineHeight = testSize;
+#endif
+
+            // Vaciar líneas
+            lines.clear();
+            linesSize.clear();
+
+            if(!CalculateTextSize())
+            {
+                return textResult;
             }
 
-            PushLine(current);
+            float totalWidth = 0.0f;
+
+            for(size_t i=0;i<linesSize.size();i++)
+            {
+                totalWidth = std::max(totalWidth, linesSize[i].x);
+
+                totalHeight += linesSize[i].y;
+
+                if(i+1<linesSize.size())
+                    totalHeight += lineSpacing;
+            }
+
+            if(totalWidth <= w && totalHeight <= h)
+            {
+                bestSize = testSize;
+                minSize = testSize;
+            }
+            else
+            {
+                maxSize = testSize;
+            }
+        }
+
+        fontSize = bestSize;
+        currentFontSize = bestSize;
+
+    #if defined(PLATFORM_PC)
+        TTF_SetFontSize(font->font, fontSize * windowScale);
+        lineHeight = TTF_FontHeight(font->font);
+    #endif
+
+        if(!CalculateTextSize())
+        {
+            totalHeight = 0.0f;
+            lines.clear();
+            linesSize.clear();
+            return textResult;
         }
     }
     else
     {
-        std::stringstream ss(textString);
+        if(!CalculateTextSize())
+            return textResult;
 
-        std::string paragraph;
+        totalHeight = 0.0f;
 
-        while(std::getline(ss, paragraph, '\n'))
+        for(size_t i = 0; i < linesSize.size(); i++)
         {
-            std::string current;
+            totalHeight += linesSize[i].y;
 
-            for(char ch : paragraph)
-            {
-                std::string test = current;
-                test += ch;
-
-                float tw;
-                float th;
-
-                MeasureText(
-                    test,
-                    tw,
-                    th
-                );
-
-                if(tw <= w || current.empty())
-                {
-                    current = test;
-                }
-                else
-                {
-                    PushLine(current);
-                    current.clear();
-                    current += ch;
-                }
-            }
-
-            PushLine(current);
+            if(i + 1 < linesSize.size())
+                totalHeight += lineSpacing;
         }
-    }
 
-    if(lines.empty())
-        return textResult;
+        while(!lines.empty() && totalHeight > h)
+        {
+            totalHeight -= linesSize.back().y;
 
-    //--------------------------------------------
-    // Altura total
-    //--------------------------------------------
+            if(lines.size() > 1)
+                totalHeight -= lineSpacing;
 
-    for(size_t i = 0; i < linesSize.size(); i++)
-    {
-        totalHeight += linesSize[i].y;
-
-        if(i + 1 < linesSize.size())
-            totalHeight += lineSpacing;
-    }
-
-    //--------------------------------------------
-    // Recorte por altura
-    //--------------------------------------------
-
-    while(!lines.empty() && totalHeight > h)
-    {
-        totalHeight -= linesSize.back().y;
-
-        if(lines.size() > 1)
-            totalHeight -= lineSpacing;
-
-        lines.pop_back();
-        linesSize.pop_back();
+            lines.pop_back();
+            linesSize.pop_back();
+        }
     }
 
     textResult.height = totalHeight;
@@ -603,7 +699,7 @@ D2D_Text D2D_DrawText_Buf(
             {
                 char txt[2] = { ch, 0 };
 
-                SDL_Surface* glyph = TTF_RenderText_Solid(
+                SDL_Surface* glyph = TTF_RenderText_Blended(
                     font->font,
                     txt,
                     c
@@ -754,10 +850,10 @@ D2D_Text D2D_DrawText_Buf(
                 C2D_Text glyph;
 
                 C2D_TextFontParse(
-                    &txt,
+                    &glyph,
                     font->font,
-                    globalBuffer,
-                    lines[i].c_str()
+                    textBuffer,
+                    s
                 );
                 C2D_TextOptimize(&glyph);
 
@@ -792,6 +888,7 @@ D2D_Text D2D_DrawText_Buf(
 #endif
 
     textResult.drawed = true;
+    currentCharactersCount += textString.length();
 
     return textResult;
 }
@@ -810,6 +907,8 @@ void D2D_InitTexts()
     globalBuffer = C2D_TextBufNew(MAX_CHARACTERS_FT);
 #endif
     textsInitialized = true;
+    InitAllFonts();
+    DrawConsole::InitConsole();
 }
 
 void D2D_TextsBegin()
@@ -818,7 +917,8 @@ void D2D_TextsBegin()
         return;
     currentCharactersCount = 0;
 #if defined(PLATFORM_3DS)
-    C2D_TextBufClear(globalBuffer);
+    if(globalBuffer)
+        C2D_TextBufClear(globalBuffer);
 #endif
 }
 
@@ -832,9 +932,12 @@ void D2D_TextsDeleteAllBuffers()
     if(!textsInitialized)
         return;
 #if defined(PLATFORM_3DS)
-    C2D_TextBufDelete(globalBuffer);
+    if(globalBuffer)
+        C2D_TextBufDelete(globalBuffer);
     globalBuffer = nullptr;
 #endif
     currentCharactersCount = 0;
     textsInitialized = false;
+    DrawConsole::EndConsole();
+    CloseAllFonts();
 }

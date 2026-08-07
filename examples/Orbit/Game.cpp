@@ -39,6 +39,8 @@ bool Game::Init()
     SpawnPickup();
 
     font = D2D_OpenFont("engine/fonts/PopHappinessStd-EB");
+    if(!font)
+        printf("Not opened font.\n");
 
     bool l = loadSimple("gameData.sav", data);
     if(l)

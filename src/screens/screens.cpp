@@ -3,6 +3,8 @@
 
 #include <pak_loader/pak_loader.h>
 
+#include "../sys_fonts_gen_funcs.h"
+
 #include "../textures/textures_types.h"
 
 #include "screensLoadingStart.h"
@@ -288,7 +290,6 @@ bool S2S_ScreensInit()
     romfsInit();
     aptHook(&hookCookie, SystemCallback, NULL);
 #endif
-    DrawConsole::InitConsole();
 
     screensInitialized = true;
     running = true;
@@ -685,7 +686,6 @@ void S2S_ScreensExit()
 {
     if(!screensInitialized)
         return;
-    DrawConsole::EndConsole();
 #if defined(PLATFORM_PC)
     PAKL_ClosePak();
     if(!MDS_ACTIVATED)
