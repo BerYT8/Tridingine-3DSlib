@@ -183,6 +183,28 @@ No es necesario modificar el código fuente del juego para cambiar de plataforma
 
 ---
 
+# Ejecutar directamente en Nintendo 3DS mediante `3dslink`
+
+Los proyectos para Nintendo 3DS pueden enviarse directamente a una consola mediante **`3dslink`**, lo que permite compilar y probar el juego sin tener que copiar manualmente el archivo `.3dsx` a la tarjeta SD.
+
+Esta función está disponible al añadir `link` a la llamada de compilación para 3DS.
+
+## Requisitos
+
+Para utilizar esta función necesitas:
+
+- Tener **DevkitPro** instalado y `3dslink` disponible en el `PATH`.
+- Tener la **Nintendo 3DS conectada a la misma red Wi-Fi que el PC**.
+- Tener **Homebrew Launcher/Menu abierto en la 3DS**.
+- Dentro de Homebrew Launcher/Menu, pulsar **`Y`** para activar el **Netloader**.
+- Conocer la dirección IP de la 3DS si se quiere utilizar una conexión directa.
+
+Cuando el Netloader está activo, la 3DS queda esperando una conexión desde el PC.
+
+> **Importante:** la 3DS debe estar conectada a la misma red local que el PC. No es necesario realizar *port forwarding* ni abrir la consola a Internet.
+
+---
+
 # game.json
 
 El archivo `game.json` de tu proyecto contiene la información utilizada por las herramientas para empaquetar el juego (especialmente el archivo `.3dsx` de la consola).

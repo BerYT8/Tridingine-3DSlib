@@ -24,7 +24,7 @@ if [ "$1" == "3ds" ]; then
     ./tools/SoundMaker3DS --all -i "$CONTENT_DIR" -o "$ROMFS_DIR_3DS"
     ./tools/LocalizationMaker --all -i "$CONTENT_DIR" -o "$ROMFS_DIR_3DS"
 
-    ./tools/build_3ds.sh
+    ./tools/build_3ds.sh "${@:2}"
     exit 0
 fi
 
