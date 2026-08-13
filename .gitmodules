@@ -1,0 +1,21 @@
+[submodule "external/sdl2"]
+	path = external/sdl2
+	url = https://github.com/libsdl-org/SDL.git
+[submodule "external/sdl2-ttf"]
+	path = external/sdl2-ttf
+	url = https://github.com/libsdl-org/SDL_ttf.git
+[submodule "external/sdl2-mixer"]
+	path = external/sdl2-mixer
+	url = https://github.com/libsdl-org/SDL_mixer.git
+[submodule "external/sdl2-image"]
+	path = external/sdl2-image
+	url = https://github.com/libsdl-org/SDL_image.git
+[submodule "tools/3dstool"]
+	path = tools/3dstool
+	url = https://github.com/devkitPro/3dstools.git
+[submodule "tools/bannertool"]
+	path = tools/bannertool
+	url = https://github.com/diasurgical/bannertool.git
+[submodule "tools/Project_CTR"]
+	path = tools/Project_CTR
+	url = https://github.com/3DSGuy/Project_CTR.git

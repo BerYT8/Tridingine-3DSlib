@@ -92,42 +92,90 @@ file(GLOB_RECURSE IMGUI_SRC "lib_include/imgui/*.cpp")
 # 🖥️ PC BUILD CONFIGURATION
 # =====================================================
 if(NOT BUILD_3DS)
-    # Buscar OpenGL y GLU nativos del sistema operativo (Arch Linux)
-    
-    # 1. Buscar todas las dependencias requeridas del sistema
+
     find_package(OpenGL REQUIRED)
     find_package(GLEW REQUIRED)
-    find_package(SDL2 REQUIRED)
-    find_package(SDL2_mixer REQUIRED)
 
-    # Nota: SDL2_image y SDL2_ttf a veces requieren buscarse mediante pkg-config o sus nombres exactos
-    find_package(SDL2_image REQUIRED)
-    find_package(SDL2_ttf REQUIRED)
+    # -------------------------------------------------
+    # SDL2 - STATIC
+    # -------------------------------------------------
+    set(SDL_SHARED OFF CACHE BOOL "Build SDL2 shared library" FORCE)
+    set(SDL_STATIC ON CACHE BOOL "Build SDL2 static library" FORCE)
+    set(SDL_STATIC_PIC ON CACHE BOOL "" FORCE)
 
+    add_subdirectory(
+        external/sdl2
+        EXCLUDE_FROM_ALL
+    )
+
+    # -------------------------------------------------
+    # SDL2_mixer - STATIC
+    # -------------------------------------------------
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
+
+    add_subdirectory(
+        external/sdl2-mixer
+        EXCLUDE_FROM_ALL
+    )
+
+    # -------------------------------------------------
+    # SDL2_image - STATIC
+    # -------------------------------------------------
+    set(SDL2IMAGE_BUILD_SHARED_LIBS OFF CACHE BOOL
+        "Build SDL2_image shared library" FORCE)
+
+    set(SDL2IMAGE_BUILD_STATIC_LIBS ON CACHE BOOL
+        "Build SDL2_image static library" FORCE)
+
+    add_subdirectory(
+        external/sdl2-image
+        EXCLUDE_FROM_ALL
+    )
+
+    # -------------------------------------------------
+    # SDL2_ttf - STATIC
+    # -------------------------------------------------
+    set(SDL2TTF_BUILD_SHARED_LIBS OFF CACHE BOOL
+        "Build SDL2_ttf shared library" FORCE)
+
+    set(SDL2TTF_BUILD_STATIC_LIBS ON CACHE BOOL
+        "Build SDL2_ttf static library" FORCE)
+
+    add_subdirectory(
+        external/sdl2-ttf
+        EXCLUDE_FROM_ALL
+    )
+
+    # -------------------------------------------------
+    # Main library
+    # -------------------------------------------------
     add_library(${PROJECT_NAME} SHARED
         ${SOURCES}
     )
 
-    target_compile_definitions(${PROJECT_NAME} PRIVATE PLATFORM_PC)
-
-    # CORRECCIÓN DE RUTAS: Usamos los targets oficiales de CMake
-    target_include_directories(${PROJECT_NAME} PRIVATE 
-        include
-        ${OPENGL_INCLUDE_DIR}
-        ${GLEW_INCLUDE_DIRS}
+    target_compile_definitions(${PROJECT_NAME}
+        PRIVATE
+            PLATFORM_PC
     )
 
-    # ENLACE DE LIBRERÍAS: Enlazar los targets nativos de Linux directamente
+    target_include_directories(${PROJECT_NAME}
+        PRIVATE
+            include
+            ${OPENGL_INCLUDE_DIR}
+    )
+
     target_link_libraries(${PROJECT_NAME}
         PRIVATE
-            GLEW::GLEW            # Luego sus dependencias de OpenGL/Glew
+            GLEW::GLEW
             OpenGL::GLU
             OpenGL::GL
-            SDL2::SDL2            # Luego SDL2 y sus extensionesç
-            SDL2_mixer::SDL2_mixer
-            SDL2_image::SDL2_image
-            SDL2_ttf::SDL2_ttf
+
+            SDL2::SDL2-static
+            SDL2_mixer::SDL2_mixer-static
+            SDL2_image::SDL2_image-static
+            SDL2_ttf::SDL2_ttf-static
     )
+
 
 # =====================================================
 # 🎮 3DS BUILD (OFICIAL)
