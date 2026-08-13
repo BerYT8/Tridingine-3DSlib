@@ -104,8 +104,6 @@ cp "$ROOT/tools/3dstool/bin/Release/3dstool" "$LIB_DIR/tools/" 2>/dev/null || tr
 
 # Copia de seguridad del PAK para el entorno Linux modificado
 mkdir -p "$ROOT/tools/ProjectMaker/build"
-cp "$ROOT/tools/ProjectMaker/pak.pak" "$ROOT/tools/ProjectMaker/build/template.pak" 2>/dev/null || true
-cp "$ROOT/tools/ProjectMaker/pak.pak" "$ROOT/tools/ProjectMaker/template.pak" 2>/dev/null || true
 
 # =========================
 # ProjectMaker
@@ -120,6 +118,5 @@ cmake --build "$ROOT/tools/ProjectMaker/build"
 
 # Corregido el cierre del comando de copia colgante
 cp "$ROOT/tools/ProjectMaker/build/ProjectMaker" "$BUILD_DIR/ProjectMaker" 2>/dev/null || true
-cp "$ROOT/tools/ProjectMaker/build/template.pak" "$BUILD_DIR/template.pak" 2>/dev/null || true
 
 echo "=== DONE ==="

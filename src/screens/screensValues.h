@@ -8,8 +8,8 @@
 extern "C" {
 #endif
 
-// Si este .c define ALLOCATE_SHMEM, se crean las variables.
-// Si no lo define, se tratan como extern automáticos.
+// If this .c defines ALLOCATE_SHMEM, the variables are created.
+// If it does not, they are treated as automatic externs.
 #ifdef ALLOCATE_SHMEM
   #define SHMEM_EXT
   #define SHMEM_INIT(x) = x
@@ -50,8 +50,8 @@ SHMEM_EXT float windowScale SHMEM_INIT(1.0f);
 void setDrawRegion(float x, float y, float w, float h);
 void stopDrawRegion();
 
-// Convertimos la función en 'static inline' para que cada .c 
-// tenga su copia de la lógica sin pelearse en el enlazador.
+// Convert the function to 'static inline' so each .c
+// has its own copy of the logic without linker conflicts.
 static inline bool isValidScreen(void)
 {
     if(currScreen != TOP && currScreen != BOTTOM)

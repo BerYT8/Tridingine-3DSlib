@@ -16,12 +16,12 @@
 void S2S_WaitTime(float seconds)
 {
 #if defined(PLATFORM_PC)
-    // 1 segundo = 1000 milisegundos (Convertimos float a entero Uint32)
+    // 1 second = 1000 milliseconds (convert float to Uint32)
     Uint32 miliseconds = (Uint32)(seconds * 1000.0f);
     SDL_Delay(miliseconds);
 
 #elif defined(PLATFORM_3DS)
-    // 1 segundo = 1,000,000,000 nanosegundos (Usamos un entero de 64 bits)
+    // 1 second = 1,000,000,000 nanoseconds (use a 64-bit integer)
     s64 nanoseconds = (s64)(seconds * 1000000000.0f);
     svcSleepThread(nanoseconds); 
 #endif
@@ -160,7 +160,7 @@ bool S2S_ScreensInit()
                 continue;
             }
             
-            // 1. Leer tamaño guardado (Casteo corregido a int32_t*)
+            // 1. Read saved size (cast corrected to int32_t*)
             if(strcmp(list->list[i].name, "window_width") == 0) {
                 if(list->list[i].type == SAVE_TYPE_INT32){
                     saved_w = *(int32_t*)(list->list[i].data);
@@ -176,18 +176,18 @@ bool S2S_ScreensInit()
                 continue;
             }
 
-            // 2. Leer posición guardada (Casteo corregido a int32_t* y bandera corregida a has_pos)
+            // 2. Read saved position (cast corrected to int32_t* and flag fixed to has_pos)
             if(strcmp(list->list[i].name, "window_x") == 0) {
                 if(list->list[i].type == SAVE_TYPE_INT32){
                     saved_x = *(int32_t*)(list->list[i].data);
-                    has_pos = true; // <- CORREGIDO (Antes era has_size)
+                    has_pos = true; // <- FIXED (Previously was has_size)
                 }
                 continue;
             }
             if(strcmp(list->list[i].name, "window_y") == 0) {
                 if(list->list[i].type == SAVE_TYPE_INT32){
                     saved_y = *(int32_t*)(list->list[i].data);
-                    has_pos = true; // <- CORREGIDO (Antes era has_size)
+                    has_pos = true; // <- FIXED (Previously was has_size)
                 }
                 continue;
             }

@@ -32,8 +32,6 @@ int app_main(int argc, char* argv[])
     }
     dt_init();
 
-    HTML_PAGE *html = HTML_LoadPage("game/html.html");
-
     while (S2S_ScreensRunning())
     {
         dt_update();
@@ -56,16 +54,12 @@ int app_main(int argc, char* argv[])
 
         game.DrawTop();
 
-        DrawHtmlPage(html, 0, 0, 1.0f, S2S_GetScreenSize(TOP).x, S2S_GetScreenSize(TOP).y, 0, 0);
-
         S2S_SetCurrentScreen(BOTTOM);
 
         game.DrawBot();
 
         S2S_EndFrame();
     }
-
-    HTML_ClosePage(html);
 
     game.Exit();
 

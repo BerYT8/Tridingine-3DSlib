@@ -1,54 +1,57 @@
-# Instalación
+# Installation
 
-En este documento se explica cómo compilar **Tridingine-3DSlib**, generar el kit de desarrollo y crear proyectos listos para usar.
-
----
-
-# Requisitos
-
-Actualmente, **Tridingine-3DSlib** está diseñada principalmente para ejecutarse de forma nativa según tu sistema operativo. El flujo de compilación soporta:
-
-- **Windows**: Ejecución nativa mediante archivos `.bat`.
-- **Linux / macOS**: Ejecución nativa mediante archivos `.sh`.
-
-utilizando la misma API y la misma estructura de proyecto.
+This document explains how to build **Tridingine-3DSlib**, generate the development kit, and create ready-to-use projects.
 
 ---
 
-# Software necesario
+# Requirements
 
-Antes de compilar la biblioteca es necesario instalar las siguientes herramientas.
+Currently, **Tridingine-3DSlib** is primarily designed to run natively according to your operating system. The build workflow supports:
+
+- **Windows**: Native execution using `.bat` files.
+- **Linux / macOS**: Native execution using `.sh` files.
+
+Both platforms use the same API and project structure.
+
+---
+
+# Required Software
+
+Before building the library, you need to install the following tools.
 
 ## DevkitPro
 
-Instala **DevkitPro** utilizando el instalador oficial.
+Install **DevkitPro** using the official installer.
 
-La ruta de instalación predeterminada varía según el sistema:
+The default installation path varies depending on the operating system:
+
 - **Windows**: `C:\devkitPro`
 - **Linux / macOS**: `/opt/devkitpro`
 
-Esta dependencia es necesaria para poder compilar proyectos destinados a **Nintendo 3DS**.
+This dependency is required to build projects targeting **Nintendo 3DS**.
 
 ---
 
 ## CMake
 
-Instala la versión más reciente de **CMake** y asegúrate de que esté añadida al PATH de tu sistema para poder ejecutarla desde la línea de comandos.
+Install the latest version of **CMake** and make sure it is added to your system's PATH so that it can be executed from the command line.
 
 ---
 
-# Compilar Tridingine-3DSlib (Paso 1)
+# Building Tridingine-3DSlib (Step 1)
 
-El proceso de construcción consta de dos fases. En esta primera fase se compila **únicamente la librería principal** del motor para la plataforma elegida.
+The build process consists of two phases. During this first phase, **only the engine's main library** is compiled for the selected platform.
 
-Desde la carpeta raíz del repositorio, ejecuta el comando correspondiente a tu sistema operativo:
+From the repository root directory, run the command corresponding to your operating system:
 
-### En Windows:
+### Windows
+
 ```bat
 .\build.bat
 ```
 
-### En Linux / macOS:
+### Linux / macOS
+
 ```bash
 chmod +x ./build.sh
 ./build.sh
@@ -56,18 +59,20 @@ chmod +x ./build.sh
 
 ---
 
-# Generar el Kit de Desarrollo (Paso 2)
+# Generating the Development Kit (Step 2)
 
-Una vez compilada la librería principal en el Paso 1, **es obligatorio** ejecutar el script de post-construcción. Este script se encarga de compilar la herramienta `ProjectMaker`, todas las utilidades secundarias (`PakMaker`, `SoundMaker3DS`, etc.) y empaquetar la estructura final de la carpeta `Lib`.
+Once the main library has been compiled in Step 1, **you must** run the post-build script. This script compiles the `ProjectMaker` tool, all secondary utilities (`PakMaker`, `SoundMaker3DS`, etc.), and packages the final `Lib` folder structure.
 
-Desde la carpeta raíz del repositorio, ejecuta:
+From the repository root directory, run:
 
-### En Windows:
+### Windows
+
 ```bat
 .\MakeProjectMaker.bat
 ```
 
-### En Linux / macOS:
+### Linux / macOS
+
 ```bash
 chmod +x ./MakeProjectMaker.sh
 ./MakeProjectMaker.sh
@@ -75,24 +80,27 @@ chmod +x ./MakeProjectMaker.sh
 
 ---
 
-# Carpetas generadas
+# Generated Folders
 
-Al finalizar ambos scripts, encontrarás la siguiente estructura en la raíz:
+After both scripts have finished, you will find the following structure in the repository root:
 
 ## build/
-Contiene los archivos temporales de configuración y objetos generados durante la compilación de PC.
+
+Contains temporary configuration files and objects generated during the PC build process.
 
 ## ProjectMaker.exe / ProjectMaker
-El ejecutable de la herramienta de creación de proyectos se copiará directamente en la raíz de tu repositorio tras ejecutar el script del Paso 2.
+
+The project creation tool executable is copied directly to the repository root after running the Step 2 script.
 
 ## build/Lib/
-Este es tu **Kit de Desarrollo** empaquetado y listo para usar. Contiene todo lo necesario para crear juegos con Tridingine-3DSlib.
+
+This is your **Development Kit**, packaged and ready to use. It contains everything required to create games with Tridingine-3DSlib.
 
 ---
 
-# Estructura del kit de desarrollo (build/Lib/)
+# Development Kit Structure (build/Lib/)
 
-Después de completar con éxito el Paso 2 (`MakeProjectMaker`), la carpeta `build/Lib/` tendrá la siguiente estructura:
+After successfully completing Step 2 (`MakeProjectMaker`), the `build/Lib/` folder will have the following structure:
 
 ```text
 build/Lib/
@@ -112,104 +120,117 @@ build/Lib/
 ---
 
 ## include/
-Archivos de cabecera públicos (`.h` / `.hpp`) de la biblioteca.
+
+Public header files (`.h` / `.hpp`) for the library.
 
 ---
 
 ## lib/
-Bibliotecas estáticas compiladas necesarias para enlazar el proyecto (`.lib` para PC, `.a` para 3DS).
+
+Compiled static libraries required for linking the project (`.lib` for PC, `.a` for 3DS).
 
 ---
 
 ## templates/
-Plantillas internas utilizadas por el entorno para la creación de proyectos.
+
+Internal templates used by the environment for project creation.
 
 ---
 
 ## examples/
-Ejemplos de uso de la API de Tridingine.
+
+Examples demonstrating how to use the Tridingine API.
 
 ---
 
 ## tools/
-Herramientas internas compiladas (como `PakMaker` o `SoundMaker3DS`) utilizadas por el ecosistema del motor.
+
+Compiled internal tools, such as `PakMaker` and `SoundMaker3DS`, used by the engine ecosystem.
 
 ---
 
 ## content/
-En esta carpeta deben colocarse todos los recursos base del juego (Texturas, Audio, Fuentes, Shaders, etc.).
+
+This folder should contain all the game's source assets (textures, audio, fonts, shaders, etc.).
 
 ---
 
 ## romfs/
-Contiene los recursos procesados y optimizados listos para ser consumidos por el ejecutable de cada plataforma (**pc** y **3ds**).
+
+Contains the processed and optimized assets ready to be consumed by the executable for each platform (**PC** and **3DS**).
 
 ---
 
-# Herramienta ProjectMaker
+# ProjectMaker Tool
 
-`ProjectMaker` es la utilidad incluida en la raíz para crear proyectos vacíos basados en el kit de desarrollo generado en `build/Lib/`.
+`ProjectMaker` is the utility included in the repository root for creating empty projects based on the development kit generated in `build/Lib/`.
 
-### Uso
+### Usage
 
-### En Windows:
+### Windows
+
 ```bat
-ProjectMaker.exe -o [carpeta_de_salida]
+ProjectMaker.exe -o [output_folder]
 ```
 
-### En Linux / macOS:
+### Linux / macOS
+
 ```bash
-./ProjectMaker -o [carpeta_de_salida]
+./ProjectMaker -o [output_folder]
 ```
 
-### Resultado
-El programa generará un proyecto completamente limpio en el destino especificado con la estructura necesaria para comenzar a desarrollar directamente, incluyendo configuraciones de CMake base y scripts locales de construcción.
+### Result
+
+The program will generate a completely clean project in the specified destination, including the required structure, base CMake configuration, and local build scripts, allowing you to start development immediately.
 
 ---
 
-# Compilar un proyecto generado
+# Building a Generated Project
 
-Los proyectos creados con `ProjectMaker` son independientes y contienen sus propios scripts automáticos. Para compilar tu nuevo juego:
+Projects created with `ProjectMaker` are self-contained and include their own automated scripts. To build your new game:
 
-### Para la versión de PC:
-- En Windows: `.\build.bat`
-- En Linux: `./build.sh`
+### PC version
 
-### Para la versión de Nintendo 3DS:
-- En Windows: `.\build.bat 3ds`
-- En Linux: `./build.sh build_3ds`
+- Windows: `.\build.bat`
+- Linux: `./build.sh`
 
-No es necesario modificar el código fuente del juego para cambiar de plataforma.
+### Nintendo 3DS version
+
+- Windows: `.\build.bat 3ds`
+- Linux: `./build.sh build_3ds`
+
+There is no need to modify the game's source code when switching platforms.
 
 ---
 
-# Ejecutar directamente en Nintendo 3DS mediante `3dslink`
+# Running Directly on Nintendo 3DS Using `3dslink`
 
-Los proyectos para Nintendo 3DS pueden enviarse directamente a una consola mediante **`3dslink`**, lo que permite compilar y probar el juego sin tener que copiar manualmente el archivo `.3dsx` a la tarjeta SD.
+Nintendo 3DS projects can be sent directly to a console using **`3dslink`**, allowing you to build and test the game without manually copying the `.3dsx` file to the SD card.
 
-Esta función está disponible al añadir `link` a la llamada de compilación para 3DS.
+This feature is available by adding `link` to the 3DS build command.
 
-## Requisitos
+## Requirements
 
-Para utilizar esta función necesitas:
+To use this feature, you need:
 
-- Tener **DevkitPro** instalado y `3dslink` disponible en el `PATH`.
-- Tener la **Nintendo 3DS conectada a la misma red Wi-Fi que el PC**.
-- Tener **Homebrew Launcher/Menu abierto en la 3DS**.
-- Dentro de Homebrew Launcher/Menu, pulsar **`Y`** para activar el **Netloader**.
-- Conocer la dirección IP de la 3DS si se quiere utilizar una conexión directa.
+- **DevkitPro** installed with `3dslink` available in your PATH.
+- The **Nintendo 3DS connected to the same Wi-Fi network as the PC**.
+- **Homebrew Launcher/Menu open on the 3DS**.
+- Inside Homebrew Launcher/Menu, press **`Y`** to enable the **Netloader**.
+- Know the 3DS IP address if you want to use a direct connection.
 
-Cuando el Netloader está activo, la 3DS queda esperando una conexión desde el PC.
+When the Netloader is active, the 3DS waits for a connection from the PC.
 
-> **Importante:** la 3DS debe estar conectada a la misma red local que el PC. No es necesario realizar *port forwarding* ni abrir la consola a Internet.
+> **Important:** The 3DS must be connected to the same local network as the PC. No port forwarding or Internet access to the console is required.
 
 ---
 
 # game.json
 
-El archivo `game.json` de tu proyecto contiene la información utilizada por las herramientas para empaquetar el juego (especialmente el archivo `.3dsx` de la consola).
+The `game.json` file in your project contains the information used by the packaging tools to package the game, especially the `.3dsx` file for the console.
 
-Ejemplo:
+Example:
+
 ```json
 {
     "file": "name_of_file",
@@ -221,8 +242,8 @@ Ejemplo:
 
 ---
 
-# Siguiente paso
+# Next Step
 
-Una vez generado tu proyecto con `ProjectMaker`, continúa con:
+Once your project has been generated with `ProjectMaker`, continue with:
 
-**[02 - Primer proyecto](02-Getting-Started.md)** para crear tu primer juego utilizando **Tridingine-3DSlib**.
+**[02 - Getting Started](02-Getting-Started.md)** to create your first game using **Tridingine-3DSlib**.

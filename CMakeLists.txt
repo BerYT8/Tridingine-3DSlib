@@ -54,10 +54,6 @@ set(SOURCES
     src/html/html.cpp
     src/html/html-ds.cpp
 
-    src/ui/definitions.h
-    src/ui/canvas/canvas.c
-    src/ui/user_interface.c
-
     src/save_system/types.h
     src/save_system/types.c
     src/save_system/saveSys.c

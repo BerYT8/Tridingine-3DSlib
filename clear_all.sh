@@ -9,6 +9,13 @@ DIRECTORIES=(
   "tools/PakMaker/build"
   "tools/ProjectMaker/build"
   "tools/SoundMaker3DS/build"
+  "tools/3dstool/build"
+  "tools/3dstool/bin"
+  "tools/bannertool/build"
+  "tools/bannertool/output"
+  "tools/Project_CTR/ctrtool/build"
+  "tools/Project_CTR/makerom/build"
+  "tools/Project_CTR/makerom/bin"
 )
 
 echo "Limpiando directorios de construcción..."

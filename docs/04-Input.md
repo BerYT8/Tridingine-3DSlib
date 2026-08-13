@@ -1,31 +1,31 @@
-# Entrada (Input)
+# Input
 
-El módulo **Input** proporciona una capa de abstracción para la entrada del usuario, permitiendo utilizar los mismos botones independientemente de la plataforma.
+The **Input** module provides an abstraction layer for user input, allowing the same buttons to be used regardless of the platform.
 
-Actualmente soporta:
+Currently supported:
 
 - Nintendo 3DS
 - PC (SDL)
 
-La traducción entre los botones físicos y los botones del motor se realiza automáticamente.
+The translation between physical buttons and the engine's buttons is handled automatically.
 
 ---
 
-# Inicialización
+# Initialization
 
-Antes de utilizar el sistema de entrada:
+Before using the input system:
 
 ```c
 input_init();
 ```
 
-Cada frame debe actualizarse el estado de la entrada:
+The input state must be updated every frame:
 
 ```c
 input_read();
 ```
 
-Al finalizar la aplicación:
+When the application exits:
 
 ```c
 input_exit();
@@ -33,11 +33,11 @@ input_exit();
 
 ---
 
-# Botones virtuales
+# Virtual Buttons
 
-El motor utiliza un conjunto de botones abstractos comunes entre todas las plataformas.
+The engine uses a set of abstract buttons shared across all platforms.
 
-## Botones principales
+## Main Buttons
 
 ```c
 INPUT_KEY_A
@@ -48,7 +48,7 @@ INPUT_KEY_Y
 
 ---
 
-## Gatillos
+## Triggers
 
 ```c
 INPUT_KEY_L
@@ -60,7 +60,7 @@ INPUT_KEY_ZR
 
 ---
 
-## Sistema
+## System
 
 ```c
 INPUT_KEY_START
@@ -69,7 +69,7 @@ INPUT_KEY_SELECT
 
 ---
 
-## Cruceta (D-Pad)
+## D-Pad
 
 ```c
 INPUT_KEY_DUP
@@ -102,7 +102,7 @@ INPUT_KEY_CSTICK_RIGHT
 
 ---
 
-## Pantalla táctil
+## Touchscreen
 
 ```c
 INPUT_KEY_TOUCH
@@ -110,15 +110,15 @@ INPUT_KEY_TOUCH
 
 ---
 
-## Especiales
+## Special
 
-Detectar cualquier botón:
+Detect any button:
 
 ```c
 INPUT_KEY_ANY
 ```
 
-Sin botón válido:
+No valid button:
 
 ```c
 INPUT_KEY_NONE
@@ -126,11 +126,11 @@ INPUT_KEY_NONE
 
 ---
 
-# Consultar botones
+# Querying Buttons
 
-## Pulsado este frame
+## Pressed This Frame
 
-Devuelve `true` únicamente durante el frame en el que el botón fue presionado.
+Returns `true` only during the frame in which the button was pressed.
 
 ```c
 if (input_isKeyPressed(INPUT_KEY_A))
@@ -141,7 +141,7 @@ if (input_isKeyPressed(INPUT_KEY_A))
 
 ---
 
-## Liberado este frame
+## Released This Frame
 
 ```c
 if (input_isKeyReleased(INPUT_KEY_A))
@@ -152,9 +152,9 @@ if (input_isKeyReleased(INPUT_KEY_A))
 
 ---
 
-## Mantenido
+## Held Down
 
-Devuelve `true` mientras el botón permanezca presionado.
+Returns `true` while the button remains pressed.
 
 ```c
 if (input_isKeyDown(INPUT_KEY_A))
@@ -165,7 +165,7 @@ if (input_isKeyDown(INPUT_KEY_A))
 
 ---
 
-## No pulsado
+## Not Pressed
 
 ```c
 if (input_isKeyUp(INPUT_KEY_A))
@@ -176,9 +176,9 @@ if (input_isKeyUp(INPUT_KEY_A))
 
 ---
 
-# Reasignar botones
+# Button Remapping
 
-Es posible asociar un botón físico de la plataforma a un botón virtual del motor.
+A platform's physical button can be associated with one of the engine's virtual buttons.
 
 ```c
 input_bindKey(
@@ -188,49 +188,49 @@ input_bindKey(
 );
 ```
 
-Esto permite personalizar los controles sin modificar el resto del código del juego.
+This allows you to customize the controls without modifying the rest of the game's code.
 
 ---
 
-# Entrada táctil
+# Touch Input
 
-Obtener la posición actual del toque:
+Get the current touch position:
 
 ```c
 Vec2 touch = input_getTouch();
 ```
 
-El valor devuelto corresponde a las coordenadas de la pantalla táctil de la plataforma.
+The returned value corresponds to the coordinates of the platform's touchscreen.
 
 ---
 
-# Botones del ratón (PC)
+# Mouse Buttons (PC)
 
-En la versión para PC también existen constantes para los botones del ratón.
+The PC version also provides constants for mouse buttons.
 
-Botón izquierdo:
+Left button:
 
 ```c
 PC_MOUSE_LEFT_BUTTON
 ```
 
-Botón derecho:
+Right button:
 
 ```c
 PC_MOUSE_RIGHT_BUTTON
 ```
 
-Ambos botones:
+Both buttons:
 
 ```c
 PC_MOUSE_BOTH_BUTTONS
 ```
 
-Estas constantes solo están disponibles cuando se compila para la plataforma PC.
+These constants are only available when compiling for the PC platform.
 
 ---
 
-# Flujo típico de uso
+# Typical Usage
 
 ```c
 input_init();
@@ -241,12 +241,12 @@ while (S2S_ScreensRunning())
 
     if (input_isKeyPressed(INPUT_KEY_START))
     {
-        // Abrir menú
+        // Open menu
     }
 
     if (input_isKeyDown(INPUT_KEY_A))
     {
-        // Acción continua
+        // Continuous action
     }
 }
 
@@ -255,13 +255,13 @@ input_exit();
 
 ---
 
-# Próximo paso
+# Next Step
 
-Ya puedes recibir entrada del usuario e interactuar con el juego.
+You can now receive user input and interact with the game.
 
-Continúa con [**05 - Audio**](05-Audio.md), donde aprenderás a:
+Continue with [**05 - Audio**](05-Audio.md), where you will learn how to:
 
-- Inicializar el sistema de audio.
-- Reproducir efectos de sonido.
-- Reproducir música.
-- Controlar el volumen y la reproducción.
+- Initialize the audio system.
+- Play sound effects.
+- Play music.
+- Control volume and playback.

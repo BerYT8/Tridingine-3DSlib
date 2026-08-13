@@ -1,12 +1,12 @@
-# Primer proyecto
+# First Project
 
-En este documento aprenderás a crear y ejecutar tu primer proyecto con **Tridingine-3DSlib**.
+In this document, you will learn how to create and run your first project with **Tridingine-3DSlib**.
 
 ---
 
-# Estructura del proyecto
+# Project Structure
 
-Después de generar el kit de desarrollo, encontrarás una estructura similar a la siguiente:
+After generating the development kit, you will find a structure similar to the following:
 
 ```text
 Lib/
@@ -22,26 +22,27 @@ Lib/
 └── main.cpp
 ```
 
-El archivo principal del proyecto es `main.cpp`, donde comenzará la ejecución del juego.
+The main project file is `main.cpp`, where the game execution begins.
 
 ---
 
-# Incluyendo la biblioteca
+# Including the Library
 
-Para utilizar la API simplemente incluye:
+To use the API, simply include:
 
 ```cpp
 #include <Tridingine.h>
 ```
 
-Toda la API está diseñada para utilizarse desde **C**, aunque también puede utilizarse sin problemas desde **C++**.
-> Hay alguna wrap API específica para c++.
+The entire API is designed to be used from **C**, although it can also be used without problems from **C++**.
+
+> There is also a specific C++ wrapper API.
 
 ---
 
-# Estructura mínima de un juego
+# Minimum Game Structure
 
-Todo proyecto debe tener, como mínimo, la siguiente estructura:
+Every project must have, at minimum, the following structure:
 
 ```cpp
 #include <Tridingine.h>
@@ -49,23 +50,24 @@ Todo proyecto debe tener, como mínimo, la siguiente estructura:
 int main(int argc, char *argv[])
 {
     S2S_ScreensInit();
+
 #if defined(GAME_TITLE)
     const char* title = GAME_TITLE;
     SetWindowTitle(title);
 #endif
 
-    // Inicializaciones
+    // Initialization
 
     while (S2S_ScreensRunning())
     {
         S2S_BeginFrame();
 
-        // Lógica
+        // Game logic
 
         S2S_EndFrame();
     }
 
-    // Salidas
+    // Cleanup
 
     S2S_ScreensExit();
 
@@ -73,91 +75,90 @@ int main(int argc, char *argv[])
 }
 ```
 
-Sin esta estructura no existirá una ventana válida ni un contexto de ejecución correctamente inicializado.
+Without this structure, there will be no valid window or properly initialized execution context.
 
 ---
 
-# Explicación
+# Explanation
 
 ## S2S_ScreensInit()
 
-Inicializa el sistema de pantallas.
+Initializes the screen system.
 
-Esta función prepara la aplicación para comenzar la ejecución del juego.
+This function prepares the application to begin running the game.
 
-Debe llamarse una única vez al iniciar el programa.
+It should be called only once when the program starts.
 
 ---
 
 ## S2S_ScreensRunning()
 
-Devuelve si la aplicación debe continuar ejecutándose.
+Returns whether the application should continue running.
 
-Mientras esta función devuelva `true`, el juego seguirá funcionando.
+As long as this function returns `true`, the game will continue running.
 
-Cuando el usuario cierre la ventana o la aplicación finalice, devolverá `false`.
+When the user closes the window or the application terminates, it will return `false`.
 
 ---
 
 ## S2S_BeginFrame()
 
-Marca el comienzo de un nuevo frame.
+Marks the beginning of a new frame.
 
-Toda la lógica del juego y las operaciones de dibujo deben realizarse entre `S2S_BeginFrame()` y `S2S_EndFrame()`.
+All game logic and drawing operations should be performed between `S2S_BeginFrame()` and `S2S_EndFrame()`.
 
 ---
 
 ## S2S_EndFrame()
 
-Finaliza el frame actual.
+Ends the current frame.
 
-Esta función presenta la imagen en pantalla y prepara el siguiente frame.
+This function presents the image on screen and prepares the next frame.
 
 ---
 
 ## S2S_ScreensExit()
 
-Libera todos los recursos utilizados por el sistema de pantallas.
+Releases all resources used by the screen system.
 
-Debe ejecutarse antes de terminar el programa.
+It should be called before the program terminates.
 
 ---
 
 ## SetWindowTitle()
 
-Únicamente como función de pc para asignar el nombre de la ventana con el que hay en game.json.
+This is a **PC-only function** used to set the window title using the title defined in `game.json`.
 
 ---
 
+# Building the Project
 
-# Compilar el proyecto
-
-Para generar la versión de Windows:
+To build the Windows version:
 
 ```bat
 build.bat
 ```
 
-Para generar la versión de Nintendo 3DS:
+To build the Nintendo 3DS version:
 
 ```bat
 build.bat 3ds
 ```
 
-No es necesario modificar el código fuente para cambiar de plataforma.
+There is no need to modify the source code when switching platforms.
 
 ---
 
-# Próximo paso
+# Next Step
 
-Una vez que el proyecto básico funciona correctamente, puedes continuar con [**03 - Graphics**](03-Graphics.md), donde aprenderás a dibujar:
+Once the basic project is working correctly, you can continue with [**03 - Graphics**](03-Graphics.md), where you will learn how to draw:
 
-* Rectángulos
-* Triángulos
-* Elipses
-* Rectángulos con borde
-* Líneas
-* Puntos
-* Texto
-* Sprites
-* Y el resto de primitivas gráficas disponibles en Tridingine-3DSlib.
+- Rectangles
+- Triangles
+- Ellipses
+- Outlined rectangles
+- Lines
+- Points
+- Text
+- Sprites
+- And the rest of the graphics primitives available in Tridingine-3DSlib.

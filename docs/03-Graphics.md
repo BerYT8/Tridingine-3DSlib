@@ -1,23 +1,23 @@
-# Dibujar en pantalla
+# Drawing on Screen
 
-El motor incluye dos APIs de renderizado:
+The engine includes two rendering APIs:
 
-- **D2D**: renderizado 2D para interfaces, texto y primitivas.
-- **D3D**: renderizado 3D para modelos y primitivas básicas.
+- **D2D**: 2D rendering for interfaces, text, and primitives.
+- **D3D**: 3D rendering for models and basic primitives.
 
-> **⚠️ Estado actual**
+> **⚠️ Current Status**
 >
-> La API **D3D** aún se encuentra en desarrollo. Actualmente es **muy poco confiable**, la interfaz puede cambiar sin previo aviso y **no se recomienda utilizarla en proyectos importantes**.
+> The **D3D** API is still under development. It is currently **very unreliable**, its interface may change without notice, and **it is not recommended for use in important projects**.
 
 ---
 
-# Renderizado 2D (D2D)
+# 2D Rendering (D2D)
 
-La API `D2D` permite dibujar primitivas, texto y elementos de interfaz directamente en pantalla.
+The `D2D` API allows you to draw primitives, text, and interface elements directly on screen.
 
-## Inicialización
+## Initialization
 
-Antes de utilizar cualquier función de dibujo es necesario inicializar el sistema.
+Before using any drawing function, the system must be initialized.
 
 ```c
 if (!D2D_Init())
@@ -26,15 +26,15 @@ if (!D2D_Init())
 }
 ```
 
-Una vez inicializado el módulo, debe prepararse antes de comenzar a dibujar:
+Once the module has been initialized, it must be prepared before drawing:
 
 ```c
 D2D_Prepare();
 ```
 
-> `D2D_Prepare()` se llama **una única vez después de `D2D_Init()`**.
+> `D2D_Prepare()` is called **only once after `D2D_Init()`**.
 
-Al finalizar la aplicación:
+When the application exits:
 
 ```c
 D2D_Exit();
@@ -42,27 +42,29 @@ D2D_Exit();
 
 ---
 
-# Rotación
+# Rotation
 
-Algunas primitivas aceptan un parámetro `rotation`.
+Some primitives accept a `rotation` parameter.
 
-La API también proporciona utilidades para trabajar con rotaciones:
+The API also provides utilities for working with rotations:
 
 ```c
-float rotation = D2D_ValueIsRotation(395.0f); // Devuelve 35.0f
+float rotation = D2D_ValueIsRotation(395.0f); // Returns 35.0f
 ```
-Devuelve un valor entre 0.0f y 360.0f de un valor float.
+
+Returns a value between `0.0f` and `360.0f` from a float value.
 
 ```c
 D2D_AddRotation(&rotation, 15.0f);
 ```
-Añade el valor de rotación especificado pero manteniendo el valor entre 0.0f y 360.0f.
+
+Adds the specified rotation value while keeping the result between `0.0f` and `360.0f`.
 
 ---
 
-# Punto
+# Point
 
-Dibuja un punto.
+Draws a point.
 
 ```c
 D2D_DrawPoint(
@@ -77,9 +79,9 @@ D2D_DrawPoint(
 
 ---
 
-# Línea
+# Line
 
-Permite dibujar una línea con color independiente para cada extremo.
+Draws a line with an independent color for each endpoint.
 
 ```c
 D2D_DrawLine(
@@ -94,11 +96,11 @@ D2D_DrawLine(
 
 ---
 
-# Rectángulos
+# Rectangles
 
-## Rectángulo con gradiente
+## Gradient Rectangle
 
-Cada esquina puede tener un color diferente.
+Each corner can have a different color.
 
 ```c
 D2D_DrawRectangle(
@@ -117,7 +119,7 @@ D2D_DrawRectangle(
 );
 ```
 
-## Rectángulo sólido
+## Solid Rectangle
 
 ```c
 D2D_DrawRectSolid(
@@ -135,9 +137,9 @@ D2D_DrawRectSolid(
 
 ---
 
-# Rectángulos con borde
+# Bordered Rectangles
 
-## Con gradiente
+## Gradient
 
 ```c
 D2D_DrawBorderedRect(
@@ -156,7 +158,7 @@ D2D_DrawBorderedRect(
 );
 ```
 
-## Color sólido
+## Solid Color
 
 ```c
 D2D_DrawBorderedRectSolid(
@@ -174,9 +176,9 @@ D2D_DrawBorderedRectSolid(
 
 ---
 
-# Triángulos
+# Triangles
 
-## Con colores por vértice
+## Per-Vertex Colors
 
 ```c
 D2D_DrawTriangle(
@@ -190,7 +192,7 @@ D2D_DrawTriangle(
 );
 ```
 
-## Color sólido
+## Solid Color
 
 ```c
 D2D_DrawTriangleSolid(
@@ -207,9 +209,9 @@ D2D_DrawTriangleSolid(
 
 ---
 
-# Elipses y círculos
+# Ellipses and Circles
 
-## Elipse
+## Ellipse
 
 ```c
 D2D_DrawEllipse(
@@ -228,7 +230,7 @@ D2D_DrawEllipse(
 );
 ```
 
-## Elipse sólida
+## Solid Ellipse
 
 ```c
 D2D_DrawEllipseSolid(
@@ -244,7 +246,7 @@ D2D_DrawEllipseSolid(
 );
 ```
 
-## Círculo
+## Circle
 
 ```c
 D2D_DrawCircle(
@@ -262,7 +264,7 @@ D2D_DrawCircle(
 );
 ```
 
-## Círculo sólido
+## Solid Circle
 
 ```c
 D2D_DrawCircleSolid(
@@ -279,15 +281,15 @@ D2D_DrawCircleSolid(
 
 ---
 
-# Fuentes
+# Fonts
 
-## Abrir una fuente
+## Open a Font
 
 ```c
 D2D_Font* font = D2D_OpenFont("engine/fonts/arial");
 ```
 
-## Liberarla
+## Close a Font
 
 ```c
 D2D_CloseFont(font);
@@ -295,11 +297,11 @@ D2D_CloseFont(font);
 
 ---
 
-# Texto
+# Text
 
 ```c
 D2D_DrawText(
-    "Hola mundo",
+    "Hello world",
     font,
     32.0f,
     WHITE,
@@ -324,62 +326,62 @@ D2D_DrawText(
 );
 ```
 
-Parámetros principales:
+Main parameters:
 
-| Parámetro | Descripción |
+| Parameter | Description |
 |-----------|-------------|
-| `font` | Fuente utilizada. |
-| `fontSize` | Tamaño de letra. |
-| `color` | Color del texto. |
-| `x`, `y` | Posición. |
-| `depth` | Profundidad. |
-| `w`, `h` | Área de dibujo. |
-| `alignX` | Alineación horizontal. |
-| `alignY` | Alineación vertical. |
-| `textAlignX` | Alineación horizontal del texto. |
-| `textAlignY` | Alineación vertical del texto. |
-| `letterSpacing` | Espaciado entre letras. |
-| `lineSpacing` | Espaciado entre líneas. |
-| `wrap` | Tipo de ajuste de línea. |
+| `font` | Font to use. |
+| `fontSize` | Font size. |
+| `color` | Text color. |
+| `x`, `y` | Position. |
+| `depth` | Depth. |
+| `w`, `h` | Drawing area. |
+| `alignX` | Horizontal alignment. |
+| `alignY` | Vertical alignment. |
+| `textAlignX` | Horizontal text alignment. |
+| `textAlignY` | Vertical text alignment. |
+| `letterSpacing` | Spacing between letters. |
+| `lineSpacing` | Spacing between lines. |
+| `wrap` | Line wrapping mode. |
 
-### Modos de ajuste
+### Wrapping Modes
 
 ```c
 LETTER_WRAP_MODE
 ```
 
-Ajuste por caracteres.
+Wraps text by characters.
 
 ```c
 WORD_WRAP_MODE
 ```
 
-Ajuste por palabras.
+Wraps text by words.
 
 ```c
 WRAP_NONE
 ```
 
-Sin ajuste.
+No wrapping.
 
 ---
 
-# Renderizado 3D (D3D)
+# 3D Rendering (D3D)
 
-> **⚠️ API experimental**
+> **⚠️ Experimental API**
 >
-> Esta API está en una etapa muy temprana de desarrollo.
+> This API is still in a very early stage of development.
 >
-> Actualmente:
+> Currently:
 >
-> - Puede contener errores importantes.
-> - La estabilidad no está garantizada.
-> - La interfaz puede cambiar en cualquier momento.
-> - No se recomienda su uso fuera de pruebas.
+> - It may contain significant bugs.
+> - Stability is not guaranteed.
+> - The interface may change at any time.
+> - It is not recommended for anything beyond testing.
 
 ---
 
-## Inicialización
+## Initialization
 
 ```c
 if (!D3D_Init())
@@ -388,15 +390,15 @@ if (!D3D_Init())
 }
 ```
 
-Después de inicializar el módulo:
+After initializing the module:
 
 ```c
 D3D_Prepare();
 ```
 
-> `D3D_Prepare()` se ejecuta **una única vez tras `D3D_Init()`** para preparar el sistema de renderizado.
+> `D3D_Prepare()` is executed **only once after `D3D_Init()`** to prepare the rendering system.
 
-Al cerrar la aplicación:
+When the application exits:
 
 ```c
 D3D_Exit();
@@ -404,9 +406,9 @@ D3D_Exit();
 
 ---
 
-# Cámara
+# Camera
 
-La cámara está definida como:
+The camera is defined as:
 
 ```c
 Camera3D camera;
@@ -418,27 +420,27 @@ camera.fov = 70.0f;
 
 ---
 
-# Movimiento
+# Movement
 
-Mover hacia delante:
+Move forward:
 
 ```c
 D3D_AddFront(&camera, 5.0f);
 ```
 
-Mover hacia la derecha:
+Move right:
 
 ```c
 D3D_AddRight(&camera, 5.0f);
 ```
 
-Mover hacia arriba:
+Move upward:
 
 ```c
 D3D_AddUp(&camera, 2.0f);
 ```
 
-También existen funciones para mover utilizando el vector frontal.
+There are also functions for movement using the forward vector.
 
 ```c
 D3D_AddForwardPos(&camera, movement);
@@ -446,9 +448,9 @@ D3D_AddForwardPos(&camera, movement);
 
 ---
 
-# Dirección de la cámara
+# Camera Direction
 
-Obtener los vectores principales:
+Get the main direction vectors:
 
 ```c
 Vec3 forward = D3D_Camera_GetForward(&camera);
@@ -460,21 +462,21 @@ Vec3 up = D3D_Camera_GetUp(&camera);
 
 ---
 
-# Conversión de direcciones
+# Direction Conversion
 
-Mirar hacia un punto:
+Look at a point:
 
 ```c
 Vec3 rot = D3D_LookAt(origen, destino);
 ```
 
-Dirección → Rotación
+Direction → Rotation
 
 ```c
 Vec3 rot = D3D_ForwardToRotation(forward);
 ```
 
-Rotación → Dirección
+Rotation → Direction
 
 ```c
 Vec3 forward = D3D_RotationToForward(rot);
@@ -482,7 +484,7 @@ Vec3 forward = D3D_RotationToForward(rot);
 
 ---
 
-# Configuración de cámara
+# Camera Configuration
 
 ```c
 D3D_SetCameraPos(&camera, pos);
@@ -492,7 +494,7 @@ D3D_SetCameraRot(&camera, rot);
 D3D_SetCameraFov(&camera, 70.0f);
 ```
 
-Consultar valores:
+Get values:
 
 ```c
 Vec3 pos = D3D_GetCameraPos(&camera);
@@ -504,15 +506,15 @@ float fov = D3D_GetCameraFov(&camera);
 
 ---
 
-# Modelos
+# Models
 
-## Cargar
+## Load
 
 ```c
 Model3D* model = D3D_LoadModel3D("assets/tree.obj");
 ```
 
-## Dibujar
+## Draw
 
 ```c
 D3D_DrawModel(
@@ -527,9 +529,9 @@ D3D_DrawModel(
 
 ---
 
-# Primitivas 3D
+# 3D Primitives
 
-## Cuboide
+## Cuboid
 
 ```c
 D3D_DrawCuboid(
@@ -542,7 +544,7 @@ D3D_DrawCuboid(
 );
 ```
 
-## Esfera
+## Sphere
 
 ```c
 D3D_DrawSphere(
@@ -557,22 +559,22 @@ D3D_DrawSphere(
 
 ---
 
-# Estado de desarrollo
+# Development Status
 
-Actualmente el módulo **D2D** puede utilizarse para interfaces y renderizado 2D de forma estable.
+The **D2D** module can currently be used for interfaces and stable 2D rendering.
 
-El módulo **D3D** continúa en desarrollo activo y todavía no debe considerarse una API final. Es posible que funciones, estructuras y comportamientos cambien en futuras versiones sin mantener compatibilidad con versiones anteriores.
+The **D3D** module is still under active development and should not yet be considered a final API. Functions, structures, and behavior may change in future versions without maintaining backward compatibility.
 
 ---
 
-# Próximo paso
+# Next Step
 
-Ahora que conoces cómo dibujar en pantalla, el siguiente paso es aprender a gestionar la entrada del usuario.
+Now that you know how to draw on screen, the next step is learning how to handle user input.
 
-Continúa con [**04 - Input**](04-Input.md), donde aprenderás a:
+Continue with [**04 - Input**](04-Input.md), where you will learn how to:
 
-- Leer botones.
-- Detectar pulsaciones y liberaciones.
-- Consultar el estado de los controles.
-- Obtener la posición de la pantalla táctil.
-- Reasignar botones físicos a botones virtuales.
+- Read buttons.
+- Detect button presses and releases.
+- Query controller states.
+- Get the touchscreen position.
+- Remap physical buttons to virtual buttons.

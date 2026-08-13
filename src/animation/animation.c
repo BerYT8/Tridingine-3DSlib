@@ -155,7 +155,7 @@ bool a3d_play_2d_anim(A3D_Animation2D *anim)
 
     if (anim->paused)
     {
-        // Reanudar desde donde estaba pausada
+        // Resume from where it was paused
         anim->startingTime = currentTime - anim->pausedTime;
     }
 
@@ -287,7 +287,7 @@ a3d_get_2d_anim_seconds_sprite(A3D_Animation2D *anim, double seconds)
             break;
     }
 
-    // si no hay frame anterior válido (caso t < primer keyframe)
+    // if there is no previous valid frame (case t < first keyframe)
     if (!last)
         return anim->frames[anim->keyframes - 1]->img;
 

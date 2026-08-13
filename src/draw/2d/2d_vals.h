@@ -8,8 +8,8 @@
 extern "C" {
 #endif
 
-// Si este .c define ALLOCATE_SHMEM, se crean las variables.
-// Si no lo define, se tratan como extern automáticos.
+// If this .c defines ALLOCATE_SHMEM, the variables are created.
+// If it does not, they are treated as automatic externs.
 #ifdef ALLOCATE_SHMEM
   #define SHMEM_EXTD
   #define SHMEM_INITD(x) = x
