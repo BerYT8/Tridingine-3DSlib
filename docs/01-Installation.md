@@ -187,7 +187,6 @@ ProjectMaker --update -o <FOLDER>
 ProjectMaker -o <FOLDER>
 ProjectMaker [--only <pattern> ...]
 ProjectMaker [--exclude <pattern> ...]
-ProjectMaker [--no-libs]
 ProjectMaker [--no-examples]
 ```
 
@@ -195,8 +194,7 @@ ProjectMaker [--no-examples]
 * `-o <FOLDER>` — Specifies the destination folder where the project will be created or updated.
 * `--update` — Updates an existing project using the latest ProjectMaker templates and development kit files.
 * `--only <pattern>` — Only includes files matching the specified pattern. The option can be specified multiple times.
-* `--exclude <pattern>` — Excludes files matching the specified pattern. The option can be specified multiple times.
-* `--no-libs` — Does not include the bundled Tridingine libraries in the generated project. This is optional when updating a project if Tridingine has already been installed through CMake.
+* `--exclude <pattern>` — Excludes files matching the specified pattern. The option can be specified multiple times.been installed through CMake.
 
 ### Creating a new project
 
@@ -218,16 +216,7 @@ For example, to update the `Orbit` example:
 ProjectMaker -o "[FOLDER]/Orbit" --update
 ```
 
-If you have already installed Tridingine through CMake — that is, you have already built and installed the Tridingine library project — you can also omit the bundled libraries:
-
-```bash
-ProjectMaker -o "[FOLDER]/Orbit" --update --no-libs
-```
-
-`--no-libs` is optional in this situation. It is harmless to include the libraries even if Tridingine is already installed through CMake; the option simply prevents ProjectMaker from copying the bundled library files into the project.
-
-
-This updates the project without copying the example files or the bundled Tridingine libraries.
+This updates the project with only modified essential files.
 
 ### Result
 

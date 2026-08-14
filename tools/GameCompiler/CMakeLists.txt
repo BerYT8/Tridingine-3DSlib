@@ -53,7 +53,7 @@ set(SOURCES
 )
 
 # =====================================================
-# TRIDINGINE
+# BUILD
 # =====================================================
 
 if(BUILD_3DS)
@@ -82,87 +82,30 @@ if(BUILD_3DS)
     # Tridingine 3DS
     # -------------------------------------------------
 
-    find_package(
-        Tridingine
-        CONFIG
-        QUIET
+    set(
+        TRIDINGINE_3DS_LIB
+        "${CMAKE_SOURCE_DIR}/lib/3ds/tridingine.a"
     )
 
-    if(Tridingine_FOUND)
+    set(
+        ENTRYPOINT_3DS_LIB
+        "${CMAKE_SOURCE_DIR}/lib/3ds/entrypoint.a"
+    )
 
-        message(STATUS "Tridingine 3DS found through CMake.")
+    if(NOT EXISTS "${TRIDINGINE_3DS_LIB}")
 
-    else()
-
-        message(STATUS
-            "Tridingine 3DS not found through CMake."
+        message(FATAL_ERROR
+            "Tridingine 3DS library not found:\n"
+            "  ${TRIDINGINE_3DS_LIB}"
         )
 
-        set(
-            TRIDINGINE_3DS_LIB
-            "${CMAKE_SOURCE_DIR}/lib/3ds/tridingine.a"
-        )
+    endif()
 
-        set(
-            ENTRYPOINT_3DS_LIB
-            "${CMAKE_SOURCE_DIR}/lib/3ds/entrypoint.a"
-        )
+    if(NOT EXISTS "${ENTRYPOINT_3DS_LIB}")
 
-        if(NOT EXISTS "${TRIDINGINE_3DS_LIB}")
-
-            message(FATAL_ERROR
-                "Tridingine 3DS library not found:\n"
-                "  ${TRIDINGINE_3DS_LIB}"
-            )
-
-        endif()
-
-        if(NOT EXISTS "${ENTRYPOINT_3DS_LIB}")
-
-            message(FATAL_ERROR
-                "Tridingine 3DS entrypoint library not found:\n"
-                "  ${ENTRYPOINT_3DS_LIB}"
-            )
-
-        endif()
-
-        add_library(
-            TridingineFallback3DS
-            STATIC
-            IMPORTED
-        )
-
-        set_target_properties(
-            TridingineFallback3DS
-            PROPERTIES
-                IMPORTED_LOCATION
-                    "${TRIDINGINE_3DS_LIB}"
-        )
-
-        add_library(
-            EntryPointFallback3DS
-            STATIC
-            IMPORTED
-        )
-
-        set_target_properties(
-            EntryPointFallback3DS
-            PROPERTIES
-                IMPORTED_LOCATION
-                    "${ENTRYPOINT_3DS_LIB}"
-        )
-
-        add_library(
-            Tridingine::Tridingine
-            INTERFACE
-            IMPORTED
-        )
-
-        set_target_properties(
-            Tridingine::Tridingine
-            PROPERTIES
-                INTERFACE_LINK_LIBRARIES
-                    "TridingineFallback3DS;EntryPointFallback3DS"
+        message(FATAL_ERROR
+            "Tridingine 3DS entrypoint library not found:\n"
+            "  ${ENTRYPOINT_3DS_LIB}"
         )
 
     endif()
@@ -187,6 +130,7 @@ if(BUILD_3DS)
         ${GAME_TARGET}
         PRIVATE
 
+            include
             "${CMAKE_CURRENT_SOURCE_DIR}"
     )
 
@@ -198,7 +142,16 @@ if(BUILD_3DS)
         ${GAME_TARGET}
         PRIVATE
 
-            Tridingine::Tridingine
+            "${TRIDINGINE_3DS_LIB}"
+            "${ENTRYPOINT_3DS_LIB}"
+            citro2d
+            citro3d
+            ctru
+            m
+
+            opusfile
+            opus
+            ogg
     )
 
     # -------------------------------------------------
@@ -218,258 +171,237 @@ else()
     message(STATUS "Building game for PC")
     message(STATUS "========================================")
 
-    # -------------------------------------------------
-    # Tridingine PC
-    # -------------------------------------------------
+    # =================================================
+    # Windows
+    # =================================================
 
-    find_package(
-        Tridingine
-        CONFIG
-        QUIET
-    )
+    if(WIN32)
 
-    if(Tridingine_FOUND)
+        message(STATUS "Platform: Windows")
 
-        message(STATUS "Tridingine PC found through CMake.")
-
-    else()
-
-        message(STATUS
-            "Tridingine PC not found through CMake."
+        set(
+            TRIDINGINE_PC_LIB
+            "${CMAKE_SOURCE_DIR}/lib/pc/libTridingine.lib"
         )
 
-        # =============================================
-        # Windows
-        # =============================================
+        set(
+            ENTRYPOINT_PC_LIB
+            "${CMAKE_SOURCE_DIR}/lib/pc/libEntrypoint.lib"
+        )
 
-        if(WIN32)
+        set(
+            TRIDINGINE_PC_DLL
+            "${CMAKE_SOURCE_DIR}/lib/pc/Tridingine.dll"
+        )
 
-            set(
-                TRIDINGINE_PC_LIB
-                "${CMAKE_SOURCE_DIR}/lib/pc/libTridingine.lib"
-            )
+        # -------------------------------------------------
+        # Check files
+        # -------------------------------------------------
 
-            set(
-                ENTRYPOINT_PC_LIB
-                "${CMAKE_SOURCE_DIR}/lib/pc/libEntrypoint.lib"
-            )
-
-            set(
-                TRIDINGINE_PC_DLL
-                "${CMAKE_SOURCE_DIR}/lib/pc/Tridingine.dll"
-            )
-
-            if(NOT EXISTS "${TRIDINGINE_PC_LIB}")
-
-                message(FATAL_ERROR
-                    "Tridingine Windows library not found:\n"
-                    "  ${TRIDINGINE_PC_LIB}"
-                )
-
-            endif()
-
-            if(NOT EXISTS "${ENTRYPOINT_PC_LIB}")
-
-                message(FATAL_ERROR
-                    "Tridingine Windows entrypoint library not found:\n"
-                    "  ${ENTRYPOINT_PC_LIB}"
-                )
-
-            endif()
-
-            if(NOT EXISTS "${TRIDINGINE_PC_DLL}")
-
-                message(FATAL_ERROR
-                    "Tridingine Windows DLL not found:\n"
-                    "  ${TRIDINGINE_PC_DLL}"
-                )
-
-            endif()
-
-            add_library(
-                TridingineFallbackPC
-                STATIC
-                IMPORTED
-            )
-
-            set_target_properties(
-                TridingineFallbackPC
-                PROPERTIES
-                    IMPORTED_LOCATION
-                        "${TRIDINGINE_PC_LIB}"
-            )
-
-            add_library(
-                EntryPointFallbackPC
-                STATIC
-                IMPORTED
-            )
-
-            set_target_properties(
-                EntryPointFallbackPC
-                PROPERTIES
-                    IMPORTED_LOCATION
-                        "${ENTRYPOINT_PC_LIB}"
-            )
-
-            add_library(
-                Tridingine::Tridingine
-                INTERFACE
-                IMPORTED
-            )
-
-            set_target_properties(
-                Tridingine::Tridingine
-                PROPERTIES
-                    INTERFACE_LINK_LIBRARIES
-                        "TridingineFallbackPC;EntryPointFallbackPC"
-            )
-
-        # =============================================
-        # Linux
-        # =============================================
-
-        elseif(UNIX)
-
-            set(
-                TRIDINGINE_PC_LIB
-                "${CMAKE_SOURCE_DIR}/lib/pc/libTridingine.so"
-            )
-
-            set(
-                ENTRYPOINT_PC_LIB
-                "${CMAKE_SOURCE_DIR}/lib/pc/libEntrypoint.a"
-            )
-
-            if(NOT EXISTS "${TRIDINGINE_PC_LIB}")
-
-                message(FATAL_ERROR
-                    "Tridingine Linux library not found:\n"
-                    "  ${TRIDINGINE_PC_LIB}"
-                )
-
-            endif()
-
-            if(NOT EXISTS "${ENTRYPOINT_PC_LIB}")
-
-                message(FATAL_ERROR
-                    "Tridingine Linux entrypoint library not found:\n"
-                    "  ${ENTRYPOINT_PC_LIB}"
-                )
-
-            endif()
-
-            add_library(
-                TridingineFallbackPC
-                SHARED
-                IMPORTED
-            )
-
-            set_target_properties(
-                TridingineFallbackPC
-                PROPERTIES
-                    IMPORTED_LOCATION
-                        "${TRIDINGINE_PC_LIB}"
-            )
-
-            add_library(
-                EntryPointFallbackPC
-                STATIC
-                IMPORTED
-            )
-
-            set_target_properties(
-                EntryPointFallbackPC
-                PROPERTIES
-                    IMPORTED_LOCATION
-                        "${ENTRYPOINT_PC_LIB}"
-            )
-
-            add_library(
-                Tridingine::Tridingine
-                INTERFACE
-                IMPORTED
-            )
-
-            set_target_properties(
-                Tridingine::Tridingine
-                PROPERTIES
-                    INTERFACE_LINK_LIBRARIES
-                        "TridingineFallbackPC;EntryPointFallbackPC"
-            )
-
-        else()
+        if(NOT EXISTS "${TRIDINGINE_PC_LIB}")
 
             message(FATAL_ERROR
-                "Unsupported PC platform."
+                "Tridingine Windows library not found:\n"
+                "  ${TRIDINGINE_PC_LIB}"
             )
 
         endif()
 
-    endif()
+        if(NOT EXISTS "${ENTRYPOINT_PC_LIB}")
 
-    # -------------------------------------------------
-    # Executable
-    # -------------------------------------------------
+            message(FATAL_ERROR
+                "Tridingine Windows entrypoint library not found:\n"
+                "  ${ENTRYPOINT_PC_LIB}"
+            )
 
-    add_executable(
-        ${GAME_NAME}
+        endif()
 
-        ${SOURCES}
-        main.cpp
-    )
+        if(NOT EXISTS "${TRIDINGINE_PC_DLL}")
 
-    target_include_directories(
-        ${GAME_NAME}
-        PRIVATE
+            message(FATAL_ERROR
+                "Tridingine Windows DLL not found:\n"
+                "  ${TRIDINGINE_PC_DLL}"
+            )
 
-            "${CMAKE_CURRENT_SOURCE_DIR}"
-    )
+        endif()
 
-    # -------------------------------------------------
-    # Tridingine
-    # -------------------------------------------------
+        # -------------------------------------------------
+        # Executable
+        # -------------------------------------------------
 
-    target_link_libraries(
-        ${GAME_NAME}
-        PRIVATE
+        add_executable(
+            ${GAME_NAME}
 
-            Tridingine::Tridingine
-    )
+            ${SOURCES}
+            main.cpp
+        )
 
-    # -------------------------------------------------
-    # Windows DLL
-    # -------------------------------------------------
+        target_include_directories(
+            ${GAME_NAME}
+            PRIVATE
 
-    if(WIN32 AND NOT Tridingine_FOUND)
+                include
+                "${CMAKE_CURRENT_SOURCE_DIR}"
+        )
+
+        # -------------------------------------------------
+        # Tridingine
+        # -------------------------------------------------
+
+        target_link_libraries(
+            ${GAME_NAME}
+            PRIVATE
+
+                "${TRIDINGINE_PC_LIB}"
+                "${ENTRYPOINT_PC_LIB}"
+        )
+
+        # -------------------------------------------------
+        # Copy DLL next to executable
+        # -------------------------------------------------
 
         add_custom_command(
             TARGET ${GAME_NAME}
             POST_BUILD
 
-            COMMAND
-                ${CMAKE_COMMAND}
-                -E copy_if_different
-
-                "${CMAKE_SOURCE_DIR}/lib/pc/Tridingine.dll"
-
-                "$<TARGET_FILE_DIR:${GAME_NAME}>/Tridingine.dll"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${TRIDINGINE_PC_DLL}"
+                "$<TARGET_FILE_DIR:${GAME_NAME}>"
 
             COMMENT
-                "Copying Tridingine.dll next to executable"
+                "Copying Tridingine.dll next to ${GAME_NAME}"
+        )
+
+        # -------------------------------------------------
+        # Game title
+        # -------------------------------------------------
+
+        target_compile_definitions(
+            ${GAME_NAME}
+            PRIVATE
+
+                GAME_TITLE="${GAME_TITLE}"
+        )
+
+    # =================================================
+    # Linux
+    # =================================================
+
+    elseif(UNIX AND NOT APPLE)
+
+        message(STATUS "Platform: Linux")
+
+        set(
+            TRIDINGINE_PC_LIB
+            "${CMAKE_SOURCE_DIR}/lib/pc/libTridingine.so"
+        )
+
+        set(
+            ENTRYPOINT_PC_LIB
+            "${CMAKE_SOURCE_DIR}/lib/pc/libEntrypoint.a"
+        )
+
+        # -------------------------------------------------
+        # Check files
+        # -------------------------------------------------
+
+        if(NOT EXISTS "${TRIDINGINE_PC_LIB}")
+
+            message(FATAL_ERROR
+                "Tridingine Linux library not found:\n"
+                "  ${TRIDINGINE_PC_LIB}"
+            )
+
+        endif()
+
+        if(NOT EXISTS "${ENTRYPOINT_PC_LIB}")
+
+            message(FATAL_ERROR
+                "Tridingine Linux entrypoint library not found:\n"
+                "  ${ENTRYPOINT_PC_LIB}"
+            )
+
+        endif()
+
+        # -------------------------------------------------
+        # Executable
+        # -------------------------------------------------
+
+        add_executable(
+            ${GAME_NAME}
+
+            ${SOURCES}
+            main.cpp
+        )
+
+        target_include_directories(
+            ${GAME_NAME}
+            PRIVATE
+
+                include
+                "${CMAKE_CURRENT_SOURCE_DIR}"
+        )
+
+        # -------------------------------------------------
+        # Tridingine
+        # -------------------------------------------------
+
+        target_link_libraries(
+            ${GAME_NAME}
+            PRIVATE
+
+                "${TRIDINGINE_PC_LIB}"
+                "${ENTRYPOINT_PC_LIB}"
+        )
+
+        # -------------------------------------------------
+        # Copy SO next to executable
+        # -------------------------------------------------
+
+        add_custom_command(
+            TARGET ${GAME_NAME}
+            POST_BUILD
+
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${TRIDINGINE_PC_LIB}"
+                "$<TARGET_FILE_DIR:${GAME_NAME}>"
+
+            COMMENT
+                "Copying libTridingine.so next to ${GAME_NAME}"
+        )
+
+        # -------------------------------------------------
+        # Make executable search for .so beside itself
+        # -------------------------------------------------
+
+        set_target_properties(
+            ${GAME_NAME}
+            PROPERTIES
+
+                BUILD_RPATH
+                    "$ORIGIN"
+
+                INSTALL_RPATH
+                    "$ORIGIN"
+        )
+
+        # -------------------------------------------------
+        # Game title
+        # -------------------------------------------------
+
+        target_compile_definitions(
+            ${GAME_NAME}
+            PRIVATE
+
+                GAME_TITLE="${GAME_TITLE}"
+        )
+
+    else()
+
+        message(FATAL_ERROR
+            "Unsupported PC platform."
         )
 
     endif()
-
-    # -------------------------------------------------
-    # Game title
-    # -------------------------------------------------
-
-    target_compile_definitions(
-        ${GAME_NAME}
-        PRIVATE
-
-            GAME_TITLE="${GAME_TITLE}"
-    )
 
 endif()

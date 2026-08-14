@@ -519,165 +519,49 @@ this normally means that the corresponding 3DS portlibs are not installed or tha
 
 ## PC
 
-Create a build directory:
+### Linux
 
+Use:
 ```bash
-mkdir build
-cd build
+chmod +x config.sh
+./congif.sh
+
+./build.sh
+./MakeProjectMaker.sh
 ```
 
-Configure:
+### Windows
 
+Use:
 ```bash
-cmake ..
+.\congif.bat
+
+.\build.bat
+.\MakeProjectMaker.bat
 ```
-
-Build:
-
-```bash
-cmake --build .
-```
-
-Install:
-
-```bash
-cmake --install .
-```
-
-If you want to use a specific installation prefix:
-
-```bash
-cmake .. -DCMAKE_INSTALL_PREFIX=/your/install/path
-cmake --build .
-cmake --install .
-```
-
-
-## Nintendo 3DS
-
-Create a separate 3DS build directory:
-
-```bash
-mkdir build_3ds
-cd build_3ds
-```
-
-Configure:
-
-```bash
-cmake .. -DBUILD_3DS=ON
-```
-
-Build:
-
-```bash
-cmake --build .
-```
-
-Install:
-
-```bash
-cmake --install .
-```
-
-The Nintendo 3DS build uses the devkitPro toolchain and 3DS CMake configuration.
-
 
 # Building a Game
 
-A game using Tridingine can use:
-
-```cmake
-find_package(Tridingine CONFIG REQUIRED)
-
-target_link_libraries(
-    YourGame
-    PRIVATE
-        Tridingine::Tridingine
-)
-```
-
-The Tridingine installation provides its public headers through its CMake package.
-
-Therefore, a game project should **not** need to manually copy the Tridingine headers into its own source tree.
-
-CMake provides the include directories through the installed Tridingine target.
-
-
 # PC Game Build
 
-For a PC game, configure CMake normally:
+For a PC game:
 
 ```bash
-cmake ..
+./build.sh
 ```
-
-Then build:
-
-```bash
-cmake --build .
-```
-
 
 # Nintendo 3DS Game Build
 
 For a Nintendo 3DS game:
 
 ```bash
-cmake .. -DBUILD_3DS=ON
+./build.sh 3ds (link) (-a [ip]192.168.0.0)
 ```
 
-Then:
-
-```bash
-cmake --build .
-```
+You can also use **link** option with optional **-a** for direct connection. 
+>You need your 3ds with 3dslink connection opened on homebrew with Y.
 
 The 3DS build requires devkitPro and devkitARM to be correctly installed and configured.
-
-
-# Troubleshooting
-
-## CMake cannot find Tridingine
-
-Make sure Tridingine has been installed first.
-
-If Tridingine was installed into a custom prefix, tell CMake where to find it using `CMAKE_PREFIX_PATH`.
-
-For example:
-
-```bash
-cmake .. -DCMAKE_PREFIX_PATH=/path/to/tridingine/install
-```
-
-On Windows, you can also configure `CMAKE_PREFIX_PATH` as an environment variable.
-
-
-## CMake finds the wrong Tridingine
-
-If you have multiple Tridingine installations, CMake may find an older installation.
-
-Check your `CMAKE_PREFIX_PATH` and remove obsolete Tridingine installations or place the desired installation first in the search path.
-
-
-## CMake finds a PC version when building for 3DS
-
-Do not use a PC installation of Tridingine for a Nintendo 3DS build.
-
-Build and install Tridingine separately with:
-
-```bash
-cmake .. -DBUILD_3DS=ON
-cmake --build .
-cmake --install .
-```
-
-Then configure the game with the same 3DS configuration:
-
-```bash
-cmake .. -DBUILD_3DS=ON
-```
-
 
 ## Cannot find opusfile, opus or ogg
 

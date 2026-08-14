@@ -5,6 +5,13 @@ set -e
 
 BUILD_DIR="build"
 
+cd external/glew
+
+make -C auto
+make glew.lib.static
+
+cd ../..
+
 # Crear directorio de construcción si no existe
 mkdir -p "$BUILD_DIR"
 
@@ -21,7 +28,7 @@ mkdir -p Code
 cd Code
 cmake ../.. -DBUILD_3DS=OFF -DCMAKE_BUILD_TYPE=Release
 cmake --build . --config Release
-sudo cmake --install .
+# sudo cmake --install .
 
 cd ../..
 

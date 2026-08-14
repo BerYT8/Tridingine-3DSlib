@@ -25,3 +25,6 @@
 [submodule "tools/SoundMaker3DS/libopusenc"]
 	path = tools/SoundMaker3DS/libopusenc
 	url = https://github.com/xiph/libopusenc
+[submodule "external/glew"]
+	path = external/glew
+	url = https://github.com/nigels-com/glew.git

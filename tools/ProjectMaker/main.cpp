@@ -22,7 +22,6 @@ void mostrarUso(const char* nombrePrograma)
     std::cerr << "  " << nombrePrograma << " -o <CARPETA>\n";
     std::cerr << "  " << nombrePrograma << " [--only <patron> ...]\n";
     std::cerr << "  " << nombrePrograma << " [--exclude <patron> ...]\n";
-    std::cerr << "  " << nombrePrograma << " [--no-libs (optional)]\n";
 }
 
 std::string wildcardToRegex(const std::string& pattern)
@@ -142,13 +141,6 @@ int main(int argc, char* argv[])
         if (strcmp(argv[i], "--update") == 0)
         {
             updateMode = true;
-            continue;
-        }
-
-        if (strcmp(argv[i], "--no-libs") == 0)
-        {
-            excludePatterns.emplace_back("lib/*");
-            excludePatterns.emplace_back("include/*");
             continue;
         }
 

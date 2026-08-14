@@ -119,16 +119,6 @@ set(SOURCES
 )
 
 # =====================================================
-# IMGUI
-# =====================================================
-
-file(
-    GLOB_RECURSE
-    IMGUI_SRC
-    "lib_include/imgui/*.cpp"
-)
-
-# =====================================================
 # PLATFORM
 # =====================================================
 
@@ -186,11 +176,121 @@ if(NOT BUILD_3DS)
 
     find_package(OpenGL REQUIRED)
 
+    # =================================================
+    # GLEW STATIC
+    # =================================================
+    #
+    # GLEW se obtiene EXCLUSIVAMENTE desde:
+    #
+    #     external/glew/include
+    #     external/glew/lib
+    #
+    # No se utiliza find_package(GLEW)
+    # No se utiliza find_path()
+    # No se utiliza find_library()
+    #
+    # Linux:
+    #     lib/libGLEW.a
+    #
+    # Windows:
+    #     lib/glew32s.lib
+    #
+    # =================================================
+
+    set(GLEW_ROOT
+        "${CMAKE_CURRENT_SOURCE_DIR}/external/glew"
+    )
+
+    set(GLEW_INCLUDE_DIR
+        "${GLEW_ROOT}/include"
+    )
+
+    if(WIN32)
+
+        set(GLEW_STATIC_LIBRARY
+            "${GLEW_ROOT}/lib/glew32s.lib"
+        )
+
+    elseif(UNIX AND NOT APPLE)
+
+        set(GLEW_STATIC_LIBRARY
+            "${GLEW_ROOT}/lib/libGLEW.a"
+        )
+
+    elseif(APPLE)
+
+        set(GLEW_STATIC_LIBRARY
+            "${GLEW_ROOT}/lib/libGLEW.a"
+        )
+
+    else()
+
+        message(FATAL_ERROR
+            "Unsupported platform for bundled GLEW."
+        )
+
+    endif()
+
     # -------------------------------------------------
-    # GLEW
+    # Verificar GLEW
     # -------------------------------------------------
 
-    find_package(GLEW REQUIRED)
+    if(NOT EXISTS "${GLEW_INCLUDE_DIR}/GL/glew.h")
+
+        message(FATAL_ERROR
+            "GLEW headers not found:\n"
+            "  ${GLEW_INCLUDE_DIR}/GL/glew.h"
+        )
+
+    endif()
+
+    if(NOT EXISTS "${GLEW_STATIC_LIBRARY}")
+
+        message(FATAL_ERROR
+            "Static GLEW library not found:\n"
+            "  ${GLEW_STATIC_LIBRARY}"
+        )
+
+    endif()
+
+    message(STATUS "GLEW root    : ${GLEW_ROOT}")
+    message(STATUS "GLEW include : ${GLEW_INCLUDE_DIR}")
+    message(STATUS "GLEW static  : ${GLEW_STATIC_LIBRARY}")
+
+    # -------------------------------------------------
+    # GLEW::GLEW
+    # -------------------------------------------------
+
+    add_library(
+        GLEW::GLEW
+        STATIC
+        IMPORTED
+    )
+
+    set_target_properties(
+        GLEW::GLEW
+        PROPERTIES
+
+            IMPORTED_LOCATION
+                "${GLEW_STATIC_LIBRARY}"
+
+            INTERFACE_INCLUDE_DIRECTORIES
+                "${GLEW_INCLUDE_DIR}"
+    )
+
+    # -------------------------------------------------
+    # GLEW Windows
+    # -------------------------------------------------
+
+    if(WIN32)
+
+        target_compile_definitions(
+            GLEW::GLEW
+            INTERFACE
+                GLEW_STATIC
+        )
+
+    endif()
 
     # -------------------------------------------------
     # SDL2
@@ -300,7 +400,6 @@ if(NOT BUILD_3DS)
         TridingineCore
         SHARED
         ${SOURCES}
-        ${IMGUI_SRC}
     )
 
     set_target_properties(
@@ -427,7 +526,6 @@ else()
         TridingineCore
         STATIC
         ${SOURCES}
-        ${IMGUI_SRC}
     )
 
     set_target_properties(
@@ -566,156 +664,6 @@ else()
 
 endif()
 
-
-# =====================================================
-# 📦 INSTALL
-# =====================================================
-
-include(GNUInstallDirs)
-include(CMakePackageConfigHelpers)
-
-# =====================================================
-# INSTALL TARGETS
-# =====================================================
-
-install(
-    TARGETS
-
-        Tridingine
-        TridingineCore
-        TridingineEntrypoint
-
-    EXPORT
-        TridingineTargets
-
-    LIBRARY
-        DESTINATION
-            ${CMAKE_INSTALL_LIBDIR}
-
-    ARCHIVE
-        DESTINATION
-            ${CMAKE_INSTALL_LIBDIR}
-
-    RUNTIME
-        DESTINATION
-            ${CMAKE_INSTALL_BINDIR}
-
-    INCLUDES
-        DESTINATION
-            ${CMAKE_INSTALL_INCLUDEDIR}
-)
-
-# =====================================================
-# 3DS SHADER LIBRARY
-# =====================================================
-
-if(BUILD_3DS)
-
-    install(
-        TARGETS
-            3dlibrary
-
-        EXPORT
-            TridingineTargets
-
-        ARCHIVE
-            DESTINATION
-                ${CMAKE_INSTALL_LIBDIR}
-    )
-
-endif()
-
-# =====================================================
-# HEADERS
-# =====================================================
-
-if(
-    EXISTS
-    "${CMAKE_CURRENT_SOURCE_DIR}/include"
-)
-
-    install(
-        DIRECTORY
-            include/
-
-        DESTINATION
-            ${CMAKE_INSTALL_INCLUDEDIR}
-    )
-
-endif()
-
-# =====================================================
-# CMAKE PACKAGE DIRECTORY
-# =====================================================
-
-set(
-    TRIDINGINE_CMAKE_INSTALL_DIR
-    "${CMAKE_INSTALL_LIBDIR}/cmake/Tridingine"
-)
-
-# =====================================================
-# EXPORT TARGETS
-# =====================================================
-
-install(
-    EXPORT
-        TridingineTargets
-
-    FILE
-        TridingineTargets.cmake
-
-    NAMESPACE
-        Tridingine::
-
-    DESTINATION
-        ${TRIDINGINE_CMAKE_INSTALL_DIR}
-)
-
-# =====================================================
-# CONFIG
-# =====================================================
-
-configure_package_config_file(
-
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/TridingineConfig.cmake.in
-
-    ${CMAKE_CURRENT_BINARY_DIR}/TridingineConfig.cmake
-
-    INSTALL_DESTINATION
-        ${TRIDINGINE_CMAKE_INSTALL_DIR}
-
-    NO_CHECK_REQUIRED_COMPONENTS_MACRO
-)
-
-# =====================================================
-# VERSION
-# =====================================================
-
-write_basic_package_version_file(
-
-    ${CMAKE_CURRENT_BINARY_DIR}/TridingineConfigVersion.cmake
-
-    VERSION
-        ${PROJECT_VERSION}
-
-    COMPATIBILITY
-        SameMajorVersion
-)
-
-# =====================================================
-# INSTALL CONFIG
-# =====================================================
-
-install(
-    FILES
-
-        ${CMAKE_CURRENT_BINARY_DIR}/TridingineConfig.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/TridingineConfigVersion.cmake
-
-    DESTINATION
-        ${TRIDINGINE_CMAKE_INSTALL_DIR}
-)
-
 # =====================================================
 # SUMMARY
 # =====================================================
@@ -724,5 +672,17 @@ message(STATUS "========================================")
 message(STATUS "Tridingine configuration:")
 message(STATUS "  Platform : ${TRIDINGINE_PLATFORM}")
 message(STATUS "  Version  : ${PROJECT_VERSION}")
-message(STATUS "  Install  : ${CMAKE_INSTALL_PREFIX}")
+
+if(NOT BUILD_3DS)
+
+    message(STATUS "  GLEW     : bundled static")
+
+    if(WIN32)
+        message(STATUS "  GLEW lib : ${GLEW_STATIC_LIBRARY}")
+    else()
+        message(STATUS "  GLEW lib : ${GLEW_STATIC_LIBRARY}")
+    endif()
+
+endif()
+
 message(STATUS "========================================")

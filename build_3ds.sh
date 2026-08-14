@@ -42,6 +42,6 @@ cmake .. \
 
 echo "[CMake] Building..."
 cmake --build .
-sudo cmake --install .
+# sudo cmake --install .
 
 echo "=== 3DS BUILD DONE ==="
