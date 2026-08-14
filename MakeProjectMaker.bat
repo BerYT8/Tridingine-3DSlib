@@ -50,17 +50,17 @@ REM =========================
 echo [3/6] Copying PC libs...
 
 REM DLL principal
-if exist "%BUILD_DIR%\Code\libTridingine.dll" (
-    copy /y "%BUILD_DIR%\Code\libTridingine.dll" "%LIB_DIR%\lib\pc\libTridingine.dll" >nul
+if exist "%BUILD_DIR%\Code\Release\Tridingine.dll" (
+    copy /y "%BUILD_DIR%\Code\Release\Tridingine.dll" "%LIB_DIR%\lib\pc\libTridingine.dll" >nul
 ) else (
-    echo WARNING: libTridingine.dll not found.
+    echo WARNING: Tridingine.dll not found.
 )
 
 REM Import/static library de la DLL
-if exist "%BUILD_DIR%\Code\libTridingineEntrypoint.lib" (
-    copy /y "%BUILD_DIR%\Code\libTridingineEntrypoint.lib" "%LIB_DIR%\lib\pc\libTridingineEntrypoint.lib" >nul
+if exist "%BUILD_DIR%\Code\Release\TridingineEntrypoint.lib" (
+    copy /y "%BUILD_DIR%\Code\Release\TridingineEntrypoint.lib" "%LIB_DIR%\lib\pc\libTridingineEntrypoint.lib" >nul
 ) else (
-    echo WARNING: libTridingineEntrypoint.lib not found.
+    echo WARNING: TridingineEntrypoint.lib not found.
 )
 
 REM =========================

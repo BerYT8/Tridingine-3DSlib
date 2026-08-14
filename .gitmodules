@@ -19,3 +19,9 @@
 [submodule "tools/Project_CTR"]
 	path = tools/Project_CTR
 	url = https://github.com/3DSGuy/Project_CTR.git
+[submodule "tools/SoundMaker3DS/libopus"]
+	path = tools/SoundMaker3DS/libopus
+	url = https://github.com/xiph/opus
+[submodule "tools/SoundMaker3DS/libopusenc"]
+	path = tools/SoundMaker3DS/libopusenc
+	url = https://github.com/xiph/libopusenc

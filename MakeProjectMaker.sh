@@ -62,7 +62,6 @@ echo "[5/6] Building tools..."
 TOOLS=(
   "PakMaker"
   "3DModelsConverter"
-  "SoundMaker3DS"
   "LocalizationMaker"
   "FontsConverter"
 )
@@ -75,6 +74,28 @@ for t in "${TOOLS[@]}"; do
     cp "$ROOT/tools/$t/build/$t" "$LIB_DIR/tools/" 2>/dev/null
   fi
 done
+
+cd "$ROOT/tools/SoundMaker3DS"
+
+mkdir -p lib
+
+cd libopus
+mkdir -p build && cd build
+cmake .. -DOPUS_BUILD_PROGRAMS=ON -DOPUS_BUILD_TESTING=ON
+cmake --build .
+cp "$ROOT/tools/SoundMaker3DS/libopus/build/libopus.a" "$ROOT/tools/SoundMaker3DS/lib/" 2>/dev/null
+
+cd ../..
+
+cp "$ROOT/tools/SoundMaker3DS/cmake/libopusenc.cmake" "$ROOT/tools/SoundMaker3DS/libopusenc/CMakeLists.txt" 2>/dev/null
+cd libopusenc
+mkdir -p lib_include
+cp -r "$ROOT/tools/SoundMaker3DS/libopus/include/"*.h "$ROOT/tools/SoundMaker3DS/libopusenc/lib_include/" 2>/dev/null
+mkdir -p build && cd build
+cmake ..
+cmake --build .
+
+cd "$ROOT"
 
 cd "$ROOT/tools/bannertool" && make || true
 cd "$ROOT"
