@@ -11,6 +11,11 @@ lib
 *.so
 *.a
 
+examples/*/tools/*
+!examples/*/tools/
+examples/*/tools/*
+!examples/*/tools/build_3ds.sh
+
 /*.cpp
 /*.json
 /*.atlas
