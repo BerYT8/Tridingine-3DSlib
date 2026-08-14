@@ -38,11 +38,11 @@ mkdir -p "$ROOT/templates"
 mkdir -p "$ROOT/content"
 
 # Copiar el contenido de las carpetas de forma limpia (evita rutas duplicadas)
-cp -r "$ROOT/tools/GameCompiler/"* "$LIB_DIR/" 2>/dev/null || true
-cp -r "$ROOT/include/"* "$LIB_DIR/include/" 2>/dev/null || true
-cp -r "$ROOT/examples/"* "$LIB_DIR/examples/" 2>/dev/null || true
-cp -r "$ROOT/templates/"* "$LIB_DIR/templates/" 2>/dev/null || true
-cp -r "$ROOT/content/"* "$LIB_DIR/content/" 2>/dev/null || true
+cp -r "$ROOT/tools/GameCompiler/"* "$LIB_DIR/" 2>/dev/null
+cp -r "$ROOT/include/"* "$LIB_DIR/include/" 2>/dev/null
+cp -r "$ROOT/examples/"* "$LIB_DIR/examples/" 2>/dev/null
+cp -r "$ROOT/templates/"* "$LIB_DIR/templates/" 2>/dev/null
+cp -r "$ROOT/content/"* "$LIB_DIR/content/" 2>/dev/null
 
 # =========================
 # PC libs
@@ -101,7 +101,8 @@ cmake --build "$ROOT/tools/3dstool/build"
 cp "$ROOT/tools/3dstool/bin/Release/3dstool" "$LIB_DIR/tools/" 2>/dev/null
 
 # Generar el paquete PAK indispensable
-"$LIB_DIR/tools/PakMaker" -c "$LIB_DIR" -o "$ROOT/tools/ProjectMaker/template.pak" -e "build" "build_3ds" "romfs" "examples/*/examples/*"
+"$LIB_DIR/tools/PakMaker" -c "$LIB_DIR" -o "$ROOT/tools/ProjectMaker/template.pak" -e "build" "build_3ds" "romfs" \
+                          "examples/*/examples/*" "examples/*/include/*" "examples/*/tools/*" "examples/*/lib/*"
 
 # Copia de seguridad del PAK para el entorno Linux modificado
 mkdir -p "$ROOT/tools/ProjectMaker/build"

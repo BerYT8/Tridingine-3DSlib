@@ -228,7 +228,7 @@ if not exist "%LIB_DIR%\tools\PakMaker.exe" (
 "%LIB_DIR%\tools\PakMaker.exe" ^
     -c "%LIB_DIR%" ^
     -o "%ROOT%\tools\ProjectMaker\template.pak" ^
-    -e "build" "build_3ds" "romfs" "examples/*/examples/*"
+    -e "build" "build_3ds" "romfs" "examples/*/examples/*" "examples/*/examples/*" "examples/*/include/*" "examples/*/tools/*" "examples/*/lib/*"
 
 if !errorlevel! neq 0 (
     echo ERROR: Failed to generate PAK.
