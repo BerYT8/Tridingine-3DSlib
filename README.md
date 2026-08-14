@@ -41,14 +41,12 @@ The 2D API currently supports:
 * Points
 * Lines
 * Rectangles
-* Bordered rectangles
 * Triangles
 * Circles
 * Ellipses
 * Rotation
 * Depth
 * Alignment
-* Gradients
 * Text rendering
 * Fonts
 
@@ -157,7 +155,7 @@ A basic game follows this structure:
 ```c
 #include <Tridingine.h>
 
-int main(int argc, char *argv[])
+int app_main()
 {
     S2S_ScreensInit();
 

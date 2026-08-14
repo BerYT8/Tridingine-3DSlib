@@ -46,12 +46,15 @@ static inline D2D_Result D2D_DrawRectSolid(float x, float y, float w, float h, f
     return D2D_DrawRectangle(x, y, w, h, rotation, depth, alignX, alignY, color, color, color, color);
 };
 
+// Borderer rects under development
+/*
 D2D_Result D2D_DrawBorderedRect(float x, float y, float w, float h, float radius, float depth, float alignX, float alignY, Color c1, Color c2, Color c3, Color c4);
 
 static inline D2D_Result D2D_DrawBorderedRectSolid(float x, float y, float w, float h, float radius, float depth, float alignX, float alignY, Color color)
 {
     return D2D_DrawBorderedRect(x, y, w, h, radius, depth, alignX, alignY, color, color, color, color);
 };
+*/
 
 D2D_Result D2D_DrawTriangle(float x0, float y0, Color c0,
                         float x1, float y1, Color c1,
