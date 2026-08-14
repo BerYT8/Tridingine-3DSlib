@@ -5,3 +5,5 @@ chmod +x build.sh
 chmod +x build_3ds.sh
 chmod +x MakeProjectMaker.sh
 chmod +x clear_all.sh
+
+git submodule update --init --recursive
