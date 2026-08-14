@@ -9,6 +9,8 @@ for %%D in (
   tools/PakMaker/build
   tools/ProjectMaker/build
   tools/SoundMaker3DS/build
+  tools/SoundMaker3DS/libopus/build
+  tools/SoundMaker3DS/libopusenc/build
   tools/3dstool/build
   tools/3dstool/bin
   tools/bannertool/build

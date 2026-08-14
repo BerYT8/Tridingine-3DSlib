@@ -25,7 +25,7 @@ void D3D_AddUp(Camera3D *c, float amount);
 
 Vec3 D3D_LookAt(Vec3 from, Vec3 to);
 Vec3 D3D_ForwardToRotation(Vec3 forward);
-Vec3 D3D_RotationToForward(const Vec3& rot);
+Vec3 D3D_RotationToForward(Vec3 rot);
 void D3D_AddForwardPos(Camera3D *c, Vec3 v);
 
 Vec3 D3D_Camera_GetForward(Camera3D *c);

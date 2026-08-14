@@ -97,7 +97,7 @@ Vec3 D3D_ForwardToRotation(Vec3 forward)
 }
 
 // rotation: (pitch=X, yaw=Y, roll=Z) o como lo interpretes
-Vec3 D3D_RotationToForward(const Vec3& rot)
+Vec3 D3D_RotationToForward(Vec3 rot)
 {
     float yaw   = DegToRad(rot.z);
     float pitch = DegToRad(rot.y);

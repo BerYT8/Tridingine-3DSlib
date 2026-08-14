@@ -1,5 +1,6 @@
 #pragma once
 
+#include "maths/vector3.h"
 #define TRIDINGINE_VERSION_MAJOR 0
 #define TRIDINGINE_VERSION_MINOR 1
 #define TRIDINGINE_VERSION_MICRO 0
@@ -20,3 +21,5 @@
 #include "utils/random.h"
 #include "utils/save_system.h"
 // #include "html/html-ds.h"
+
+Vec3 getVersion();

@@ -86,7 +86,7 @@ REM Tools build
 REM =========================
 echo [5/6] Building tools...
 
-set "TOOLS=PakMaker 3DModelsConverter SoundMaker3DS LocalizationMaker FontsConverter"
+set "TOOLS=PakMaker 3DModelsConverter LocalizationMaker FontsConverter"
 
 for %%t in (%TOOLS%) do (
     echo  -^> %%t
@@ -109,7 +109,6 @@ for %%t in (%TOOLS%) do (
             exit /b !errorlevel!
         )
 
-        REM CMake en Windows suele colocar los ejecutables en Release
         if exist "%ROOT%\tools\%%t\build\Release\%%t.exe" (
             copy /y "%ROOT%\tools\%%t\build\Release\%%t.exe" "%LIB_DIR%\tools\" >nul
         ) else if exist "%ROOT%\tools\%%t\build\%%t.exe" (
@@ -117,6 +116,209 @@ for %%t in (%TOOLS%) do (
         )
     )
 )
+
+REM =========================
+REM SoundMaker3DS
+REM =========================
+echo Building SoundMaker3DS...
+
+set "SOUNDMAKER_DIR=%ROOT%\tools\SoundMaker3DS"
+set "OPUS_DIR=%SOUNDMAKER_DIR%\libopus"
+set "OPUSENC_DIR=%SOUNDMAKER_DIR%\libopusenc"
+set "SOUNDMAKER_BUILD=%SOUNDMAKER_DIR%\build"
+set "SOUNDMAKER_LIB=%SOUNDMAKER_DIR%\lib"
+
+if not exist "%SOUNDMAKER_DIR%" (
+    echo ERROR: SoundMaker3DS directory not found.
+    exit /b 1
+)
+
+if not exist "%SOUNDMAKER_LIB%" (
+    mkdir "%SOUNDMAKER_LIB%"
+)
+
+REM =========================
+REM libopus
+REM =========================
+echo Building libopus...
+
+cmake -S "%OPUS_DIR%" ^
+      -B "%OPUS_DIR%\build" ^
+      -DOPUS_BUILD_PROGRAMS=ON ^
+      -DOPUS_BUILD_TESTING=ON ^
+      -DCMAKE_BUILD_TYPE=Release
+
+if !errorlevel! neq 0 (
+    echo ERROR: libopus configure failed.
+    exit /b !errorlevel!
+)
+
+cmake --build "%OPUS_DIR%\build" --config Release
+
+if !errorlevel! neq 0 (
+    echo ERROR: libopus build failed.
+    exit /b !errorlevel!
+)
+
+REM =========================
+REM Copiar opus.lib
+REM =========================
+echo Copying opus.lib...
+
+if exist "%OPUS_DIR%\build\Release\opus.lib" (
+    copy /y "%OPUS_DIR%\build\Release\opus.lib" ^
+        "%SOUNDMAKER_LIB%\opus.lib" >nul
+) else if exist "%OPUS_DIR%\build\opus.lib" (
+    copy /y "%OPUS_DIR%\build\opus.lib" ^
+        "%SOUNDMAKER_LIB%\opus.lib" >nul
+) else if exist "%OPUS_DIR%\build\Release\libopus.lib" (
+    copy /y "%OPUS_DIR%\build\Release\libopus.lib" ^
+        "%SOUNDMAKER_LIB%\opus.lib" >nul
+) else if exist "%OPUS_DIR%\build\libopus.lib" (
+    copy /y "%OPUS_DIR%\build\libopus.lib" ^
+        "%SOUNDMAKER_LIB%\opus.lib" >nul
+) else (
+    echo ERROR: opus.lib not found.
+    exit /b 1
+)
+
+REM Comprobar copia
+if not exist "%SOUNDMAKER_LIB%\opus.lib" (
+    echo ERROR: Failed to copy opus.lib.
+    exit /b 1
+)
+
+echo opus.lib copied successfully.
+
+REM =========================
+REM Preparar libopusenc
+REM =========================
+echo Preparing libopusenc...
+
+if not exist "%SOUNDMAKER_DIR%\cmake\libopusenc.cmake" (
+    echo ERROR: libopusenc.cmake not found.
+    exit /b 1
+)
+
+copy /y ^
+    "%SOUNDMAKER_DIR%\cmake\libopusenc.cmake" ^
+    "%OPUSENC_DIR%\CMakeLists.txt" >nul
+
+if !errorlevel! neq 0 (
+    echo ERROR: Failed to prepare libopusenc.
+    exit /b !errorlevel!
+)
+
+REM =========================
+REM Copiar headers de Opus
+REM =========================
+echo Copying Opus headers...
+
+if not exist "%OPUSENC_DIR%\lib_include" (
+    mkdir "%OPUSENC_DIR%\lib_include"
+)
+
+copy /y ^
+    "%OPUS_DIR%\include\*.h" ^
+    "%OPUSENC_DIR%\lib_include\" >nul
+
+if !errorlevel! neq 0 (
+    echo ERROR: Failed to copy Opus headers.
+    exit /b !errorlevel!
+)
+
+REM =========================
+REM libopusenc
+REM =========================
+echo Building libopusenc...
+
+cmake -S "%OPUSENC_DIR%" ^
+      -B "%OPUSENC_DIR%\build" ^
+      -DCMAKE_BUILD_TYPE=Release
+
+if !errorlevel! neq 0 (
+    echo ERROR: libopusenc configure failed.
+    exit /b !errorlevel!
+)
+
+cmake --build "%OPUSENC_DIR%\build" --config Release
+
+if !errorlevel! neq 0 (
+    echo ERROR: libopusenc build failed.
+    exit /b !errorlevel!
+)
+
+REM =========================
+REM Copiar opusenc.lib
+REM =========================
+echo Copying opusenc.lib...
+
+if exist "%OPUSENC_DIR%\build\Release\opusenc.lib" (
+    copy /y ^
+        "%OPUSENC_DIR%\build\Release\opusenc.lib" ^
+        "%SOUNDMAKER_LIB%\opusenc.lib" >nul
+) else if exist "%OPUSENC_DIR%\build\opusenc.lib" (
+    copy /y ^
+        "%OPUSENC_DIR%\build\opusenc.lib" ^
+        "%SOUNDMAKER_LIB%\opusenc.lib" >nul
+) else if exist "%OPUSENC_DIR%\build\Release\libopusenc.lib" (
+    copy /y ^
+        "%OPUSENC_DIR%\build\Release\libopusenc.lib" ^
+        "%SOUNDMAKER_LIB%\opusenc.lib" >nul
+) else if exist "%OPUSENC_DIR%\build\libopusenc.lib" (
+    copy /y ^
+        "%OPUSENC_DIR%\build\libopusenc.lib" ^
+        "%SOUNDMAKER_LIB%\opusenc.lib" >nul
+) else (
+    echo ERROR: opusenc.lib not found.
+    exit /b 1
+)
+
+if not exist "%SOUNDMAKER_LIB%\opusenc.lib" (
+    echo ERROR: Failed to copy opusenc.lib.
+    exit /b 1
+)
+
+echo opusenc.lib copied successfully.
+
+REM =========================
+REM SoundMaker3DS
+REM =========================
+echo Building SoundMaker3DS...
+
+cmake -S "%SOUNDMAKER_DIR%" ^
+      -B "%SOUNDMAKER_BUILD%" ^
+      -DCMAKE_BUILD_TYPE=Release
+
+if !errorlevel! neq 0 (
+    echo ERROR: SoundMaker3DS configure failed.
+    exit /b !errorlevel!
+)
+
+cmake --build "%SOUNDMAKER_BUILD%" --config Release
+
+if !errorlevel! neq 0 (
+    echo ERROR: SoundMaker3DS build failed.
+    exit /b !errorlevel!
+)
+
+REM =========================
+REM Copiar ejecutable
+REM =========================
+if exist "%SOUNDMAKER_BUILD%\Release\SoundMaker3DS.exe" (
+    copy /y ^
+        "%SOUNDMAKER_BUILD%\Release\SoundMaker3DS.exe" ^
+        "%LIB_DIR%\tools\SoundMaker3DS.exe" >nul
+) else if exist "%SOUNDMAKER_BUILD%\SoundMaker3DS.exe" (
+    copy /y ^
+        "%SOUNDMAKER_BUILD%\SoundMaker3DS.exe" ^
+        "%LIB_DIR%\tools\SoundMaker3DS.exe" >nul
+) else (
+    echo ERROR: SoundMaker3DS.exe not found.
+    exit /b 1
+)
+
+echo SoundMaker3DS built successfully.
 
 REM =========================
 REM bannertool

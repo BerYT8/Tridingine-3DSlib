@@ -102,7 +102,8 @@ Current experimental functionality includes:
 
 | Platform           | Status               |
 | ------------------ | -------------------- |
-| Windows            | 🟢 Supported         |
+| Windows            | 🚧 Experimental      |
+|  (windows needs FontsConverter libs fix)  |
 | Linux              | 🟢 Supported         |
 | macOS              | 🚧 In development    |
 | Nintendo 3DS       | 🟢 Supported         |

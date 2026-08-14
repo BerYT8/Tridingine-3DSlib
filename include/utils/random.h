@@ -17,7 +17,7 @@ extern "C"
 {
 #endif
 
-void randomInit(RandomType type = RANDOM_TIME_BASED);
+void randomInit(RandomType type);
 void setRandomType(RandomType type);
 unsigned int getSeed();
 void setSeed(unsigned int seed);

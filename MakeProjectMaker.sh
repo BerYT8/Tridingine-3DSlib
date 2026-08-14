@@ -75,25 +75,128 @@ for t in "${TOOLS[@]}"; do
   fi
 done
 
-cd "$ROOT/tools/SoundMaker3DS"
+# =========================
+# SoundMaker3DS
+# =========================
+echo "Building SoundMaker3DS..."
 
-mkdir -p lib
+SOUNDMAKER_DIR="$ROOT/tools/SoundMaker3DS"
+OPUS_DIR="$SOUNDMAKER_DIR/libopus"
+OPUSENC_DIR="$SOUNDMAKER_DIR/libopusenc"
+SOUNDMAKER_BUILD="$SOUNDMAKER_DIR/build"
+SOUNDMAKER_LIB="$SOUNDMAKER_DIR/lib"
 
-cd libopus
-mkdir -p build && cd build
-cmake .. -DOPUS_BUILD_PROGRAMS=ON -DOPUS_BUILD_TESTING=ON
-cmake --build .
-cp "$ROOT/tools/SoundMaker3DS/libopus/build/libopus.a" "$ROOT/tools/SoundMaker3DS/lib/" 2>/dev/null
+mkdir -p "$SOUNDMAKER_LIB"
 
-cd ../..
+# =========================
+# libopus
+# =========================
+echo "Building libopus..."
 
-cp "$ROOT/tools/SoundMaker3DS/cmake/libopusenc.cmake" "$ROOT/tools/SoundMaker3DS/libopusenc/CMakeLists.txt" 2>/dev/null
-cd libopusenc
-mkdir -p lib_include
-cp -r "$ROOT/tools/SoundMaker3DS/libopus/include/"*.h "$ROOT/tools/SoundMaker3DS/libopusenc/lib_include/" 2>/dev/null
-mkdir -p build && cd build
-cmake ..
-cmake --build .
+cmake -S "$OPUS_DIR" \
+      -B "$OPUS_DIR/build" \
+      -DOPUS_BUILD_PROGRAMS=ON \
+      -DOPUS_BUILD_TESTING=ON \
+      -DCMAKE_BUILD_TYPE=Release
+
+cmake --build "$OPUS_DIR/build"
+
+# Buscar libopus.a
+if [ -f "$OPUS_DIR/build/libopus.a" ]; then
+    cp -f "$OPUS_DIR/build/libopus.a" "$SOUNDMAKER_LIB/libopus.a"
+elif [ -f "$OPUS_DIR/build/Release/libopus.a" ]; then
+    cp -f "$OPUS_DIR/build/Release/libopus.a" "$SOUNDMAKER_LIB/libopus.a"
+else
+    echo "ERROR: libopus.a not found."
+    exit 1
+fi
+
+echo "libopus.a copied successfully."
+
+# =========================
+# Preparar libopusenc
+# =========================
+echo "Preparing libopusenc..."
+
+if [ ! -f "$SOUNDMAKER_DIR/cmake/libopusenc.cmake" ]; then
+    echo "ERROR: libopusenc.cmake not found."
+    exit 1
+fi
+
+cp -f \
+    "$SOUNDMAKER_DIR/cmake/libopusenc.cmake" \
+    "$OPUSENC_DIR/CMakeLists.txt"
+
+# =========================
+# Copiar headers de Opus
+# =========================
+echo "Copying Opus headers..."
+
+mkdir -p "$OPUSENC_DIR/lib_include"
+
+cp -f "$OPUS_DIR/include/"*.h "$OPUSENC_DIR/lib_include/"
+
+# Comprobar que se copiaron
+if ! ls "$OPUSENC_DIR/lib_include/"*.h >/dev/null 2>&1; then
+    echo "ERROR: Opus headers were not copied."
+    exit 1
+fi
+
+# =========================
+# libopusenc
+# =========================
+echo "Building libopusenc..."
+
+cmake -S "$OPUSENC_DIR" \
+      -B "$OPUSENC_DIR/build" \
+      -DCMAKE_BUILD_TYPE=Release
+
+cmake --build "$OPUSENC_DIR/build"
+
+# Buscar libopusenc.a
+if [ -f "$OPUSENC_DIR/build/libopusenc.a" ]; then
+    cp -f "$OPUSENC_DIR/build/libopusenc.a" "$SOUNDMAKER_LIB/libopusenc.a"
+elif [ -f "$OPUSENC_DIR/build/Release/libopusenc.a" ]; then
+    cp -f "$OPUSENC_DIR/build/Release/libopusenc.a" "$SOUNDMAKER_LIB/libopusenc.a"
+else
+    echo "ERROR: libopusenc.a not found."
+    exit 1
+fi
+
+echo "libopusenc.a copied successfully."
+
+# =========================
+# SoundMaker3DS
+# =========================
+echo "Building SoundMaker3DS..."
+
+cmake -S "$SOUNDMAKER_DIR" \
+      -B "$SOUNDMAKER_BUILD" \
+      -DCMAKE_BUILD_TYPE=Release
+
+cmake --build "$SOUNDMAKER_BUILD"
+
+# =========================
+# Copiar ejecutable
+# =========================
+if [ -f "$SOUNDMAKER_BUILD/SoundMaker3DS" ]; then
+
+    cp -f \
+        "$SOUNDMAKER_BUILD/SoundMaker3DS" \
+        "$LIB_DIR/tools/SoundMaker3DS"
+
+elif [ -f "$SOUNDMAKER_BUILD/Release/SoundMaker3DS" ]; then
+
+    cp -f \
+        "$SOUNDMAKER_BUILD/Release/SoundMaker3DS" \
+        "$LIB_DIR/tools/SoundMaker3DS"
+
+else
+    echo "ERROR: SoundMaker3DS executable not found."
+    exit 1
+fi
+
+echo "SoundMaker3DS built successfully."
 
 cd "$ROOT"
 

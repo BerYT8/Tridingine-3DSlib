@@ -54,17 +54,17 @@ if not defined DEVKITPRO (
 )
 
 REM Verificar MSYS2
-set "MSYS2_BASH=%DEVKITPRO%\msys2\usr\bin\bash.exe"
+set "MSYS2_BASH=%DEVKITPRO%\msys2\msys2_shell.bat"
 
 if not exist "%MSYS2_BASH%" (
-    echo ERROR: No se encuentra bash.exe de MSYS2.
+    echo ERROR: No se encuentra msys2_shell.bat de MSYS2.
     echo Ruta esperada: %MSYS2_BASH%
     endlocal
     exit /b 1
 )
 
 REM Ejecutar build_3ds.sh directamente
-"%MSYS2_BASH%" -lc "chmod +x ./build_3ds.sh && ./build_3ds.sh build_3ds"
+"%MSYS2_BASH%" -defterm -here -no-start -c "chmod +x ./build_3ds.sh && ./build_3ds.sh build_3ds"
 
 if errorlevel 1 (
     echo ERROR: 3DS build failed.
