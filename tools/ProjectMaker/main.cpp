@@ -1,5 +1,5 @@
 #include "template_pak.h"
-#include <pak_loader/pak_loader.h>
+#include <Tridingine.h>
 
 #include <iostream>
 #include <fstream>
@@ -17,10 +17,12 @@ namespace fs = std::filesystem;
 void mostrarUso(const char* nombrePrograma)
 {
     std::cerr << "Uso:\n";
+    std::cerr << "  " << nombrePrograma << " --version/-v\n";
     std::cerr << "  " << nombrePrograma << " --update -o <CARPETA>\n";
     std::cerr << "  " << nombrePrograma << " -o <CARPETA>\n";
     std::cerr << "  " << nombrePrograma << " [--only <patron> ...]\n";
     std::cerr << "  " << nombrePrograma << " [--exclude <patron> ...]\n";
+    std::cerr << "  " << nombrePrograma << " [--no-libs (optional)]\n";
     std::cerr << "  " << nombrePrograma << " [--no-examples (optional)]\n";
 }
 
@@ -115,6 +117,21 @@ int main(int argc, char* argv[])
 
     for (int i = 1; i < argc; ++i)
     {
+        if(strcmp(argv[i], "--version") == 0 ||
+            strcmp(argv[i], "-v") == 0)
+        {
+            std::cout
+                << "Tridingine Project Maker v"
+                << TRIDINGINE_VERSION_MAJOR
+                << "."
+                << TRIDINGINE_VERSION_MINOR
+                << "."
+                << TRIDINGINE_VERSION_MICRO
+                << "\n";
+
+            return 0;
+        }
+
         if (strcmp(argv[i], "--help") == 0)
         {
             mostrarUso(argv[0]);
@@ -131,6 +148,13 @@ int main(int argc, char* argv[])
         if (strcmp(argv[i], "--no-examples") == 0)
         {
             excludePatterns.emplace_back("examples/*");
+            continue;
+        }
+
+        if (strcmp(argv[i], "--no-libs") == 0)
+        {
+            excludePatterns.emplace_back("lib/*");
+            excludePatterns.emplace_back("include/*");
             continue;
         }
 

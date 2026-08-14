@@ -10,7 +10,7 @@ echo === ProjectMaker POST BUILD ===
 REM =========================
 REM Crear estructura Lib
 REM =========================
-echo [1/4] Creating Lib structure...
+echo [1/6] Creating Lib structure...
 
 if exist "%LIB_DIR%" rmdir /s /q "%LIB_DIR%"
 
@@ -22,31 +22,79 @@ mkdir "%LIB_DIR%\romfs\pc"
 mkdir "%LIB_DIR%\romfs\3ds"
 mkdir "%LIB_DIR%\templates"
 mkdir "%LIB_DIR%\examples"
+mkdir "%LIB_DIR%\include"
+mkdir "%LIB_DIR%\lib\pc"
+mkdir "%LIB_DIR%\lib\3ds"
 
 REM =========================
 REM Assets
 REM =========================
-echo [2/4] Copying engine assets...
+echo [2/6] Copying engine assets...
 
 REM Asegurar que existan los origenes
+if not exist "%ROOT%\include" mkdir "%ROOT%\include"
 if not exist "%ROOT%\examples" mkdir "%ROOT%\examples"
 if not exist "%ROOT%\templates" mkdir "%ROOT%\templates"
 if not exist "%ROOT%\content" mkdir "%ROOT%\content"
 
-REM Copiar contenido de las carpetas, no las carpetas en si
+REM Copiar GameCompiler
 if exist "%ROOT%\tools\GameCompiler" (
-    xcopy /e /i /y "%ROOT%\tools\GameCompiler\*" "%LIB_DIR%\" >nul
+    xcopy /e /i /y "%ROOT%\tools\GameCompiler\*" "%LIB_DIR%\" >nul 2>nul
 )
 
+REM Copiar include
+xcopy /e /i /y "%ROOT%\include\*" "%LIB_DIR%\include\" >nul 2>nul
+
+REM Copiar examples
 xcopy /e /i /y "%ROOT%\examples\*" "%LIB_DIR%\examples\" >nul 2>nul
+
+REM Copiar templates
 xcopy /e /i /y "%ROOT%\templates\*" "%LIB_DIR%\templates\" >nul 2>nul
+
+REM Copiar content
 xcopy /e /i /y "%ROOT%\content\*" "%LIB_DIR%\content\" >nul 2>nul
 
+REM =========================
+REM PC libs
+REM =========================
+echo [3/6] Copying PC libs...
+
+REM DLL principal
+if exist "%BUILD_DIR%\Code\libTridingine.dll" (
+    copy /y "%BUILD_DIR%\Code\libTridingine.dll" "%LIB_DIR%\lib\pc\libTridingine.dll" >nul
+) else (
+    echo WARNING: libTridingine.dll not found.
+)
+
+REM Import/static library de la DLL
+if exist "%BUILD_DIR%\Code\libTridingineEntrypoint.lib" (
+    copy /y "%BUILD_DIR%\Code\libTridingineEntrypoint.lib" "%LIB_DIR%\lib\pc\libTridingineEntrypoint.lib" >nul
+) else (
+    echo WARNING: libTridingineEntrypoint.lib not found.
+)
+
+REM =========================
+REM 3DS libs
+REM =========================
+echo [4/6] Copying 3DS libs...
+
+REM Mantener los nombres equivalentes a los .a de Linux
+if exist "%ROOT%\build_3ds\libTridingine.a" (
+    copy /y "%ROOT%\build_3ds\libTridingine.a" "%LIB_DIR%\lib\3ds\tridingine.a" >nul
+) else (
+    echo WARNING: build_3ds\libTridingine.a not found.
+)
+
+if exist "%ROOT%\build_3ds\libTridingineEntrypoint.a" (
+    copy /y "%ROOT%\build_3ds\libTridingineEntrypoint.a" "%LIB_DIR%\lib\3ds\entrypoint.a" >nul
+) else (
+    echo WARNING: build_3ds\libTridingineEntrypoint.a not found.
+)
 
 REM =========================
 REM Tools build
 REM =========================
-echo [3/4] Building tools...
+echo [5/6] Building tools...
 
 set "TOOLS=PakMaker 3DModelsConverter SoundMaker3DS LocalizationMaker FontsConverter"
 
@@ -134,8 +182,6 @@ if exist "%ROOT%\tools\Project_CTR\makerom" (
 
     if exist "%ROOT%\tools\Project_CTR\makerom\bin\makerom.exe" (
         copy /y "%ROOT%\tools\Project_CTR\makerom\bin\makerom.exe" "%LIB_DIR%\tools\" >nul
-    ) else if exist "%ROOT%\tools\Project_CTR\makerom\bin\makerom" (
-        copy /y "%ROOT%\tools\Project_CTR\makerom\bin\makerom" "%LIB_DIR%\tools\" >nul
     )
 )
 
@@ -199,7 +245,7 @@ if not exist "%ROOT%\tools\ProjectMaker\build" (
 REM =========================
 REM ProjectMaker
 REM =========================
-echo [4/4] Building ProjectMaker...
+echo [6/6] Building ProjectMaker...
 
 cmake -S "%ROOT%\tools\ProjectMaker" ^
       -B "%ROOT%\tools\ProjectMaker\build" ^

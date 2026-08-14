@@ -2,8 +2,10 @@ bin
 build
 build_3ds
 .vscode
+.cache
 romfs
 
+lib
 *.dll
 *.lib
 *.so

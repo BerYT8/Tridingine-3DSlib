@@ -1,3 +1,9 @@
+#pragma once
+
+#define TRIDINGINE_VERSION_MAJOR 0
+#define TRIDINGINE_VERSION_MINOR 1
+#define TRIDINGINE_VERSION_MICRO 0
+
 #include "screens.h"
 #include "maths.h"
 #include "localization.h"

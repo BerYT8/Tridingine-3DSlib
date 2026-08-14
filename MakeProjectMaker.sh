@@ -10,7 +10,7 @@ echo "=== ProjectMaker POST BUILD ==="
 # =========================
 # Crear estructura Lib
 # =========================
-echo "[1/4] Creating Lib structure..."
+echo "[1/6] Creating Lib structure..."
 
 rm -rf "$LIB_DIR"
 mkdir -p "$LIB_DIR"
@@ -22,27 +22,48 @@ mkdir -p "$LIB_DIR/romfs/pc"
 mkdir -p "$LIB_DIR/romfs/3ds"
 mkdir -p "$LIB_DIR/templates"
 mkdir -p "$LIB_DIR/examples"
+mkdir -p "$LIB_DIR/include"
+mkdir -p "$LIB_DIR/lib/pc"
+mkdir -p "$LIB_DIR/lib/3ds"
 
 # =========================
 # Assets
 # =========================
-echo "[2/4] Copying engine assets..."
+echo "[2/6] Copying engine assets..."
 
 # Asegurar que existan los orígenes
+mkdir -p "$ROOT/include"
 mkdir -p "$ROOT/examples"
 mkdir -p "$ROOT/templates"
 mkdir -p "$ROOT/content"
 
 # Copiar el contenido de las carpetas de forma limpia (evita rutas duplicadas)
 cp -r "$ROOT/tools/GameCompiler/"* "$LIB_DIR/" 2>/dev/null || true
+cp -r "$ROOT/include/"* "$LIB_DIR/include/" 2>/dev/null || true
 cp -r "$ROOT/examples/"* "$LIB_DIR/examples/" 2>/dev/null || true
 cp -r "$ROOT/templates/"* "$LIB_DIR/templates/" 2>/dev/null || true
 cp -r "$ROOT/content/"* "$LIB_DIR/content/" 2>/dev/null || true
 
 # =========================
+# PC libs
+# =========================
+echo "[3/6] Copying PC libs..."
+
+cp -f "$BUILD_DIR/Code/libTridingine.so" "$LIB_DIR/lib/pc/libTridingine.so" 2>/dev/null
+cp -f "$BUILD_DIR/Code/libTridingineEntrypoint.a" "$LIB_DIR/lib/pc/libEntrypoint.a" 2>/dev/null
+
+# =========================
+# 3DS lib
+# =========================
+echo "[4/6] Copying 3DS libs..."
+
+cp -f "$ROOT/build_3ds/libTridingine.a" "$LIB_DIR/lib/3ds/tridingine.a" 2>/dev/null
+cp -f "$ROOT/build_3ds/libTridingineEntrypoint.a" "$LIB_DIR/lib/3ds/entrypoint.a" 2>/dev/null
+
+# =========================
 # Tools build
 # =========================
-echo "[3/4] Building tools..."
+echo "[5/6] Building tools..."
 
 TOOLS=(
   "PakMaker"
@@ -88,7 +109,7 @@ mkdir -p "$ROOT/tools/ProjectMaker/build"
 # =========================
 # ProjectMaker
 # =========================
-echo "[4/4] Building ProjectMaker..."
+echo "[6/6] Building ProjectMaker..."
 
 cmake -S "$ROOT/tools/ProjectMaker" \
       -B "$ROOT/tools/ProjectMaker/build" \
