@@ -21,6 +21,7 @@ mkdir -p Code
 cd Code
 cmake ../.. -DBUILD_3DS=OFF -DCMAKE_BUILD_TYPE=Release
 cmake --build . --config Release
+sudo cmake --install .
 
 cd ../..
 

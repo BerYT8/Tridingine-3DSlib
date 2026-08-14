@@ -1,16 +1,39 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(3ds_libs C CXX)
+project(
+    Tridingine
+    VERSION 1.0.0
+    LANGUAGES C CXX
+)
 
-# ---------------- OPCIÓN ----------------
-option(BUILD_3DS "Build for Nintendo 3DS" OFF)
+# =====================================================
+# OPCIONES
+# =====================================================
 
-# ---------------- C++ STANDARD ----------------
+option(
+    BUILD_3DS
+    "Build Tridingine for Nintendo 3DS"
+    OFF
+)
+
+# =====================================================
+# C++
+# =====================================================
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# ---------------- SOURCES ----------------
+# =====================================================
+# OUTPUT
+# =====================================================
+
+set(TRIDINGINE_OUTPUT_NAME "Tridingine")
+
+# =====================================================
+# SOURCES
+# =====================================================
+
 set(SOURCES
     src/romfs_path.h
     src/romfs_path.cpp
@@ -24,14 +47,16 @@ set(SOURCES
     src/sys_fonts_gen_funcs.h
     src/system_fonts.cpp
 
-    src/entrypoint.cpp
     src/pak_loader/pak_loader.cpp
 
     src/inputIntern.h
     src/input.cpp
+
     src/localization/localization_sys.h
     src/localization/localization.cpp
+
     src/delta_time.c
+
     src/config.h
     src/config.c
 
@@ -43,11 +68,14 @@ set(SOURCES
 
     src/draw/shaders/opengl/opengl.shader.h
     src/draw/shaders/opengl/opengl.shader.cpp
+
     src/draw/shaders/pica200/pica.shader.h
     src/draw/shaders/pica200/pica.shader.cpp
+
     src/draw/2d/2d_shapes.c
     src/draw/2d/2d_vals.h
     src/draw/2d/2d_text.cpp
+
     src/draw/3d/3d_shapes.cpp
 
     src/html/html.h
@@ -59,10 +87,13 @@ set(SOURCES
     src/save_system/saveSys.c
     src/save_system/loadSys.c
     src/save_system/asyncFuncs.cpp
+
     src/random/randomIntern.h
     src/random/randomIntern.cpp
     src/random/random.cpp
+
     src/nlohmann/json.hpp
+
     src/textures/json.h
     src/textures/json.cpp
     src/textures/sprites.h
@@ -83,25 +114,111 @@ set(SOURCES
     src/sound/soundLoad.h
     src/sound/sound_wrapper.cpp
     src/sound/sound.c
+
     src/animation/animation.c
 )
 
-file(GLOB_RECURSE IMGUI_SRC "lib_include/imgui/*.cpp")
+# =====================================================
+# IMGUI
+# =====================================================
+
+file(
+    GLOB_RECURSE
+    IMGUI_SRC
+    "lib_include/imgui/*.cpp"
+)
 
 # =====================================================
-# 🖥️ PC BUILD CONFIGURATION
+# PLATFORM
 # =====================================================
+
+if(BUILD_3DS)
+
+    set(TRIDINGINE_PLATFORM "3DS")
+
+else()
+
+    if(WIN32)
+
+        set(TRIDINGINE_PLATFORM "Win")
+
+    elseif(APPLE)
+
+        set(TRIDINGINE_PLATFORM "Mac")
+
+    elseif(UNIX)
+
+        set(TRIDINGINE_PLATFORM "Linux")
+
+    else()
+
+        message(FATAL_ERROR
+            "Unsupported PC platform"
+        )
+
+    endif()
+
+endif()
+
+# =====================================================
+# CONFIGURATION HEADER
+# =====================================================
+
+message(STATUS "========================================")
+message(STATUS "Building Tridingine")
+message(STATUS "========================================")
+message(STATUS "  Platform : ${TRIDINGINE_PLATFORM}")
+message(STATUS "  Version  : ${PROJECT_VERSION}")
+message(STATUS "========================================")
+
+
+# =====================================================
+# 🖥️ PC
+# =====================================================
+
 if(NOT BUILD_3DS)
 
+    message(STATUS "Configuring PC build")
+
+    # -------------------------------------------------
+    # OpenGL
+    # -------------------------------------------------
+
     find_package(OpenGL REQUIRED)
+
+    # -------------------------------------------------
+    # GLEW
+    # -------------------------------------------------
+
     find_package(GLEW REQUIRED)
 
     # -------------------------------------------------
-    # SDL2 - STATIC
+    # SDL2
     # -------------------------------------------------
-    set(SDL_SHARED OFF CACHE BOOL "Build SDL2 shared library" FORCE)
-    set(SDL_STATIC ON CACHE BOOL "Build SDL2 static library" FORCE)
-    set(SDL_STATIC_PIC ON CACHE BOOL "" FORCE)
+
+    set(
+        SDL_SHARED
+        OFF
+        CACHE BOOL
+        "Build SDL2 shared library"
+        FORCE
+    )
+
+    set(
+        SDL_STATIC
+        ON
+        CACHE BOOL
+        "Build SDL2 static library"
+        FORCE
+    )
+
+    set(
+        SDL_STATIC_PIC
+        ON
+        CACHE BOOL
+        ""
+        FORCE
+    )
 
     add_subdirectory(
         external/sdl2
@@ -109,9 +226,16 @@ if(NOT BUILD_3DS)
     )
 
     # -------------------------------------------------
-    # SDL2_mixer - STATIC
+    # SDL2_mixer
     # -------------------------------------------------
-    set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
+
+    set(
+        BUILD_SHARED_LIBS
+        OFF
+        CACHE BOOL
+        "Build shared libraries"
+        FORCE
+    )
 
     add_subdirectory(
         external/sdl2-mixer
@@ -119,13 +243,24 @@ if(NOT BUILD_3DS)
     )
 
     # -------------------------------------------------
-    # SDL2_image - STATIC
+    # SDL2_image
     # -------------------------------------------------
-    set(SDL2IMAGE_BUILD_SHARED_LIBS OFF CACHE BOOL
-        "Build SDL2_image shared library" FORCE)
 
-    set(SDL2IMAGE_BUILD_STATIC_LIBS ON CACHE BOOL
-        "Build SDL2_image static library" FORCE)
+    set(
+        SDL2IMAGE_BUILD_SHARED_LIBS
+        OFF
+        CACHE BOOL
+        "Build SDL2_image shared library"
+        FORCE
+    )
+
+    set(
+        SDL2IMAGE_BUILD_STATIC_LIBS
+        ON
+        CACHE BOOL
+        "Build SDL2_image static library"
+        FORCE
+    )
 
     add_subdirectory(
         external/sdl2-image
@@ -133,40 +268,74 @@ if(NOT BUILD_3DS)
     )
 
     # -------------------------------------------------
-    # SDL2_ttf - STATIC
+    # SDL2_ttf
     # -------------------------------------------------
-    set(SDL2TTF_BUILD_SHARED_LIBS OFF CACHE BOOL
-        "Build SDL2_ttf shared library" FORCE)
 
-    set(SDL2TTF_BUILD_STATIC_LIBS ON CACHE BOOL
-        "Build SDL2_ttf static library" FORCE)
+    set(
+        SDL2TTF_BUILD_SHARED_LIBS
+        OFF
+        CACHE BOOL
+        "Build SDL2_ttf shared library"
+        FORCE
+    )
+
+    set(
+        SDL2TTF_BUILD_STATIC_LIBS
+        ON
+        CACHE BOOL
+        "Build SDL2_ttf static library"
+        FORCE
+    )
 
     add_subdirectory(
         external/sdl2-ttf
         EXCLUDE_FROM_ALL
     )
 
-    # -------------------------------------------------
-    # Main library
-    # -------------------------------------------------
-    add_library(${PROJECT_NAME} SHARED
+    # =================================================
+    # CORE
+    # =================================================
+
+    add_library(
+        TridingineCore
+        SHARED
         ${SOURCES}
+        ${IMGUI_SRC}
     )
 
-    target_compile_definitions(${PROJECT_NAME}
+    set_target_properties(
+        TridingineCore
+        PROPERTIES
+            OUTPUT_NAME
+                ${TRIDINGINE_OUTPUT_NAME}
+    )
+
+    target_compile_definitions(
+        TridingineCore
         PRIVATE
             PLATFORM_PC
     )
 
-    target_include_directories(${PROJECT_NAME}
+    target_include_directories(
+        TridingineCore
+        PUBLIC
+
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib_include>
+
+            $<INSTALL_INTERFACE:include>
+
         PRIVATE
-            include
+
             ${OPENGL_INCLUDE_DIR}
     )
 
-    target_link_libraries(${PROJECT_NAME}
+    target_link_libraries(
+        TridingineCore
         PRIVATE
+
             GLEW::GLEW
+
             OpenGL::GLU
             OpenGL::GL
 
@@ -176,49 +345,384 @@ if(NOT BUILD_3DS)
             SDL2_ttf::SDL2_ttf-static
     )
 
+    # =================================================
+    # ENTRYPOINT
+    # =================================================
+
+    add_library(
+        TridingineEntrypoint
+        STATIC
+        src/entrypoint.cpp
+    )
+
+    target_compile_definitions(
+        TridingineEntrypoint
+        PRIVATE
+            PLATFORM_PC
+    )
+
+    target_include_directories(
+        TridingineEntrypoint
+        PUBLIC
+
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib_include>
+
+            $<INSTALL_INTERFACE:include>
+    )
+
+    # =================================================
+    # PUBLIC TARGET
+    # =================================================
+
+    add_library(
+        Tridingine
+        INTERFACE
+    )
+
+    target_link_libraries(
+        Tridingine
+        INTERFACE
+
+            TridingineCore
+            TridingineEntrypoint
+    )
+
+    set_target_properties(
+        Tridingine
+        PROPERTIES
+            EXPORT_NAME Tridingine
+    )
+
 
 # =====================================================
-# 🎮 3DS BUILD (OFICIAL)
+# 🎮 NINTENDO 3DS
 # =====================================================
+
 else()
-    set(LIBS_3DS
-        ${CMAKE_SOURCE_DIR}/lib/3ds/libopusfile.a
-        ${CMAKE_SOURCE_DIR}/lib/3ds/libopus.a
-        ${CMAKE_SOURCE_DIR}/lib/3ds/libogg.a
+
+    message(STATUS "Configuring Nintendo 3DS build")
+
+    # -------------------------------------------------
+    # devkitPro
+    # -------------------------------------------------
+
+    if(NOT DEFINED ENV{DEVKITPRO})
+
+        message(FATAL_ERROR
+            "DEVKITPRO environment variable is not set."
+        )
+
+    endif()
+
+    include(
+        "$ENV{DEVKITPRO}/cmake/3DS.cmake"
     )
 
-    message(STATUS "Building for 3DS with devkitPro")
+    # =================================================
+    # CORE
+    # =================================================
 
-    include("$ENV{DEVKITPRO}/cmake/3DS.cmake")
-
-    add_library(${PROJECT_NAME}
+    add_library(
+        TridingineCore
+        STATIC
         ${SOURCES}
+        ${IMGUI_SRC}
     )
 
-    target_include_directories(${PROJECT_NAME} PRIVATE
-        include
-        lib_include
+    set_target_properties(
+        TridingineCore
+        PROPERTIES
+            OUTPUT_NAME
+                ${TRIDINGINE_OUTPUT_NAME}
     )
 
-    target_compile_definitions(${PROJECT_NAME} PRIVATE
-        __3DS__
-        PLATFORM_3DS
+    target_compile_definitions(
+        TridingineCore
+        PRIVATE
+            __3DS__
+            PLATFORM_3DS
     )
 
-    ctr_add_shader_library(3dshader
+    target_include_directories(
+        TridingineCore
+        PUBLIC
+
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib_include>
+
+            $<INSTALL_INTERFACE:include>
+    )
+
+    # =================================================
+    # SHADER
+    # =================================================
+
+    ctr_add_shader_library(
+        3dshader
         src/draw/3d/3dshader.v.pica
     )
 
-    dkp_add_embedded_binary_library(3dlibrary
+    dkp_add_embedded_binary_library(
+        3dlibrary
         3dshader
     )
 
-    target_link_libraries(${PROJECT_NAME} PRIVATE
+    set_target_properties(
         3dlibrary
-        citro2d
-        citro3d
-        ctru
-        m
-        ${LIBS_3DS}
+        PROPERTIES
+            OUTPUT_NAME
+                TridingineShaderData
     )
+
+    # =================================================
+    # FIX CMAKE EXPORT
+    # =================================================
+    #
+    # dkp_add_embedded_binary_library() añade el
+    # directorio .dkp-generated al INTERFACE.
+    #
+    # Ese directorio solamente existe durante el build
+    # y NO puede aparecer en un paquete instalado.
+    #
+    # El archivo .a sí se instala y se exporta.
+    #
+
+    set_target_properties(
+        3dlibrary
+        PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES ""
+    )
+
+    # =================================================
+    # ENTRYPOINT
+    # =================================================
+
+    add_library(
+        TridingineEntrypoint
+        STATIC
+        src/entrypoint.cpp
+    )
+
+    target_compile_definitions(
+        TridingineEntrypoint
+        PRIVATE
+            __3DS__
+            PLATFORM_3DS
+    )
+
+    target_include_directories(
+        TridingineEntrypoint
+        PUBLIC
+
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib_include>
+
+            $<INSTALL_INTERFACE:include>
+    )
+
+    # =================================================
+    # 3DS DEPENDENCIES
+    # =================================================
+
+    target_link_libraries(
+        TridingineCore
+        PUBLIC
+
+            3dlibrary
+
+            citro2d
+            citro3d
+            ctru
+            m
+
+            opusfile
+            opus
+            ogg
+    )
+
+    # =================================================
+    # PUBLIC TARGET
+    # =================================================
+
+    add_library(
+        Tridingine
+        INTERFACE
+    )
+
+    target_link_libraries(
+        Tridingine
+        INTERFACE
+
+            TridingineCore
+            TridingineEntrypoint
+    )
+
+    set_target_properties(
+        Tridingine
+        PROPERTIES
+            EXPORT_NAME Tridingine
+    )
+
 endif()
+
+
+# =====================================================
+# 📦 INSTALL
+# =====================================================
+
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+# =====================================================
+# INSTALL TARGETS
+# =====================================================
+
+install(
+    TARGETS
+
+        Tridingine
+        TridingineCore
+        TridingineEntrypoint
+
+    EXPORT
+        TridingineTargets
+
+    LIBRARY
+        DESTINATION
+            ${CMAKE_INSTALL_LIBDIR}
+
+    ARCHIVE
+        DESTINATION
+            ${CMAKE_INSTALL_LIBDIR}
+
+    RUNTIME
+        DESTINATION
+            ${CMAKE_INSTALL_BINDIR}
+
+    INCLUDES
+        DESTINATION
+            ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+# =====================================================
+# 3DS SHADER LIBRARY
+# =====================================================
+
+if(BUILD_3DS)
+
+    install(
+        TARGETS
+            3dlibrary
+
+        EXPORT
+            TridingineTargets
+
+        ARCHIVE
+            DESTINATION
+                ${CMAKE_INSTALL_LIBDIR}
+    )
+
+endif()
+
+# =====================================================
+# HEADERS
+# =====================================================
+
+if(
+    EXISTS
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
+
+    install(
+        DIRECTORY
+            include/
+
+        DESTINATION
+            ${CMAKE_INSTALL_INCLUDEDIR}
+    )
+
+endif()
+
+# =====================================================
+# CMAKE PACKAGE DIRECTORY
+# =====================================================
+
+set(
+    TRIDINGINE_CMAKE_INSTALL_DIR
+    "${CMAKE_INSTALL_LIBDIR}/cmake/Tridingine"
+)
+
+# =====================================================
+# EXPORT TARGETS
+# =====================================================
+
+install(
+    EXPORT
+        TridingineTargets
+
+    FILE
+        TridingineTargets.cmake
+
+    NAMESPACE
+        Tridingine::
+
+    DESTINATION
+        ${TRIDINGINE_CMAKE_INSTALL_DIR}
+)
+
+# =====================================================
+# CONFIG
+# =====================================================
+
+configure_package_config_file(
+
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/TridingineConfig.cmake.in
+
+    ${CMAKE_CURRENT_BINARY_DIR}/TridingineConfig.cmake
+
+    INSTALL_DESTINATION
+        ${TRIDINGINE_CMAKE_INSTALL_DIR}
+
+    NO_CHECK_REQUIRED_COMPONENTS_MACRO
+)
+
+# =====================================================
+# VERSION
+# =====================================================
+
+write_basic_package_version_file(
+
+    ${CMAKE_CURRENT_BINARY_DIR}/TridingineConfigVersion.cmake
+
+    VERSION
+        ${PROJECT_VERSION}
+
+    COMPATIBILITY
+        SameMajorVersion
+)
+
+# =====================================================
+# INSTALL CONFIG
+# =====================================================
+
+install(
+    FILES
+
+        ${CMAKE_CURRENT_BINARY_DIR}/TridingineConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/TridingineConfigVersion.cmake
+
+    DESTINATION
+        ${TRIDINGINE_CMAKE_INSTALL_DIR}
+)
+
+# =====================================================
+# SUMMARY
+# =====================================================
+
+message(STATUS "========================================")
+message(STATUS "Tridingine configuration:")
+message(STATUS "  Platform : ${TRIDINGINE_PLATFORM}")
+message(STATUS "  Version  : ${PROJECT_VERSION}")
+message(STATUS "  Install  : ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "========================================")

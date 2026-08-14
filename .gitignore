@@ -4,6 +4,11 @@ build_3ds
 .vscode
 romfs
 
+*.dll
+*.lib
+*.so
+*.a
+
 /*.cpp
 /*.json
 /*.atlas

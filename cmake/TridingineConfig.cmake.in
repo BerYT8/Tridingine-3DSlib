@@ -1,0 +1,75 @@
+@PACKAGE_INIT@
+
+# =====================================================
+# Tridingine package information
+# =====================================================
+
+set(
+    TRIDINGINE_PLATFORM
+    "@TRIDINGINE_PLATFORM@"
+)
+
+set(
+    TRIDINGINE_VERSION
+    "@PROJECT_VERSION@"
+)
+
+# =====================================================
+# Check platform
+# =====================================================
+
+if(
+    TRIDINGINE_PLATFORM STREQUAL "3DS"
+)
+
+    if(
+        NOT DEFINED BUILD_3DS
+        OR NOT BUILD_3DS
+    )
+
+        message(
+            FATAL_ERROR
+            "Tridingine was built for Nintendo 3DS, "
+            "but the current project is not a 3DS build."
+        )
+
+    endif()
+
+else()
+
+    if(
+        DEFINED BUILD_3DS
+        AND BUILD_3DS
+    )
+
+        message(
+            FATAL_ERROR
+            "Tridingine was built for PC, "
+            "but the current project is a Nintendo 3DS build."
+        )
+
+    endif()
+
+endif()
+
+# =====================================================
+# Targets
+# =====================================================
+
+include(
+    "${CMAKE_CURRENT_LIST_DIR}/TridingineTargets.cmake"
+)
+
+# =====================================================
+# Package variables
+# =====================================================
+
+set(
+    Tridingine_FOUND
+    TRUE
+)
+
+set(
+    Tridingine_VERSION
+    "${TRIDINGINE_VERSION}"
+)

@@ -6,32 +6,73 @@ set "BUILD_DIR=build"
 if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 
 REM =========================
-REM 3DS BUILD (MSYS2)
-REM =========================
-echo Building 3DS...
-
-set "MSYS2=%DEVKITPRO%\msys2\msys2_shell.bat"
-
-if not exist "%MSYS2%" (
-    echo ERROR: DEVKITPRO no encontrado
-    exit /b 1
-)
-
-call "%MSYS2%" -here -defterm -no-start -msys -c "./build_3ds.sh build_3ds"
-
-REM =========================
 REM PC BUILD
 REM =========================
+echo =========================
+echo Building PC...
+echo =========================
+
 cd "%BUILD_DIR%"
+
+REM Limpiar y recrear directorios
 rmdir /s /q Lib 2>nul
 mkdir Lib
 mkdir Code
 
 cd Code
+
 cmake ../.. -DBUILD_3DS=OFF -DCMAKE_BUILD_TYPE=Release
+if errorlevel 1 (
+    echo ERROR: CMake configuration failed.
+    cd ..\..
+    endlocal
+    exit /b 1
+)
+
 cmake --build . --config Release
+if errorlevel 1 (
+    echo ERROR: PC build failed.
+    cd ..\..
+    endlocal
+    exit /b 1
+)
 
 cd ..\..
 
+REM =========================
+REM 3DS BUILD
+REM =========================
+echo.
+echo =========================
+echo Building 3DS...
+echo =========================
+
+REM Verificar DEVKITPRO
+if not defined DEVKITPRO (
+    echo WARNING: La variable DEVKITPRO no esta definida.
+    echo El build podria fallar.
+)
+
+REM Verificar MSYS2
+set "MSYS2_BASH=%DEVKITPRO%\msys2\usr\bin\bash.exe"
+
+if not exist "%MSYS2_BASH%" (
+    echo ERROR: No se encuentra bash.exe de MSYS2.
+    echo Ruta esperada: %MSYS2_BASH%
+    endlocal
+    exit /b 1
+)
+
+REM Ejecutar build_3ds.sh directamente
+"%MSYS2_BASH%" -lc "chmod +x ./build_3ds.sh && ./build_3ds.sh build_3ds"
+
+if errorlevel 1 (
+    echo ERROR: 3DS build failed.
+    endlocal
+    exit /b 1
+)
+
+echo.
 echo Done.
+
 endlocal

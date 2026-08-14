@@ -10,7 +10,7 @@ echo "=== ProjectMaker POST BUILD ==="
 # =========================
 # Crear estructura Lib
 # =========================
-echo "[1/6] Creating Lib structure..."
+echo "[1/4] Creating Lib structure..."
 
 rm -rf "$LIB_DIR"
 mkdir -p "$LIB_DIR"
@@ -22,46 +22,27 @@ mkdir -p "$LIB_DIR/romfs/pc"
 mkdir -p "$LIB_DIR/romfs/3ds"
 mkdir -p "$LIB_DIR/templates"
 mkdir -p "$LIB_DIR/examples"
-mkdir -p "$LIB_DIR/include"
-mkdir -p "$LIB_DIR/lib/pc"
-mkdir -p "$LIB_DIR/lib/3ds"
 
 # =========================
 # Assets
 # =========================
-echo "[2/6] Copying engine assets..."
+echo "[2/4] Copying engine assets..."
 
 # Asegurar que existan los orígenes
-mkdir -p "$ROOT/include"
 mkdir -p "$ROOT/examples"
 mkdir -p "$ROOT/templates"
 mkdir -p "$ROOT/content"
 
 # Copiar el contenido de las carpetas de forma limpia (evita rutas duplicadas)
 cp -r "$ROOT/tools/GameCompiler/"* "$LIB_DIR/" 2>/dev/null || true
-cp -r "$ROOT/include/"* "$LIB_DIR/include/" 2>/dev/null || true
 cp -r "$ROOT/examples/"* "$LIB_DIR/examples/" 2>/dev/null || true
 cp -r "$ROOT/templates/"* "$LIB_DIR/templates/" 2>/dev/null || true
 cp -r "$ROOT/content/"* "$LIB_DIR/content/" 2>/dev/null || true
 
 # =========================
-# PC libs
-# =========================
-echo "[3/6] Copying PC libs..."
-
-cp -f "$BUILD_DIR/Code/lib3ds_libs.so" "$LIB_DIR/lib/pc/lib3ds_libs.so" 2>/dev/null || true
-
-# =========================
-# 3DS lib
-# =========================
-echo "[4/6] Copying 3DS libs..."
-
-cp -f "$ROOT/build_3ds/lib3ds_libs.a" "$LIB_DIR/lib/3ds/3ds_libs.a" 2>/dev/null || true
-
-# =========================
 # Tools build
 # =========================
-echo "[5/6] Building tools..."
+echo "[3/4] Building tools..."
 
 TOOLS=(
   "PakMaker"
@@ -76,7 +57,7 @@ for t in "${TOOLS[@]}"; do
   if [ -d "$ROOT/tools/$t" ]; then
     cmake -S "$ROOT/tools/$t" -B "$ROOT/tools/$t/build" -DCMAKE_BUILD_TYPE=Release
     cmake --build "$ROOT/tools/$t/build"
-    cp "$ROOT/tools/$t/build/$t" "$LIB_DIR/tools/" 2>/dev/null || true
+    cp "$ROOT/tools/$t/build/$t" "$LIB_DIR/tools/" 2>/dev/null
   fi
 done
 
@@ -87,20 +68,19 @@ cp "$ROOT/tools/bannertool/output/linux-x86_64/bannertool" "$LIB_DIR/tools/" 2>/
 || cp "$ROOT/tools/bannertool/output/linux-i686/bannertool" "$LIB_DIR/tools/" 2>/dev/null \
 || cp "$ROOT/tools/bannertool/output/macos/bannertool" "$LIB_DIR/tools/" 2>/dev/null \
 || cp "$ROOT/tools/bannertool/output/macos-x86_64/bannertool" "$LIB_DIR/tools/" 2>/dev/null \
-|| cp "$ROOT/tools/bannertool/output/macos-arm64/bannertool" "$LIB_DIR/tools/" 2>/dev/null \
-|| true
+|| cp "$ROOT/tools/bannertool/output/macos-arm64/bannertool" "$LIB_DIR/tools/" 2>/dev/null
 
 cd "$ROOT/tools/Project_CTR/makerom"
 make deps
 make
-cp "$ROOT/tools/Project_CTR/makerom/bin/makerom" "$LIB_DIR/tools/" 2>/dev/null || true
+cp "$ROOT/tools/Project_CTR/makerom/bin/makerom" "$LIB_DIR/tools/" 2>/dev/null
 
 cmake -S "$ROOT/tools/3dstool" -B "$ROOT/tools/3dstool/build" -DCMAKE_BUILD_TYPE=Release
 cmake --build "$ROOT/tools/3dstool/build"
-cp "$ROOT/tools/3dstool/bin/Release/3dstool" "$LIB_DIR/tools/" 2>/dev/null || true
+cp "$ROOT/tools/3dstool/bin/Release/3dstool" "$LIB_DIR/tools/" 2>/dev/null
 
 # Generar el paquete PAK indispensable
-"$LIB_DIR/tools/PakMaker" -c "$LIB_DIR" -o "$ROOT/tools/ProjectMaker/pak.pak" -e "build" "build_3ds" "romfs" "examples/*/examples/*"
+"$LIB_DIR/tools/PakMaker" -c "$LIB_DIR" -o "$ROOT/tools/ProjectMaker/template.pak" -e "build" "build_3ds" "romfs" "examples/*/examples/*"
 
 # Copia de seguridad del PAK para el entorno Linux modificado
 mkdir -p "$ROOT/tools/ProjectMaker/build"
@@ -108,7 +88,7 @@ mkdir -p "$ROOT/tools/ProjectMaker/build"
 # =========================
 # ProjectMaker
 # =========================
-echo "[6/6] Building ProjectMaker..."
+echo "[4/4] Building ProjectMaker..."
 
 cmake -S "$ROOT/tools/ProjectMaker" \
       -B "$ROOT/tools/ProjectMaker/build" \
@@ -117,6 +97,6 @@ cmake -S "$ROOT/tools/ProjectMaker" \
 cmake --build "$ROOT/tools/ProjectMaker/build"
 
 # Corregido el cierre del comando de copia colgante
-cp "$ROOT/tools/ProjectMaker/build/ProjectMaker" "$BUILD_DIR/ProjectMaker" 2>/dev/null || true
+cp "$ROOT/tools/ProjectMaker/build/ProjectMaker" "$BUILD_DIR/ProjectMaker" 2>/dev/null
 
 echo "=== DONE ==="

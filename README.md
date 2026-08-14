@@ -104,7 +104,7 @@ Current experimental functionality includes:
 | ------------------ | -------------------- |
 | Windows            | 🟢 Supported         |
 | Linux              | 🟢 Supported         |
-| macOS              | 🟢 Supported         |
+| macOS              | 🚧 In development    |
 | Nintendo 3DS       | 🟢 Supported         |
 | 2D rendering       | 🟢 Usable            |
 | 3D rendering       | 🚧 Experimental      |

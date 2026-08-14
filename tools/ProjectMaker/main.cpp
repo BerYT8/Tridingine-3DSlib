@@ -124,6 +124,7 @@ int main(int argc, char* argv[])
         if (strcmp(argv[i], "--update") == 0)
         {
             updateMode = true;
+            excludePatterns.emplace_back("examples/*");
             continue;
         }
 

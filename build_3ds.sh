@@ -37,9 +37,11 @@ echo "[CMake] Configuring..."
 cmake .. \
   -DBUILD_3DS=ON \
   -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_TOOLCHAIN_FILE="$DEVKITPRO/cmake/3DS.cmake"
+  -DCMAKE_TOOLCHAIN_FILE="$DEVKITPRO/cmake/3DS.cmake" \
+  -DCMAKE_INSTALL_PREFIX="$DEVKITPRO/portlibs/3ds"
 
 echo "[CMake] Building..."
 cmake --build .
+sudo cmake --install .
 
 echo "=== 3DS BUILD DONE ==="

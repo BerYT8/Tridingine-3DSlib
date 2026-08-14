@@ -1,16 +1,54 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(Game C CXX)
+project(
+    Game
+    LANGUAGES C CXX
+)
 
-# ---------------- OPCIÓN ----------------
-option(BUILD_3DS "Build for Nintendo 3DS" OFF)
+# =====================================================
+# OPTIONS
+# =====================================================
 
-# ---------------- C++ ----------------
+option(
+    BUILD_3DS
+    "Build game for Nintendo 3DS"
+    OFF
+)
+
+# =====================================================
+# C++
+# =====================================================
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# ---------------- SOURCES ----------------
+# =====================================================
+# GAME NAME
+# =====================================================
+
+set(
+    GAME_NAME
+    "${PROJECT_NAME}"
+    CACHE STRING
+    "Name of the game executable"
+)
+
+# =====================================================
+# GAME TITLE
+# =====================================================
+
+set(
+    GAME_TITLE
+    "Game"
+    CACHE STRING
+    "Game title"
+)
+
+# =====================================================
+# SOURCES
+# =====================================================
+
 set(SOURCES
     Player.cpp
     Collision.cpp
@@ -20,80 +58,140 @@ set(SOURCES
 )
 
 # =====================================================
-# 🖥️ PC BUILD
+# TRIDINGINE
 # =====================================================
-if(NOT BUILD_3DS)
-    if(NOT DEFINED GAME_NAME)
-        # Asigna un valor por defecto si no se introduce en la terminal
-        set(GAME_NAME ${PROJECT_NAME} CACHE STRING "Nombre del proyecto")
+
+if(BUILD_3DS)
+
+    message(STATUS "========================================")
+    message(STATUS "Building game for Nintendo 3DS")
+    message(STATUS "========================================")
+
+    # -------------------------------------------------
+    # devkitPro
+    # -------------------------------------------------
+
+    if(NOT DEFINED ENV{DEVKITPRO})
+
+        message(FATAL_ERROR
+            "DEVKITPRO environment variable is not set."
+        )
+
     endif()
 
-    # 1. Buscar todas las dependencias requeridas del sistema
-    find_package(OpenGL REQUIRED)
-    find_package(GLEW REQUIRED)
-    find_package(SDL2 REQUIRED)
-    find_package(SDL2_mixer REQUIRED)
+    include(
+        "$ENV{DEVKITPRO}/cmake/3DS.cmake"
+    )
 
-    # Nota: SDL2_image y SDL2_ttf a veces requieren buscarse mediante pkg-config o sus nombres exactos
-    find_package(SDL2_image REQUIRED)
-    find_package(SDL2_ttf REQUIRED)
+    # -------------------------------------------------
+    # Tridingine 3DS
+    # -------------------------------------------------
 
-    add_executable(${GAME_NAME}
+    find_package(
+        Tridingine
+        CONFIG
+        REQUIRED
+    )
+
+    # -------------------------------------------------
+    # Executable
+    # -------------------------------------------------
+
+    set(
+        GAME_TARGET
+        code
+    )
+
+    add_executable(
+        ${GAME_TARGET}
+
         ${SOURCES}
         main.cpp
     )
 
-    target_include_directories(${GAME_NAME}
+    target_include_directories(
+        ${GAME_TARGET}
         PRIVATE
-            include
-            "${CMAKE_SOURCE_DIR}"
+
+            "${CMAKE_CURRENT_SOURCE_DIR}"
     )
 
-    target_link_libraries(${GAME_NAME}
+    # -------------------------------------------------
+    # Tridingine
+    # -------------------------------------------------
+
+    target_link_libraries(
+        ${GAME_TARGET}
         PRIVATE
-            "${CMAKE_SOURCE_DIR}/lib/pc/lib3ds_libs.so"
+
+            Tridingine::Tridingine
     )
 
-    # 2. Gestionar el título del juego y pasarlo como definición a C++
-    if(NOT DEFINED GAME_TITLE)
-        set(GAME_TITLE "Game")
-    endif()
+    # -------------------------------------------------
+    # Game title
+    # -------------------------------------------------
 
-    # Se usan las comillas escapadas \\\" para que C++ lo reciba como un string literal
-    target_compile_definitions(${GAME_NAME}
+    target_compile_definitions(
+        ${GAME_TARGET}
         PRIVATE
+
             GAME_TITLE="${GAME_TITLE}"
     )
 
 else()
 
-    message(STATUS "Building for 3DS with devkitPro")
+    message(STATUS "========================================")
+    message(STATUS "Building game for PC")
+    message(STATUS "========================================")
 
-    include("$ENV{DEVKITPRO}/cmake/3DS.cmake")
+    # -------------------------------------------------
+    # Tridingine PC
+    # -------------------------------------------------
 
-    set(LIBS_3DS
-        ${CMAKE_SOURCE_DIR}/lib/3ds/3ds_libs.a
+    find_package(
+        Tridingine
+        CONFIG
+        REQUIRED
     )
 
-    set(NAME code)
+    # -------------------------------------------------
+    # Executable
+    # -------------------------------------------------
 
-    add_executable(${NAME}
+    add_executable(
+        ${GAME_NAME}
+
         ${SOURCES}
         main.cpp
     )
 
-    target_include_directories(${NAME}
+    target_include_directories(
+        ${GAME_NAME}
         PRIVATE
-            include
+
+            "${CMAKE_CURRENT_SOURCE_DIR}"
     )
 
-    target_link_libraries(${NAME}
+    # -------------------------------------------------
+    # Tridingine
+    # -------------------------------------------------
+
+    target_link_libraries(
+        ${GAME_NAME}
         PRIVATE
-            ${LIBS_3DS}
-            citro2d
-            citro3d
-            ctru
-            m
+
+            Tridingine::Tridingine
+    )
+
+    # -------------------------------------------------
+    # Game title
+    # -------------------------------------------------
+
+    target_compile_definitions(
+        ${GAME_NAME}
+        PRIVATE
+
+            GAME_TITLE="${GAME_TITLE}"
     )
 
 endif()
