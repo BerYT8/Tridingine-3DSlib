@@ -20,8 +20,6 @@ mkdir -p "$LIB_DIR/content/game"
 mkdir -p "$LIB_DIR/content/engine"
 mkdir -p "$LIB_DIR/romfs/pc"
 mkdir -p "$LIB_DIR/romfs/3ds"
-mkdir -p "$LIB_DIR/templates"
-mkdir -p "$LIB_DIR/examples"
 mkdir -p "$LIB_DIR/include"
 mkdir -p "$LIB_DIR/lib/pc"
 mkdir -p "$LIB_DIR/lib/3ds"
@@ -33,15 +31,11 @@ echo "[2/6] Copying engine assets..."
 
 # Asegurar que existan los orígenes
 mkdir -p "$ROOT/include"
-mkdir -p "$ROOT/examples"
-mkdir -p "$ROOT/templates"
 mkdir -p "$ROOT/content"
 
 # Copiar el contenido de las carpetas de forma limpia (evita rutas duplicadas)
 cp -r "$ROOT/tools/GameCompiler/"* "$LIB_DIR/" 2>/dev/null
 cp -r "$ROOT/include/"* "$LIB_DIR/include/" 2>/dev/null
-cp -r "$ROOT/examples/"* "$LIB_DIR/examples/" 2>/dev/null
-cp -r "$ROOT/templates/"* "$LIB_DIR/templates/" 2>/dev/null
 cp -r "$ROOT/content/"* "$LIB_DIR/content/" 2>/dev/null
 
 # =========================
@@ -102,7 +96,7 @@ cp "$ROOT/tools/3dstool/bin/Release/3dstool" "$LIB_DIR/tools/" 2>/dev/null
 
 # Generar el paquete PAK indispensable
 "$LIB_DIR/tools/PakMaker" -c "$LIB_DIR" -o "$ROOT/tools/ProjectMaker/template.pak" -e "build" "build_3ds" "romfs" \
-                          "examples/*/examples/*" "examples/*/include/*" "examples/*/tools/*" "examples/*/lib/*"
+                          "examples"
 
 # Copia de seguridad del PAK para el entorno Linux modificado
 mkdir -p "$ROOT/tools/ProjectMaker/build"

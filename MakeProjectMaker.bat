@@ -20,8 +20,6 @@ mkdir "%LIB_DIR%\content\game"
 mkdir "%LIB_DIR%\content\engine"
 mkdir "%LIB_DIR%\romfs\pc"
 mkdir "%LIB_DIR%\romfs\3ds"
-mkdir "%LIB_DIR%\templates"
-mkdir "%LIB_DIR%\examples"
 mkdir "%LIB_DIR%\include"
 mkdir "%LIB_DIR%\lib\pc"
 mkdir "%LIB_DIR%\lib\3ds"
@@ -33,8 +31,6 @@ echo [2/6] Copying engine assets...
 
 REM Asegurar que existan los origenes
 if not exist "%ROOT%\include" mkdir "%ROOT%\include"
-if not exist "%ROOT%\examples" mkdir "%ROOT%\examples"
-if not exist "%ROOT%\templates" mkdir "%ROOT%\templates"
 if not exist "%ROOT%\content" mkdir "%ROOT%\content"
 
 REM Copiar GameCompiler
@@ -44,12 +40,6 @@ if exist "%ROOT%\tools\GameCompiler" (
 
 REM Copiar include
 xcopy /e /i /y "%ROOT%\include\*" "%LIB_DIR%\include\" >nul 2>nul
-
-REM Copiar examples
-xcopy /e /i /y "%ROOT%\examples\*" "%LIB_DIR%\examples\" >nul 2>nul
-
-REM Copiar templates
-xcopy /e /i /y "%ROOT%\templates\*" "%LIB_DIR%\templates\" >nul 2>nul
 
 REM Copiar content
 xcopy /e /i /y "%ROOT%\content\*" "%LIB_DIR%\content\" >nul 2>nul
@@ -228,7 +218,7 @@ if not exist "%LIB_DIR%\tools\PakMaker.exe" (
 "%LIB_DIR%\tools\PakMaker.exe" ^
     -c "%LIB_DIR%" ^
     -o "%ROOT%\tools\ProjectMaker\template.pak" ^
-    -e "build" "build_3ds" "romfs" "examples/*/examples/*" "examples/*/examples/*" "examples/*/include/*" "examples/*/tools/*" "examples/*/lib/*"
+    -e "build" "build_3ds" "romfs" "examples"
 
 if !errorlevel! neq 0 (
     echo ERROR: Failed to generate PAK.

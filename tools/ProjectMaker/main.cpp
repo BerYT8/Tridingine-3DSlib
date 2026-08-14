@@ -23,7 +23,6 @@ void mostrarUso(const char* nombrePrograma)
     std::cerr << "  " << nombrePrograma << " [--only <patron> ...]\n";
     std::cerr << "  " << nombrePrograma << " [--exclude <patron> ...]\n";
     std::cerr << "  " << nombrePrograma << " [--no-libs (optional)]\n";
-    std::cerr << "  " << nombrePrograma << " [--no-examples (optional)]\n";
 }
 
 std::string wildcardToRegex(const std::string& pattern)
@@ -115,6 +114,8 @@ int main(int argc, char* argv[])
     // PROCESAR ARGUMENTOS
     // ============================================================
 
+    excludePatterns.emplace_back("examples/*");
+    
     for (int i = 1; i < argc; ++i)
     {
         if(strcmp(argv[i], "--version") == 0 ||
@@ -141,13 +142,6 @@ int main(int argc, char* argv[])
         if (strcmp(argv[i], "--update") == 0)
         {
             updateMode = true;
-            excludePatterns.emplace_back("examples/*");
-            continue;
-        }
-
-        if (strcmp(argv[i], "--no-examples") == 0)
-        {
-            excludePatterns.emplace_back("examples/*");
             continue;
         }
 
