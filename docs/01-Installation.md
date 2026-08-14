@@ -163,9 +163,9 @@ Contains the processed and optimized assets ready to be consumed by the executab
 
 # ProjectMaker Tool
 
-`ProjectMaker` is the utility included in the repository root for creating empty projects based on the development kit generated in `build/Lib/`.
+`ProjectMaker` is the utility included in the repository root for creating and updating projects based on the development kit generated in `build/Lib/`.
 
-### Usage
+## Usage
 
 ### Windows
 
@@ -179,9 +179,71 @@ ProjectMaker.exe -o [output_folder]
 ./ProjectMaker -o [output_folder]
 ```
 
+### Options
+
+```text
+ProjectMaker --version/-v
+ProjectMaker --update -o <FOLDER>
+ProjectMaker -o <FOLDER>
+ProjectMaker [--only <pattern> ...]
+ProjectMaker [--exclude <pattern> ...]
+ProjectMaker [--no-libs]
+ProjectMaker [--no-examples]
+```
+
+* `--version`, `-v` — Displays the current ProjectMaker version.
+* `-o <FOLDER>` — Specifies the destination folder where the project will be created or updated.
+* `--update` — Updates an existing project using the latest ProjectMaker templates and development kit files.
+* `--only <pattern>` — Only includes files matching the specified pattern. The option can be specified multiple times.
+* `--exclude <pattern>` — Excludes files matching the specified pattern. The option can be specified multiple times.
+* `--no-libs` — Does not include the bundled Tridingine libraries in the generated project. This is optional when updating a project if Tridingine has already been installed through CMake.
+* `--no-examples` — Does not include the examples in the generated project.
+
+### Creating a new project
+
+To create a completely clean project, specify the destination with `-o`:
+
+```bash
+ProjectMaker -o [FOLDER]
+```
+
+The program will generate a clean project in the specified destination, including the required structure, base CMake configuration, and local build scripts, allowing you to start development immediately.
+
+### Updating an existing project
+
+The `--update` option is intended primarily for updating projects created from the `examples/` and `templates/` directories when a new version of the development kit is available.
+
+For example, to update the `Orbit` example:
+
+```bash
+ProjectMaker -o "[FOLDER]/Orbit" --update
+```
+
+If you do not want to include the examples in the updated project:
+
+```bash
+ProjectMaker -o "[FOLDER]/Orbit" --update --no-examples
+```
+
+If you have already installed Tridingine through CMake — that is, you have already built and installed the Tridingine library project — you can also omit the bundled libraries:
+
+```bash
+ProjectMaker -o "[FOLDER]/Orbit" --update --no-libs
+```
+
+`--no-libs` is optional in this situation. It is harmless to include the libraries even if Tridingine is already installed through CMake; the option simply prevents ProjectMaker from copying the bundled library files into the project.
+
+The same options can be combined:
+
+```bash
+ProjectMaker -o "[FOLDER]/Orbit" --update --no-examples --no-libs
+```
+
+This updates the project without copying the example files or the bundled Tridingine libraries.
+
 ### Result
 
-The program will generate a completely clean project in the specified destination, including the required structure, base CMake configuration, and local build scripts, allowing you to start development immediately.
+The program will generate or update the project in the specified destination, providing the required project structure, base CMake configuration, development kit files, and local build scripts. This allows existing projects to be updated to the latest available templates and development kit while preserving their existing project contents.
 
 ---
 

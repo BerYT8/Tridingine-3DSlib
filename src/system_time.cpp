@@ -54,7 +54,7 @@ void GetDate(u8 &day, u8 &month, u16 &year, u8 &hour, u8 &min, u8 &sec)
     u8 mn = timeStruct->tm_min;
     u8 s = timeStruct->tm_sec;
     u8 d = timeStruct->tm_mday;
-    u8 m = timeStruct->tm_mon;
+    u8 m = timeStruct->tm_mon + 1;
     u16 y = timeStruct->tm_year +1900;
 
     day   = d;
@@ -64,6 +64,11 @@ void GetDate(u8 &day, u8 &month, u16 &year, u8 &hour, u8 &min, u8 &sec)
     hour = h;
     min = mn;
     sec = s;
+}
+#else
+void GetDate(u8 &day, u8 &month, u16 &year, u8 &hour, u8 &min, u8 &sec)
+{
+    return;
 }
 #endif
 
@@ -126,6 +131,8 @@ bool Time_Init()
         std::string(Loc_GetText(loc, "SAT")),
         std::string(Loc_GetText(loc, "SUN")),
     };
+
+    initialized = true;
     
     return true;
 }

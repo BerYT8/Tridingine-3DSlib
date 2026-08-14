@@ -4,9 +4,9 @@
 
 const char *getRomfsPath(const char *path)
 {
-    std::string in = "";
+    static std::string p = path;
 #if defined(PLATFORM_3DS)
-    in = "romfs:/";
+    p = std::string("romfs:/" + path);
 #endif
-    return std::string(in + path).c_str();
+    return p.c_str();
 }

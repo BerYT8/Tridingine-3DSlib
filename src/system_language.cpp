@@ -110,7 +110,7 @@ std::string GetSysLang()
     }
 }
 #else
-const char *GetSysLang()
+std::string GetSysLang()
 {
     return "unknown";
 }
@@ -124,9 +124,14 @@ void System_SetCurrentLang(const char *lang)
     language = lang;
 }
 
-const char *System_GetCurrentLang()
+const char* System_GetCurrentLang()
 {
-    if(language.empty())
-        return GetSysLang().c_str();
+    static std::string sysLang;
+
+    if (language.empty()) {
+        sysLang = GetSysLang();
+        return sysLang.c_str();
+    }
+
     return language.c_str();
 }

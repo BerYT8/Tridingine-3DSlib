@@ -2,7 +2,6 @@
 
 #include <string>
 #include <vector>
-#include <cstdint>
 
 #include "draw/2d/2d_vals.h"
 
