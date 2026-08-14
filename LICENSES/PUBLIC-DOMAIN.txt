@@ -1,0 +1,11 @@
+Public Domain Notice
+
+Some third-party components included in this repository are released into
+the public domain by their respective authors.
+
+This file is provided for informational purposes only.
+
+The original public-domain dedication or license notice contained in each
+third-party source file must be preserved. Where a source file provides
+additional licensing options, those options and their original notices
+remain applicable.
