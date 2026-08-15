@@ -1,8 +1,8 @@
 #include "Enemy.h"
+#include "include/maths/vector2.h"
 
 #include <Tridingine.h>
 
-#include <cstdlib>
 #include <cmath>
 
 bool Enemy::Init()
@@ -12,6 +12,8 @@ bool Enemy::Init()
 
     x = 0.0f;
     y = 0.0f;
+
+    rotation = 0.0f;
 
     return true;
 }
@@ -63,6 +65,8 @@ void Enemy::Update(const Player& player)
         x += dx * speed * static_cast<float>(dt);
         y += dy * speed * static_cast<float>(dt);
     }
+
+    rotation = vec2_look_at(vec2_create(x, y), vec2_create(player.X(), player.Y()));
 }
 
 void Enemy::Draw()
@@ -72,7 +76,7 @@ void Enemy::Draw()
         y,
         size,
         size,
-        0.0f,
+        rotation,
         0.3f,
         0.5f,
         0.5f,

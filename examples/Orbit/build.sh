@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # Crear directorios base si no existen
 mkdir -p romfs romfs/3ds romfs/pc content content/engine content/game
 

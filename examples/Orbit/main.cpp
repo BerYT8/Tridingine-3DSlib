@@ -1,9 +1,8 @@
-#include <cstdio>
 #include <Tridingine.h>
 
 #include "Game.h"
 
-int app_main(int argc, char* argv[])
+int app_main()
 {
     S2S_ScreensInit();
 

@@ -2,6 +2,9 @@
 #define VEC2_H
 
 #include <math.h>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 #include <stdio.h>
 
 /* Estructura Vec2 */
@@ -131,6 +134,19 @@ static inline float vec2_distance(Vec2 a, Vec2 b)
 static inline void vec2_print(Vec2 v)
 {
     printf("(%.2f, %.2f)\n", v.x, v.y);
+}
+
+static inline float vec2_look_at(Vec2 origin, Vec2 target)
+{
+    float dx = target.x - origin.x;
+    float dy = target.y - origin.y;
+
+    float angle = atan2f(dx, -dy) * (180.0f / M_PI);
+
+    if (angle < 0.0f)
+        angle += 360.0f;
+
+    return angle;
 }
 
 #endif /* VEC2_H */

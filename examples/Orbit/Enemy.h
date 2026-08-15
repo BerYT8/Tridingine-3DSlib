@@ -27,4 +27,6 @@ private:
 
     float size;
     float speed;
+
+    float rotation;
 };

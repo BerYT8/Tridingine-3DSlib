@@ -443,7 +443,7 @@ They must be installed separately before building Tridingine for Nintendo 3DS.
 On Linux, install the required 3DS portlibs using pacman:
 
 ```bash
-sudo pacman -S 3ds-libogg 3ds-opus 3ds-opusfile
+sudo pacman -S 3ds-libogg 3ds-opusfile
 ```
 
 Depending on the devkitPro package repository and installed environment, additional dependencies may be installed automatically.
@@ -484,7 +484,6 @@ The required packages are:
 
 ```text
 3ds-libogg
-3ds-opus
 3ds-opusfile
 ```
 
