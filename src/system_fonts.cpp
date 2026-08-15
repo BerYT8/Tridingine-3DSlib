@@ -12,7 +12,7 @@ std::vector<D2D_Font*> fonts = {};
 size_t defaultFontIndex = 0;
 
 std::vector<std::string> fontsNames = {
-    "arial"
+    "NotoSansMono"
 };
 
 void CloseAllFonts()

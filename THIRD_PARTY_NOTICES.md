@@ -287,35 +287,7 @@ exact version being distributed must be retained.
 
 ---
 
-## 15. Fonts and other proprietary assets
-
-### Arial
-
-**Location:** `content/engine/fonts/arial.ttf`
-
-This font is NOT covered by the Apache-2.0 license of Tridingine-3DSlib.
-
-The font contains Microsoft/Monotype copyright and licensing metadata.
-
-Unless the project has a separate license granting redistribution rights,
-this font must not be redistributed as part of Tridingine-3DSlib.
-
----
-
-### PopHappinessStd-EB
-
-**Location:** `content/engine/fonts/PopHappinessStd-EB.ttf`
-
-This font is NOT covered by the Apache-2.0 license of Tridingine-3DSlib.
-
-The font contains Fontworks copyright and licensing metadata.
-
-Unless the project has a separate license granting redistribution rights,
-this font must not be redistributed as part of Tridingine-3DSlib.
-
----
-
-## 16. License compliance
+## 15. License compliance
 
 When redistributing Tridingine-3DSlib or a product containing it:
 

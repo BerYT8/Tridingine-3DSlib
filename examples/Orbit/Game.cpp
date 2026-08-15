@@ -38,7 +38,7 @@ bool Game::Init()
     SpawnEnemy();
     SpawnPickup();
 
-    font = D2D_OpenFont("engine/fonts/PopHappinessStd-EB");
+    font = D2D_OpenFont("engine/fonts/NotoSansMono");
     if(!font)
         printf("Not opened font.\n");
 

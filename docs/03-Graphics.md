@@ -286,7 +286,7 @@ D2D_DrawCircleSolid(
 ## Open a Font
 
 ```c
-D2D_Font* font = D2D_OpenFont("engine/fonts/arial");
+D2D_Font* font = D2D_OpenFont("engine/fonts/NotoSansMono");
 ```
 
 ## Close a Font
