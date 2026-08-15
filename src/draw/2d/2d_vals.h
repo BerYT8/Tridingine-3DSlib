@@ -46,6 +46,8 @@ typedef struct D2D_Font
     void* buffer;
 #elif defined(PLATFORM_3DS)
     C2D_Font font;
+#else
+    void *font;
 #endif
     bool deletable;
 } D2D_Font;
