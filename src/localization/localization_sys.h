@@ -12,14 +12,17 @@
 
 // Esta estructura coincide exactamente con lo que hay escrito en el archivo
 struct EntradaIndice {
-    u32 hashNombre; // Ya viene calculado desde la PC
-    u32 offsetTexto;// Posición relativa donde empieza el texto
+    u32 hashNombre = 0; // Ya viene calculado desde la PC
+    u32 offsetTexto = 0;// Posición relativa donde empieza el texto
 };
 
 struct localeEntry
 {
-    u32 hash;
-    char *path;
+    u32 hash = 0;
+    char *path = nullptr;
+
+    localeEntry() {};
+    localeEntry(u32 h, char *p) : hash(h), path(p) {};
 };
 
 constexpr u32 calcular_hash(const char* str) {
@@ -188,6 +191,8 @@ public:
         localeOut[8] = '\0';
 
         return true;
+#else
+        return false;
 #endif
     }
 

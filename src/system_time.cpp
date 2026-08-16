@@ -102,8 +102,8 @@ bool Time_Init()
     std::string lang = System_GetCurrentLang();
     if(lang == "unknown")
     {
-        System_SetCurrentLang("en-US");
         lang = "en-US";
+        System_SetCurrentLang(lang.c_str());
     }
     Loc_LoadLocale(loc, lang.c_str());
 

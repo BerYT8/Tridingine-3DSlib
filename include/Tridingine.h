@@ -20,6 +20,9 @@
 #include "textures/textures.h"
 #include "utils/random.h"
 #include "utils/save_system.h"
+#include "sys/system_fonts.h"
+#include "sys/system_language.h"
+#include "sys/system_time.h"
 // #include "html/html-ds.h"
 
 Vec3 getVersion();
