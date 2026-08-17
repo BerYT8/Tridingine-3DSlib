@@ -32,6 +32,8 @@ cmake --build . --config Release
 
 cd ../..
 
+cp build/compile_commands.json compile_commands.json
+
 # =========================
 # 3DS BUILD (Llamada Directa)
 # =========================

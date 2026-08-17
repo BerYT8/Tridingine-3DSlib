@@ -113,6 +113,8 @@ copy "..\lib\pc\*.dll" "Release\" >nul 2>&1
 
 cd ..
 
+copy build\compile_commands.json compile_commands.json
+
 :: ============================================================
 :: PROCESAR CONTENT PARA PC
 :: ============================================================

@@ -1,6 +1,8 @@
 #define ALLOCATE_SHMEM
 #include "screensValues.h"
 
+#include <sys/system_language.h>
+
 #include <pak_loader/pak_loader.h>
 
 #include "../sys_fonts_gen_funcs.h"
@@ -305,6 +307,9 @@ bool S2S_ScreensInit()
     closedCover = false;
 
     consoleGamePaused = false;
+
+    // Idioma por defecto
+    System_SetCurrentLang("en-US");
 
     return true;
 }

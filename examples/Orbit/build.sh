@@ -71,3 +71,5 @@ cd ..
 ./tools/LocalizationMaker --all -i "$CONTENT_DIR" -o "$ROMFS_DIR"
 
 ./tools/PakMaker -c "$ROMFS_DIR" -o "$BUILD_DIR/game.pak"
+
+cp build/compile_commands.json compile_commands.json
