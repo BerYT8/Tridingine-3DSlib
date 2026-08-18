@@ -779,7 +779,7 @@ D2D_Text D2D_DrawText_Buf(
         currScreen == TOP
             ? topInitialPointY
             : bottomInitialPointY;
-
+    fontSize += fontSize / 30; // 1.0f; // Ajuste para que el texto se vea más grande en PC
     fontSize *= scaleFactor;
 
 #endif

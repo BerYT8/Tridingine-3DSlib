@@ -631,7 +631,6 @@ void S2S_EndFrame()
         SDL_GL_SwapWindow(window);
     }
 #elif defined(PLATFORM_3DS)
-    C2D_Flush();
     C3D_FrameEnd(0);
 #endif
     usedTop = false;
@@ -674,6 +673,7 @@ void S2S_SetCurrentScreen(S2S_Screen screen)
         }
     }
 #elif defined(PLATFORM_3DS)
+    C2D_Flush();
     C2D_SceneTarget(currScreen == TOP ? top : bottom);
     C2D_SceneBegin(currScreen == TOP ? top : bottom);
 #endif

@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "draw/2d/2d_shapes.h"
 
 #include <Tridingine.h>
 
