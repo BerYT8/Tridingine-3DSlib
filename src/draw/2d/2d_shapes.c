@@ -209,7 +209,7 @@ bool D2D_Init()
     bool r = C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
     if(!r)
         initialized = false;
-    //C3D_DepthTest(true, GPU_GEQUAL, GPU_WRITE_COLOR | GPU_WRITE_DEPTH);
+    C3D_DepthTest(true, GPU_GEQUAL, GPU_WRITE_COLOR | GPU_WRITE_DEPTH);
     C3D_AlphaBlend(
         GPU_BLEND_ADD,              // Operación: Sumar los colores
         GPU_BLEND_ADD,              // Operación: Sumar los canales alfa
@@ -298,29 +298,189 @@ D2D_Result D2D_DrawPoint(float x, float y, float rotation, float depth, float th
 }
 
 D2D_Result D2D_DrawLine(float x0, float y0, Color c0,
-                    float x1, float y1, Color c1,
-                    float thickness, float rotation, float depth, float align)
+                        float x1, float y1, Color c1,
+                        float thickness, float rotation, float depth, float align)
 {
     if(!initialized)
         return D2D_NOT_INITIALIZED;
 
-    if(depth < -1 || depth > 1)
+    if(depth < -1.0f || depth > 1.0f)
         return D2D_INVALID_ARGUMENT;
 
     if(!isValidScreen())
         return D2D_ERROR;
 
-    align = clampf(align, 0.f, 1.f);
+    if(thickness <= 0.0f)
+        return D2D_OK;
+
+    align = clampf(align, 0.0f, 1.0f);
+
+    /*
+     * El pivote se encuentra sobre la línea:
+     *
+     * align = 0.0 -> pivote en x0,y0
+     * align = 0.5 -> pivote en el centro
+     * align = 1.0 -> pivote en x1,y1
+     *
+     * La rotación se aplica alrededor de este punto.
+     */
     float pivotX = x0 + (x1 - x0) * align;
     float pivotY = y0 + (y1 - y0) * align;
+
 #if defined(PLATFORM_PC)
+
+    /*
+     * En PC todas las primitivas 2D convierten las coordenadas
+     * lógicas a coordenadas de ventana.
+     */
+    x0 *= windowScale;
+    y0 *= windowScale;
+
+    x1 *= windowScale;
+    y1 *= windowScale;
+
+    pivotX *= windowScale;
+    pivotY *= windowScale;
+
+    thickness *= windowScale;
+
+    const float screenX =
+        (currScreen == TOP ? topInitialPointX : bottomInitialPointX);
+
+    const float screenY =
+        (currScreen == TOP ? topInitialPointY : bottomInitialPointY);
+
+    x0 += screenX;
+    y0 += screenY;
+
+    x1 += screenX;
+    y1 += screenY;
+
+    pivotX += screenX;
+    pivotY += screenY;
+
+    /*
+     * Transformamos los extremos al espacio local del pivote.
+     */
+    float lx0 = x0 - pivotX;
+    float ly0 = y0 - pivotY;
+
+    float lx1 = x1 - pivotX;
+    float ly1 = y1 - pivotY;
+
+    /*
+     * Vector de la línea.
+     */
+    float dx = lx1 - lx0;
+    float dy = ly1 - ly0;
+
+    float length = sqrtf(dx * dx + dy * dy);
+
+    /*
+     * Línea degenerada.
+     */
+    if(length <= 0.00001f)
+    {
+        /*
+         * Dibujamos un pequeño quad cuadrado para mantener
+         * el comportamiento de un punto grueso.
+         */
+        float half = thickness * 0.5f;
+
+        glDepthMask(GL_TRUE);
+
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+
+        glOrtho(
+            0,
+            wwidth,
+            wheight,
+            0,
+            -1,
+            1
+        );
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        SPOGL_Use(shader2D);
+
+        glPushMatrix();
+
+        glTranslatef(pivotX, pivotY, 0.0f);
+        glRotatef(rotation, 0.0f, 0.0f, 1.0f);
+
+        /*
+         * El punto queda exactamente en el pivote.
+         */
+        glBegin(GL_QUADS);
+
+        glColor4ub(c0.r, c0.g, c0.b, c0.a);
+        glVertex3f(-half, -half, depth);
+
+        glColor4ub(c0.r, c0.g, c0.b, c0.a);
+        glVertex3f( half, -half, depth);
+
+        glColor4ub(c1.r, c1.g, c1.b, c1.a);
+        glVertex3f( half,  half, depth);
+
+        glColor4ub(c1.r, c1.g, c1.b, c1.a);
+        glVertex3f(-half,  half, depth);
+
+        glEnd();
+
+        glPopMatrix();
+
+        return D2D_OK;
+    }
+
+    /*
+     * Normal perpendicular a la línea.
+     */
+    float nx = -dy / length;
+    float ny =  dx / length;
+
+    float halfThickness = thickness * 0.5f;
+
+    nx *= halfThickness;
+    ny *= halfThickness;
+
+    /*
+     * Quad de la línea.
+     *
+     *      p0 + N -------- p1 + N
+     *           \        /
+     *            \      /
+     *      p0 - N -------- p1 - N
+     *
+     * El color se interpola entre c0 y c1.
+     */
+    float ax = lx0 + nx;
+    float ay = ly0 + ny;
+
+    float bx = lx1 + nx;
+    float by = ly1 + ny;
+
+    float cx = lx1 - nx;
+    float cy = ly1 - ny;
+
+    float dx2 = lx0 - nx;
+    float dy2 = ly0 - ny;
+
     glDepthMask(GL_TRUE);
+
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    SPOGL_Use(shader2D);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -331,37 +491,90 @@ D2D_Result D2D_DrawLine(float x0, float y0, Color c0,
         wheight,
         0,
         -1,
-        1);
+        1
+    );
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
+    SPOGL_Use(shader2D);
+
     glPushMatrix();
-    glTranslatef(pivotX, pivotY, 0);
-    glRotatef(rotation, 0.f, 0.f, 1.f);
 
-    glLineWidth(thickness);
+    /*
+     * Igual que en 3DS:
+     *
+     * translate(pivot)
+     * rotate(rotation)
+     *
+     * Los vértices permanecen relativos al pivote.
+     */
+    glTranslatef(pivotX, pivotY, 0.0f);
+    glRotatef(rotation, 0.0f, 0.0f, 1.0f);
 
-    glBegin(GL_LINES);
+    glBegin(GL_QUADS);
 
+    /*
+     * Extremo 0.
+     */
     glColor4ub(c0.r, c0.g, c0.b, c0.a);
-    glVertex3f(x0 - pivotX, y0 - pivotY, depth);
+    glVertex3f(ax, ay, depth);
 
     glColor4ub(c1.r, c1.g, c1.b, c1.a);
-    glVertex3f(x1 - pivotX, y1 - pivotY, depth);
+    glVertex3f(bx, by, depth);
+
+    /*
+     * Extremo 1.
+     */
+    glColor4ub(c1.r, c1.g, c1.b, c1.a);
+    glVertex3f(cx, cy, depth);
+
+    glColor4ub(c0.r, c0.g, c0.b, c0.a);
+    glVertex3f(dx2, dy2, depth);
 
     glEnd();
 
     glPopMatrix();
+
 #elif defined(PLATFORM_3DS)
+
+    /*
+     * C2D ya trabaja con las coordenadas lógicas de la pantalla,
+     * por lo que no aplicamos windowScale ni offsets.
+     *
+     * El sistema de transformación es exactamente:
+     *
+     *     Translate(pivot)
+     *     Rotate(rotation)
+     *
+     * y posteriormente dibujamos los puntos relativos al pivote.
+     */
     C3D_Mtx mtx;
+
     C2D_ViewSave(&mtx);
+
     C2D_ViewTranslate(pivotX, pivotY);
     C2D_ViewRotateDegrees(rotation);
-    bool r = C2D_DrawLine(x0 - pivotX, y0 - pivotY, Color_ToUInt32_Default(c0), x1 - pivotX, y1 - pivotY, Color_ToUInt32_Default(c1), thickness, depth);
+
+    bool r = C2D_DrawLine(
+        x0 - pivotX,
+        y0 - pivotY,
+        Color_ToUInt32_Default(c0),
+
+        x1 - pivotX,
+        y1 - pivotY,
+        Color_ToUInt32_Default(c1),
+
+        thickness,
+        depth
+    );
+
     C2D_ViewRestore(&mtx);
+
     return r;
+
 #endif
+
     return D2D_OK;
 }
 

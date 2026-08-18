@@ -39,7 +39,7 @@ if errorlevel 1 (
 
 cd ..\..
 
-copy build\compile_commands.json compile_commands.json
+copy build\Code\compile_commands.json compile_commands.json
 
 REM =========================
 REM 3DS BUILD

@@ -201,8 +201,8 @@ bool S2S_ScreensInit()
         has_size = false;
         has_pos = false;
 
-        printf("[WINDOW] Width: %d, Height: %d.\n", saved_w, saved_h);
-        printf("[WINDOW] X: %d, Y: %d.\n", saved_x, saved_y);
+        //printf("[WINDOW] Width: %d, Height: %d.\n", saved_w, saved_h);
+        //printf("[WINDOW] X: %d, Y: %d.\n", saved_x, saved_y);
 
         window = SDL_CreateWindow(
                 currTitle.c_str(),
