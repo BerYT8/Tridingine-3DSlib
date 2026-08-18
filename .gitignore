@@ -16,6 +16,7 @@ examples/*/tools
 
 /*.cpp
 /*.json
+compile_commands.json
 /*.atlas
 *.pak
 src/draw/3d/3dshader_shbin.h

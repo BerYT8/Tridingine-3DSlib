@@ -1,6 +1,7 @@
 #include <Tridingine.h>
 
 #include "Game.h"
+#include "input.h"
 
 int app_main()
 {
@@ -36,6 +37,11 @@ int app_main()
         dt_update();
 
         input_read();
+
+        if(input_isKeyPressed(INPUT_KEY_A) || input_isKeyPressed(INPUT_KEY_B) || input_isKeyPressed(INPUT_KEY_X) || input_isKeyPressed(INPUT_KEY_Y))
+        {
+            S2S_StopRunning();
+        }
 
         S2S_BeginFrame();
 

@@ -8,6 +8,23 @@
 #define INITIAL_FONT_SIZE 24
 #endif
 
+/*
+ * Compensación horizontal usada EXCLUSIVAMENTE para decidir el WRAP
+ * en PC.
+ *
+ * No modifica:
+ *  - el tamaño visual
+ *  - las posiciones
+ *  - el alineamiento
+ *  - las texturas
+ *
+ * 3DS hace wrap ligeramente antes que PC, por lo que PC necesita
+ * considerar su anchura ligeramente mayor durante el cálculo.
+ */
+#ifndef PC_WRAP_WIDTH_SCALE
+#define PC_WRAP_WIDTH_SCALE 1.27f
+#endif
+
 #if defined(PLATFORM_PC)
 #include <SDL.h>
 #include <SDL_ttf.h>
@@ -42,159 +59,110 @@ C2D_TextBuf globalBuffer = nullptr;
 
 
 // ============================================================================
-// Utilidades de tamaño de fuente
+// Utilidades
 // ============================================================================
-
-/*
- * fontSize representa SIEMPRE la altura deseada de la línea.
- *
- * Ejemplo:
- *
- *     D2D_DrawText(..., 24.0f, ...)
- *
- * significa:
- *
- *     "quiero que la altura real de la línea sea aproximadamente 24 px".
- *
- * El backend puede necesitar un tamaño de fuente diferente para conseguirlo.
- *
- * Por ejemplo:
- *
- *     fontSize solicitado = 24
- *     tamaño real TTF      = 31
- *     altura TTF           = 24
- *
- * En ese caso se utilizará 31 internamente.
- */
-
 
 #if defined(PLATFORM_PC)
 
-static float GetPCFontHeight(
-    D2D_Font* font,
-    float realFontSize
+/*
+ * IMPORTANTE:
+ *
+ * En PC el TTF SIEMPRE se mantiene cargado/renderizado a
+ * INITIAL_FONT_SIZE.
+ *
+ * fontSize NO cambia el TTF.
+ *
+ * Ejemplo:
+ *
+ *     INITIAL_FONT_SIZE = 24
+ *     fontSize          = 36
+ *
+ * El TTF continúa siendo de 24.
+ *
+ * Después se calcula:
+ *
+ *     scale = 36 / alturaRealDeLaFuenteBase
+ *
+ * y la textura se dibuja con ese scale.
+ *
+ * Esto hace que PC funcione igual conceptualmente que 3DS:
+ *
+ *     fuente base -> medir -> escalar resultado.
+ *
+ * No hacemos TTF_SetFontSize() durante el layout.
+ */
+
+
+static void EnsurePCBaseFont(
+    D2D_Font* font
+)
+{
+    if(!font || !font->font)
+        return;
+
+    /*
+     * SDL_ttf necesita internamente un tamaño entero para rasterizar.
+     *
+     * Este es el ÚNICO sitio donde el tamaño de la fuente llega a SDL.
+     *
+     * El layout posterior siempre trabaja con floats.
+     */
+
+    if(TTF_FontHeight(font->font) <= 0)
+    {
+        TTF_SetFontSize(
+            font->font,
+            INITIAL_FONT_SIZE
+        );
+    }
+}
+
+
+static float GetPCBaseFontHeight(
+    D2D_Font* font
 )
 {
     if(!font || !font->font)
         return 0.0f;
 
-    if(realFontSize <= 0.0f)
-        return 0.0f;
+    EnsurePCBaseFont(font);
 
-    int pixelFontSize = std::max(
-        1,
-        (int)std::round(realFontSize * windowScale)
+    return (float)TTF_FontHeight(
+        font->font
     );
-
-    TTF_SetFontSize(
-        font->font,
-        pixelFontSize
-    );
-
-    // Convertimos SOLO aquí de píxeles escalados
-    // a unidades lógicas.
-    return (float)TTF_FontHeight(font->font) / windowScale;
 }
 
 
-static float FindPCFontSizeForHeight(
+/*
+ * Devuelve la escala necesaria para que la altura REAL de la fuente
+ * sea igual a fontSize.
+ *
+ * Ejemplo:
+ *
+ *     altura TTF real = 28
+ *     fontSize        = 24
+ *
+ *     scale = 24 / 28
+ *
+ * De esta manera la textura acaba teniendo 24 unidades de alto.
+ */
+static float GetPCTextScale(
     D2D_Font* font,
-    float wantedHeight
+    float fontSize
 )
 {
-    if(!font || !font->font || wantedHeight <= 0.0f)
-        return 1.0f;
+    const float baseHeight =
+        GetPCBaseFontHeight(font);
 
-    float low = 1.0f;
+    if(baseHeight <= 0.0f)
+        return 0.001f;
 
-    float high = std::max(
-        wantedHeight * 2.0f,
-        (float)INITIAL_FONT_SIZE
-    );
+    if(fontSize <= 0.0f)
+        return 0.001f;
 
-    float highHeight =
-        GetPCFontHeight(
-            font,
-            high
-        );
-
-    while(
-        highHeight < wantedHeight &&
-        high < 4096.0f
-    )
-    {
-        high *= 2.0f;
-
-        highHeight =
-            GetPCFontHeight(
-                font,
-                high
-            );
-    }
-
-    for(int i = 0; i < 20; i++)
-    {
-        float mid =
-            (low + high) * 0.5f;
-
-        float height =
-            GetPCFontHeight(
-                font,
-                mid
-            );
-
-        if(height < wantedHeight)
-            low = mid;
-        else
-            high = mid;
-    }
-
-    float bestSize = high;
-
-    float bestDifference =
-        std::fabs(
-            GetPCFontHeight(
-                font,
-                bestSize
-            ) - wantedHeight
-        );
-
-    const float candidates[] =
-    {
-        low,
-        high,
-        (low + high) * 0.5f,
-        std::floor(low),
-        std::ceil(low),
-        std::floor(high),
-        std::ceil(high)
-    };
-
-    for(float candidate : candidates)
-    {
-        if(candidate <= 0.0f)
-            continue;
-
-        float height =
-            GetPCFontHeight(
-                font,
-                candidate
-            );
-
-        float difference =
-            std::fabs(
-                height - wantedHeight
-            );
-
-        if(difference < bestDifference)
-        {
-            bestDifference = difference;
-            bestSize = candidate;
-        }
-    }
-
-    return bestSize;
+    return fontSize / baseHeight;
 }
+
 
 #elif defined(PLATFORM_3DS)
 
@@ -223,7 +191,8 @@ static float Get3DSFontHeight(
     C2D_TextOptimize(&txt);
 
     float scale =
-        realFontSize / (float)INITIAL_FONT_SIZE;
+        realFontSize /
+        (float)INITIAL_FONT_SIZE;
 
     if(scale <= 0.0f)
         scale = 0.001f;
@@ -260,63 +229,56 @@ static float Find3DSFontSizeForHeight(
         return 1.0f;
     }
 
-    /*
-     * En C2D la escala es proporcional al tamaño base de la fuente,
-     * pero NO asumimos que INITIAL_FONT_SIZE == altura real.
-     *
-     * Medimos realmente mediante C2D_TextGetDimensions().
-     */
-
     float low = 0.1f;
 
-    float high = std::max(
-        wantedHeight * 2.0f,
-        (float)INITIAL_FONT_SIZE
-    );
+    float high =
+        std::max(
+            wantedHeight * 2.0f,
+            (float)INITIAL_FONT_SIZE
+        );
 
-    float highHeight = Get3DSFontHeight(
-        font,
-        textBuffer,
-        referenceText,
-        high
-    );
-
-    while(highHeight < wantedHeight && high < 4096.0f)
-    {
-        high *= 2.0f;
-
-        highHeight = Get3DSFontHeight(
+    float highHeight =
+        Get3DSFontHeight(
             font,
             textBuffer,
             referenceText,
             high
         );
-    }
 
-    /*
-     * Búsqueda binaria.
-     */
+    while(
+        highHeight < wantedHeight &&
+        high < 4096.0f
+    )
+    {
+        high *= 2.0f;
+
+        highHeight =
+            Get3DSFontHeight(
+                font,
+                textBuffer,
+                referenceText,
+                high
+            );
+    }
 
     for(int i = 0; i < 16; i++)
     {
-        float mid = (low + high) * 0.5f;
+        float mid =
+            (low + high) * 0.5f;
 
-        float height = Get3DSFontHeight(
-            font,
-            textBuffer,
-            referenceText,
-            mid
-        );
+        float height =
+            Get3DSFontHeight(
+                font,
+                textBuffer,
+                referenceText,
+                mid
+            );
 
         if(height < wantedHeight)
             low = mid;
         else
             high = mid;
     }
-
-    /*
-     * Refinamiento final.
-     */
 
     float bestSize = high;
 
@@ -334,11 +296,7 @@ static float Find3DSFontSizeForHeight(
     {
         low,
         high,
-        (low + high) * 0.5f,
-        std::floor(low),
-        std::ceil(low),
-        std::floor(high),
-        std::ceil(high)
+        (low + high) * 0.5f
     };
 
     for(float candidate : candidates)
@@ -346,15 +304,18 @@ static float Find3DSFontSizeForHeight(
         if(candidate <= 0.0f)
             continue;
 
-        float height = Get3DSFontHeight(
-            font,
-            textBuffer,
-            referenceText,
-            candidate
-        );
+        float height =
+            Get3DSFontHeight(
+                font,
+                textBuffer,
+                referenceText,
+                candidate
+            );
 
         float difference =
-            std::fabs(height - wantedHeight);
+            std::fabs(
+                height - wantedHeight
+            );
 
         if(difference < bestDifference)
         {
@@ -373,12 +334,17 @@ static float Find3DSFontSizeForHeight(
 // Abrir fuente
 // ============================================================================
 
-D2D_Font *D2D_OpenFont_Buf(const char* path, bool del)
+D2D_Font* D2D_OpenFont_Buf(
+    const char* path,
+    bool del
+)
 {
-    D2D_Font *ft = new D2D_Font();
+    D2D_Font* ft =
+        new D2D_Font();
 
     if(!ft)
         return nullptr;
+
 
 #if defined(PLATFORM_PC)
 
@@ -393,9 +359,14 @@ D2D_Font *D2D_OpenFont_Buf(const char* path, bool del)
         return nullptr;
     }
 
-    PAKL_fseek(f, 0, SEEK_END);
+    PAKL_fseek(
+        f,
+        0,
+        SEEK_END
+    );
 
-    long tamano = PAKL_ftell(f);
+    long tamano =
+        PAKL_ftell(f);
 
     PAKL_rewind(f);
 
@@ -406,7 +377,8 @@ D2D_Font *D2D_OpenFont_Buf(const char* path, bool del)
         return nullptr;
     }
 
-    void* buffer = malloc(tamano);
+    void* buffer =
+        malloc(tamano);
 
     if(!buffer)
     {
@@ -431,7 +403,7 @@ D2D_Font *D2D_OpenFont_Buf(const char* path, bool del)
     {
         rw =
             SDL_RWFromMem(
-                (void*)buffer,
+                buffer,
                 tamano
             );
     }
@@ -449,6 +421,12 @@ D2D_Font *D2D_OpenFont_Buf(const char* path, bool del)
         return nullptr;
     }
 
+    /*
+     * SIEMPRE abrimos el TTF a INITIAL_FONT_SIZE.
+     *
+     * No volvemos a cambiarlo en D2D_DrawText_Buf.
+     */
+
     ft->font =
         TTF_OpenFontRW(
             rw,
@@ -465,6 +443,7 @@ D2D_Font *D2D_OpenFont_Buf(const char* path, bool del)
     }
 
     ft->buffer = buffer;
+
 
 #elif defined(PLATFORM_3DS)
 
@@ -491,20 +470,26 @@ D2D_Font *D2D_OpenFont_Buf(const char* path, bool del)
 
 #endif
 
+
     ft->deletable = del;
 
     return ft;
 }
 
 
-D2D_Font *D2D_OpenFont(const char* path)
+D2D_Font* D2D_OpenFont(
+    const char* path
+)
 {
-    return D2D_OpenFont_Buf(path, true);
+    return D2D_OpenFont_Buf(
+        path,
+        true
+    );
 }
 
 
 void D2D_CloseFont_Buf(
-    D2D_Font *font,
+    D2D_Font* font,
     bool del
 )
 {
@@ -514,24 +499,39 @@ void D2D_CloseFont_Buf(
     if(!font->deletable && del)
         return;
 
+
 #if defined(PLATFORM_PC)
 
-    TTF_CloseFont(font->font);
-    free(font->buffer);
+    TTF_CloseFont(
+        font->font
+    );
+
+    free(
+        font->buffer
+    );
+
 
 #elif defined(PLATFORM_3DS)
 
-    C2D_FontFree(font->font);
+    C2D_FontFree(
+        font->font
+    );
 
 #endif
+
 
     delete font;
 }
 
 
-void D2D_CloseFont(D2D_Font *font)
+void D2D_CloseFont(
+    D2D_Font* font
+)
 {
-    D2D_CloseFont_Buf(font, true);
+    D2D_CloseFont_Buf(
+        font,
+        true
+    );
 }
 
 
@@ -563,14 +563,24 @@ D2D_Result D2D_DrawText(
     D2D_WrapMode wrap
 )
 {
-    if(!initialized || !textsInitialized)
+    if(
+        !initialized ||
+        !textsInitialized
+    )
+    {
         return D2D_NOT_INITIALIZED;
+    }
 
     if(!isValidScreen())
         return D2D_ERROR;
 
-    if(currentCharactersCount >= MAX_CHARACTERS_FT - 3)
+    if(
+        currentCharactersCount >=
+        MAX_CHARACTERS_FT - 3
+    )
+    {
         return D2D_ERROR;
+    }
 
     auto res =
         D2D_DrawText_Buf(
@@ -627,10 +637,14 @@ void EndConsoleBuffs()
 #if defined(PLATFORM_3DS)
 
     if(consoleTopBuffer)
-        C2D_TextBufDelete(consoleTopBuffer);
+        C2D_TextBufDelete(
+            consoleTopBuffer
+        );
 
     if(consoleBotBuffer)
-        C2D_TextBufDelete(consoleBotBuffer);
+        C2D_TextBufDelete(
+            consoleBotBuffer
+        );
 
     consoleTopBuffer = nullptr;
     consoleBotBuffer = nullptr;
@@ -639,13 +653,18 @@ void EndConsoleBuffs()
 }
 
 
-void ClearConsoleBuf(ScreenConsole console)
+void ClearConsoleBuf(
+    ScreenConsole console
+)
 {
     if(
         console != TOP_CONSOLE &&
         console != BOTTOM_CONSOLE
     )
+    {
         return;
+    }
+
 
 #if defined(PLATFORM_3DS)
 
@@ -694,15 +713,18 @@ D2D_Text D2D_DrawText_Buf(
     D2D_Text textResult;
 
     textResult.drawed = false;
-    textResult.height = 0;
-    textResult.width = 0;
+    textResult.height = 0.0f;
+    textResult.width = 0.0f;
+
 
     if(
-        depth < -1 ||
-        depth > 1 ||
+        depth < -1.0f ||
+        depth > 1.0f ||
         !font
     )
+    {
         return textResult;
+    }
 
     if(!font->font)
         return textResult;
@@ -712,11 +734,14 @@ D2D_Text D2D_DrawText_Buf(
     // Preparar texto
     // ========================================================================
 
-    std::string textString = text;
+    std::string textString =
+        text ? text : "";
+
 
     if(
         textString.length() >=
-        MAX_CHARACTERS_FT - currentCharactersCount
+        MAX_CHARACTERS_FT -
+        currentCharactersCount
     )
     {
         textString.erase(
@@ -730,11 +755,15 @@ D2D_Text D2D_DrawText_Buf(
 #if defined(PLATFORM_PC)
 
     /*
-     * A partir de aquí TODO el layout se hace en píxeles reales
-     * de la ventana.
+     * x/y/w/h pasan a píxeles físicos.
+     *
+     * PERO el tamaño lógico del texto NO.
+     *
+     * fontSize continúa siendo una unidad lógica.
      */
 
-    const float scaleFactor = windowScale;
+    const float scaleFactor =
+        windowScale;
 
     x *= scaleFactor;
     y *= scaleFactor;
@@ -751,65 +780,63 @@ D2D_Text D2D_DrawText_Buf(
             ? topInitialPointY
             : bottomInitialPointY;
 
+    fontSize *= scaleFactor;
+
 #endif
 
 
     alignX =
         clampf(
             alignX,
-            0.f,
-            1.f
+            0.0f,
+            1.0f
         );
 
     alignY =
         clampf(
             alignY,
-            0.f,
-            1.f
+            0.0f,
+            1.0f
         );
 
 
-    bool autoFontSize =
+    const bool autoFontSize =
         fontSize < 0.0f;
 
 
-    /*
-     * Si fontSize es positivo:
-     *
-     *     fontSize = ALTURA DESEADA
-     *
-     * Si fontSize es negativo:
-     *
-     *     se mantiene el auto-fit original.
-     */
-
-    if(!autoFontSize && fontSize < 0)
-        fontSize = 0;
+    if(
+        !autoFontSize &&
+        fontSize < 0.0f
+    )
+    {
+        fontSize = 0.0f;
+    }
 
 
-    if(w < 0)
-        w = 0;
+    if(w < 0.0f)
+        w = 0.0f;
 
-    if(h < 0)
-        h = 0;
+    if(h < 0.0f)
+        h = 0.0f;
 
 
     // ========================================================================
     // Campo
     // ========================================================================
 
-    float fieldX =
+    const float fieldX =
         x - w * alignX;
 
-    float fieldY =
+    const float fieldY =
         y - h * alignY;
 
 
     std::vector<std::string> lines;
+
     std::vector<Vec2> linesSize;
 
 
-    float lineHeight = 0.0f;
+    float totalHeight = 0.0f;
 
 
 #if defined(PLATFORM_3DS)
@@ -829,20 +856,50 @@ D2D_Text D2D_DrawText_Buf(
 #endif
 
 
+    // ========================================================================
+    // Tamaño del texto
+    // ========================================================================
+
+#if defined(PLATFORM_PC)
+
     /*
-     * Este es el tamaño REAL de fuente que terminará usando el backend.
-     *
-     * fontSize = altura deseada.
-     *
-     * currentFontSize = tamaño interno real.
+     * La fuente BASE permanece siempre a INITIAL_FONT_SIZE.
      */
+
+    EnsurePCBaseFont(font);
+
+    const float baseFontHeight =
+        GetPCBaseFontHeight(font);
+
+#endif
+
+
+    float currentFontScale = 1.0f;
+
+
+#if defined(PLATFORM_PC)
+
+    if(fontSize > 0.0f)
+    {
+        currentFontScale =
+            fontSize /
+            baseFontHeight;
+    }
+
+    if(currentFontScale <= 0.0f)
+        currentFontScale = 0.001f;
+
+
+#elif defined(PLATFORM_3DS)
 
     float currentFontSize =
         fontSize;
 
+#endif
+
 
     // ========================================================================
-    // Medición
+    // MeasureText
     // ========================================================================
 
     auto MeasureText =
@@ -850,32 +907,38 @@ D2D_Text D2D_DrawText_Buf(
             float& tw,
             float& th)
     {
-    #if defined(PLATFORM_PC)
-
-        int mw = 0;
-        int mh = 0;
-
-        TTF_SizeText(
-            font->font,
-            str.c_str(),
-            &mw,
-            &mh
-        );
+#if defined(PLATFORM_PC)
 
         /*
-        * NO dividir por windowScale aquí.
-        *
-        * w, x, y, h ya están escalados.
-        * Las SDL_Surface también estarán escaladas.
-        *
-        * Por tanto, todo debe permanecer en píxeles
-        * escalados durante el cálculo del layout.
-        */
+         * TTF_SizeUTF8 devuelve la métrica de la cadena en la fuente base.
+         *
+         * SDL_ttf utiliza ints internamente para esta operación.
+         *
+         * En cuanto recibimos el resultado lo convertimos a float.
+         *
+         * Todo el layout posterior permanece en float.
+         */
 
-        tw = (float)mw;
-        th = (float)mh;
+        int baseW = 0;
+        int baseH = 0;
 
-    #elif defined(PLATFORM_3DS)
+        TTF_SizeUTF8(
+            font->font,
+            str.c_str(),
+            &baseW,
+            &baseH
+        );
+
+        tw =
+            (float)baseW *
+            currentFontScale;
+
+        th =
+            (float)baseH *
+            currentFontScale;
+
+
+#elif defined(PLATFORM_3DS)
 
         C2D_Text txt;
 
@@ -885,7 +948,9 @@ D2D_Text D2D_DrawText_Buf(
             str.c_str()
         );
 
-        C2D_TextOptimize(&txt);
+        C2D_TextOptimize(
+            &txt
+        );
 
         float scale =
             currentFontSize /
@@ -902,44 +967,37 @@ D2D_Text D2D_DrawText_Buf(
             &th
         );
 
-    #endif
-    };
-
-
-    // ========================================================================
-    // Buscar el tamaño real para obtener la altura solicitada
-    // ========================================================================
-
-    auto ResolveFontSize =
-        [&](float wantedHeight,
-            const std::string& referenceText)
-            -> float
-    {
-        if(wantedHeight <= 0.0f)
-            return 1.0f;
-
-#if defined(PLATFORM_PC)
-
-        return FindPCFontSizeForHeight(
-            font,
-            wantedHeight
-        );
-
-#elif defined(PLATFORM_3DS)
-
-        return Find3DSFontSizeForHeight(
-            font,
-            textBuffer,
-            referenceText,
-            wantedHeight
-        );
-
 #endif
+
+
+        /*
+         * letterSpacing forma parte del tamaño REAL de la línea.
+         */
+
+        if(letterSpacing > 0.0f)
+        {
+            const float spacing =
+#if defined(PLATFORM_PC)
+                letterSpacing * currentFontScale;
+#else
+                letterSpacing;
+#endif
+
+            const size_t count =
+                str.size();
+
+            if(count > 1)
+            {
+                tw +=
+                    (float)(count - 1) *
+                    spacing;
+            }
+        }
     };
 
 
     // ========================================================================
-    // Crear líneas
+    // PushLine
     // ========================================================================
 
     auto PushLine =
@@ -965,12 +1023,44 @@ D2D_Text D2D_DrawText_Buf(
     };
 
 
-    float totalHeight = 0.0f;
-    float drawY = 0.0f;
+    // ========================================================================
+    // WrapWidth
+    // ========================================================================
+
+    /*
+     * Devuelve la anchura que se utilizará EXCLUSIVAMENTE para decidir
+     * si una línea entra dentro del campo de wrap.
+     *
+     * La anchura visual real NO se modifica.
+     *
+     * De esta forma:
+     *
+     *     linesSize[i].x -> tamaño visual real
+     *
+     *     GetWrapWidth() -> tamaño usado para decidir wrap
+     *
+     * Esto evita alterar alineamiento o dibujo.
+     */
+
+    auto GetWrapWidth =
+        [&](float visualWidth) -> float
+    {
+#if defined(PLATFORM_PC)
+
+        return
+            visualWidth *
+            PC_WRAP_WIDTH_SCALE;
+
+#else
+
+        return visualWidth;
+
+#endif
+    };
 
 
     // ========================================================================
-    // Calcular líneas
+    // Calcular texto y WRAP
     // ========================================================================
 
     auto CalculateTextSize =
@@ -979,7 +1069,9 @@ D2D_Text D2D_DrawText_Buf(
 #if defined(PLATFORM_3DS)
 
         if(textBuffer)
-            C2D_TextBufClear(textBuffer);
+            C2D_TextBufClear(
+                textBuffer
+            );
 
 #endif
 
@@ -989,9 +1081,16 @@ D2D_Text D2D_DrawText_Buf(
         totalHeight = 0.0f;
 
 
+        // ====================================================================
+        // SIN WRAP
+        // ====================================================================
+
         if(wrap == WRAP_NONE)
         {
-            std::stringstream ss(textString);
+            std::stringstream ss(
+                textString
+            );
+
             std::string line;
 
             while(
@@ -1005,9 +1104,17 @@ D2D_Text D2D_DrawText_Buf(
                 PushLine(line);
             }
         }
+
+
+        // ====================================================================
+        // WORD WRAP
+        // ====================================================================
+
         else if(wrap == WORD_WRAP_MODE)
         {
-            std::stringstream ss(textString);
+            std::stringstream ss(
+                textString
+            );
 
             std::string paragraph;
 
@@ -1019,20 +1126,25 @@ D2D_Text D2D_DrawText_Buf(
                 )
             )
             {
-                std::istringstream iss(paragraph);
+                std::istringstream iss(
+                    paragraph
+                );
 
                 std::string word;
                 std::string current;
 
+
                 while(iss >> word)
                 {
-                    std::string test =
+                    const std::string test =
                         current.empty()
                             ? word
                             : current + " " + word;
 
-                    float tw;
-                    float th;
+
+                    float tw = 0.0f;
+                    float th = 0.0f;
+
 
                     MeasureText(
                         test,
@@ -1040,8 +1152,21 @@ D2D_Text D2D_DrawText_Buf(
                         th
                     );
 
+
+                    /*
+                     * tw es el ancho visual REAL.
+                     *
+                     * Para decidir wrap usamos una métrica ligeramente
+                     * compensada en PC para igualar el comportamiento de
+                     * 3DS.
+                     */
+
+                    const float wrapWidth =
+                        GetWrapWidth(tw);
+
+
                     if(
-                        tw <= w ||
+                        wrapWidth <= w ||
                         current.empty()
                     )
                     {
@@ -1055,14 +1180,29 @@ D2D_Text D2D_DrawText_Buf(
                     }
                 }
 
+
+                /*
+                 * Incluso si el párrafo está vacío debemos conservar
+                 * la línea.
+                 */
+
                 PushLine(current);
             }
         }
+
+
+        // ====================================================================
+        // CHAR WRAP
+        // ====================================================================
+
         else
         {
-            std::stringstream ss(textString);
+            std::stringstream ss(
+                textString
+            );
 
             std::string paragraph;
+
 
             while(
                 std::getline(
@@ -1074,14 +1214,18 @@ D2D_Text D2D_DrawText_Buf(
             {
                 std::string current;
 
+
                 for(char ch : paragraph)
                 {
-                    std::string test = current;
+                    std::string test =
+                        current;
 
                     test += ch;
 
-                    float tw;
-                    float th;
+
+                    float tw = 0.0f;
+                    float th = 0.0f;
+
 
                     MeasureText(
                         test,
@@ -1089,8 +1233,13 @@ D2D_Text D2D_DrawText_Buf(
                         th
                     );
 
+
+                    const float wrapWidth =
+                        GetWrapWidth(tw);
+
+
                     if(
-                        tw <= w ||
+                        wrapWidth <= w ||
                         current.empty()
                     )
                     {
@@ -1106,6 +1255,7 @@ D2D_Text D2D_DrawText_Buf(
                     }
                 }
 
+
                 PushLine(current);
             }
         }
@@ -1115,14 +1265,21 @@ D2D_Text D2D_DrawText_Buf(
             return false;
 
 
-        for(size_t i = 0; i < linesSize.size(); i++)
+        totalHeight = 0.0f;
+
+
+        for(size_t i = 0;
+            i < linesSize.size();
+            ++i)
         {
             totalHeight +=
                 linesSize[i].y;
 
             if(i + 1 < linesSize.size())
+            {
                 totalHeight +=
                     lineSpacing;
+            }
         }
 
 
@@ -1136,66 +1293,45 @@ D2D_Text D2D_DrawText_Buf(
 
     if(autoFontSize)
     {
-        /*
-         * Auto-fit original:
-         *
-         * buscamos el MAYOR tamaño de fuente que entre en w/h.
-         *
-         * Pero ahora cada tamaño candidato también se interpreta
-         * como altura deseada y se convierte al tamaño real del backend.
-         */
-
         float minSize = 0.1f;
 
         float maxSize =
-            std::min(w, h);
+            std::min(
+                w,
+                h
+            );
+
 
         if(maxSize <= 0.0f)
             return textResult;
+
 
         float bestSize =
             minSize;
 
 
         while(
-            maxSize - minSize > 0.5f
+            maxSize - minSize > 0.01f
         )
         {
-            float testSize =
-                (minSize + maxSize) * 0.5f;
-
-            /*
-             * Elegimos una referencia provisional.
-             *
-             * En la mayoría de fuentes cualquier línea no vacía sirve
-             * para determinar la altura.
-             */
-
-            std::string referenceText =
-                textString.empty()
-                    ? "A"
-                    : textString;
-
-
-            currentFontSize =
-                ResolveFontSize(
-                    testSize,
-                    referenceText
-                );
+            const float testSize =
+                (minSize + maxSize) *
+                0.5f;
 
 
 #if defined(PLATFORM_PC)
 
-            TTF_SetFontSize(
-                font->font,
-                std::max(
-                    1,
-                    (int)std::round(
-                        currentFontSize *
-                        windowScale
-                    )
-                )
-            );
+            currentFontScale =
+                testSize /
+                baseFontHeight;
+
+            if(currentFontScale <= 0.0f)
+                currentFontScale = 0.001f;
+
+#elif defined(PLATFORM_3DS)
+
+            currentFontSize =
+                testSize;
 
 #endif
 
@@ -1206,158 +1342,139 @@ D2D_Text D2D_DrawText_Buf(
 
             float totalWidth = 0.0f;
 
-            totalHeight = 0.0f;
+            float measuredHeight = 0.0f;
 
 
             for(size_t i = 0;
                 i < linesSize.size();
-                i++)
+                ++i)
             {
+                /*
+                 * Para el tamaño real del texto usamos la métrica visual,
+                 * no la compensación de wrap.
+                 */
+
                 totalWidth =
                     std::max(
                         totalWidth,
                         linesSize[i].x
                     );
 
-                totalHeight +=
+                measuredHeight +=
                     linesSize[i].y;
 
                 if(i + 1 < linesSize.size())
-                    totalHeight +=
+                {
+                    measuredHeight +=
                         lineSpacing;
+                }
             }
 
 
             if(
                 totalWidth <= w &&
-                totalHeight <= h
+                measuredHeight <= h
             )
             {
-                bestSize = testSize;
+                bestSize =
+                    testSize;
 
-                minSize = testSize;
+                minSize =
+                    testSize;
             }
             else
             {
-                maxSize = testSize;
+                maxSize =
+                    testSize;
             }
         }
 
-
-        /*
-         * `bestSize` es la ALTURA deseada.
-         *
-         * Convertimos finalmente esa altura al tamaño real.
-         */
 
         fontSize =
             bestSize;
 
-        currentFontSize =
-            ResolveFontSize(
-                fontSize,
-                textString.empty()
-                    ? "A"
-                    : textString
-            );
-
 
 #if defined(PLATFORM_PC)
 
-        TTF_SetFontSize(
-            font->font,
-            std::max(
-                1,
-                (int)std::round(
-                    currentFontSize *
-                    windowScale
-                )
-            )
-        );
+        currentFontScale =
+            fontSize /
+            baseFontHeight;
+
+        if(currentFontScale <= 0.0f)
+            currentFontScale = 0.001f;
+
+#elif defined(PLATFORM_3DS)
+
+        currentFontSize =
+            fontSize;
 
 #endif
 
 
         if(!CalculateTextSize())
-        {
-            totalHeight = 0.0f;
-
-            lines.clear();
-            linesSize.clear();
-
             return textResult;
-        }
     }
+
+
+    // ========================================================================
+    // TAMAÑO NORMAL
+    // ========================================================================
+
     else
     {
-        // ================================================================
-        // FONT SIZE NORMAL
-        // ================================================================
-
-        /*
-         * Aquí está el cambio principal:
-         *
-         * fontSize NO se utiliza directamente.
-         *
-         * Primero buscamos qué tamaño real necesita la fuente para
-         * conseguir una altura igual o aproximadamente igual a fontSize.
-         */
-
-        std::string referenceText =
-            textString.empty()
-                ? "A"
-                : textString;
-
-
-        currentFontSize =
-            ResolveFontSize(
-                fontSize,
-                referenceText
-            );
-
-
 #if defined(PLATFORM_PC)
 
-        TTF_SetFontSize(
-            font->font,
-            std::max(
-                1,
-                (int)std::round(
-                    currentFontSize *
-                    windowScale
-                )
-            )
-        );
+        /*
+         * NO TTF_SetFontSize().
+         *
+         * La fuente continúa siendo INITIAL_FONT_SIZE.
+         */
+
+        currentFontScale =
+            fontSize /
+            baseFontHeight;
+
+        if(currentFontScale <= 0.0f)
+            currentFontScale = 0.001f;
+
+
+#elif defined(PLATFORM_3DS)
+
+        currentFontSize =
+            fontSize;
 
 #endif
 
 
+        /*
+         * El wrap se calcula usando la métrica visual y la compensación
+         * horizontal exclusiva de wrap en PC.
+         */
+
         if(!CalculateTextSize())
             return textResult;
 
-
-        /*
-         * Recalcular la altura usando las dimensiones REALES.
-         */
 
         totalHeight = 0.0f;
 
+
         for(size_t i = 0;
             i < linesSize.size();
-            i++)
+            ++i)
         {
             totalHeight +=
                 linesSize[i].y;
 
             if(i + 1 < linesSize.size())
+            {
                 totalHeight +=
                     lineSpacing;
+            }
         }
 
 
         /*
-         * Mantener el comportamiento original:
-         * si no cabe verticalmente, eliminamos líneas del final.
+         * Si no cabe verticalmente eliminamos líneas.
          */
 
         while(
@@ -1369,8 +1486,10 @@ D2D_Text D2D_DrawText_Buf(
                 linesSize.back().y;
 
             if(lines.size() > 1)
+            {
                 totalHeight -=
                     lineSpacing;
+            }
 
             lines.pop_back();
 
@@ -1405,48 +1524,48 @@ D2D_Text D2D_DrawText_Buf(
 
 
     /*
-     * MUY IMPORTANTE:
+     * NO modificamos el tamaño del TTF.
      *
-     * currentFontSize es el tamaño REAL de TTF.
-     *
-     * fontSize sigue siendo la altura solicitada.
+     * Las superficies se generan a INITIAL_FONT_SIZE.
      */
 
-    TTF_SetFontSize(
-        font->font,
-        std::max(
-            1,
-            (int)std::round(
-                currentFontSize *
-                windowScale
-            )
-        )
-    );
+    EnsurePCBaseFont(font);
 
 
     std::vector<SDL_Surface*> surfs;
 
+    surfs.reserve(
+        lines.size()
+    );
+
 
     for(size_t i = 0;
         i < lines.size();
-        i++)
+        ++i)
     {
-        surfs.push_back(
-            TTF_RenderText_Solid(
+        SDL_Surface* surface =
+            TTF_RenderText_Blended(
                 font->font,
                 lines[i].c_str(),
                 c
-            )
+            );
+
+        surfs.push_back(
+            surface
         );
     }
 
 
     glDepthMask(GL_TRUE);
 
-    glDisable(GL_DEPTH_TEST);
+    glDisable(
+        GL_DEPTH_TEST
+    );
 
 
-    glMatrixMode(GL_PROJECTION);
+    glMatrixMode(
+        GL_PROJECTION
+    );
 
     glLoadIdentity();
 
@@ -1461,7 +1580,9 @@ D2D_Text D2D_DrawText_Buf(
     );
 
 
-    glMatrixMode(GL_MODELVIEW);
+    glMatrixMode(
+        GL_MODELVIEW
+    );
 
     glLoadIdentity();
 
@@ -1470,35 +1591,61 @@ D2D_Text D2D_DrawText_Buf(
     glUseProgram(0);
 
 
-    drawY =
+    float drawY =
         fieldY +
         (h - totalHeight) *
         textAlignY;
 
 
     for(size_t i = 0;
-        i < surfs.size();
-        i++)
+        i < lines.size();
+        ++i)
     {
+        SDL_Surface* surface =
+            surfs[i];
+
+
+        if(!surface)
+        {
+            drawY +=
+                linesSize[i].y +
+                lineSpacing;
+
+            continue;
+        }
+
+
         SDL_Surface* conv =
             SDL_ConvertSurfaceFormat(
-                surfs[i],
+                surface,
                 SDL_PIXELFORMAT_RGBA32,
                 0
             );
 
 
         SDL_FreeSurface(
-            surfs[i]
+            surface
         );
 
 
+        if(!conv)
+        {
+            drawY +=
+                linesSize[i].y +
+                lineSpacing;
+
+            continue;
+        }
+
+
         GLuint texture = 0;
+
 
         glGenTextures(
             1,
             &texture
         );
+
 
         glBindTexture(
             GL_TEXTURE_2D,
@@ -1532,47 +1679,23 @@ D2D_Text D2D_DrawText_Buf(
         );
 
 
-        // ================================================================
-        // Alineación horizontal
-        // ================================================================
+        // ====================================================================
+        // Ancho lógico de la línea
+        // ====================================================================
 
         float lineWidth =
             linesSize[i].x;
 
 
-        if(letterSpacing > 0.0f)
-        {
-            lineWidth =
-                -letterSpacing;
-
-
-            for(char ch : lines[i])
-            {
-                int minx;
-                int maxx;
-                int miny;
-                int maxy;
-                int advance;
-
-
-                if(
-                    TTF_GlyphMetrics(
-                        font->font,
-                        ch,
-                        &minx,
-                        &maxx,
-                        &miny,
-                        &maxy,
-                        &advance
-                    ) == 0
-                )
-                {
-                    lineWidth +=
-                        advance +
-                        letterSpacing;
-                }
-            }
-        }
+        /*
+         * IMPORTANTE:
+         *
+         * lineWidth es el ancho VISUAL REAL.
+         *
+         * NO contiene PC_WRAP_WIDTH_SCALE.
+         *
+         * Por tanto la compensación de wrap no afecta al alineamiento.
+         */
 
 
         float drawX =
@@ -1581,25 +1704,45 @@ D2D_Text D2D_DrawText_Buf(
             textAlignX;
 
 
-        // ================================================================
+        // ====================================================================
         // Sin letter spacing
-        // ================================================================
+        // ====================================================================
 
         if(letterSpacing <= 0.0f)
         {
-            float x1 = drawX;
-            float y1 = drawY;
+            /*
+             * La superficie es base.
+             *
+             * La escalamos físicamente mediante los vértices.
+             */
 
-            float x2 =
-                x1 + conv->w;
+            const float texW =
+                (float)conv->w *
+                currentFontScale;
 
-            float y2 =
-                y1 + conv->h;
+            const float texH =
+                (float)conv->h *
+                currentFontScale;
+
+
+            const float x1 =
+                drawX;
+
+            const float y1 =
+                drawY;
+
+
+            const float x2 =
+                x1 + texW;
+
+            const float y2 =
+                y1 + texH;
 
 
             glEnable(
                 GL_TEXTURE_2D
             );
+
 
             glColor4ub(
                 255,
@@ -1614,8 +1757,8 @@ D2D_Text D2D_DrawText_Buf(
             );
 
                 glTexCoord2f(
-                    0,
-                    0
+                    0.0f,
+                    0.0f
                 );
 
                 glVertex3f(
@@ -1626,8 +1769,8 @@ D2D_Text D2D_DrawText_Buf(
 
 
                 glTexCoord2f(
-                    1,
-                    0
+                    1.0f,
+                    0.0f
                 );
 
                 glVertex3f(
@@ -1638,8 +1781,8 @@ D2D_Text D2D_DrawText_Buf(
 
 
                 glTexCoord2f(
-                    1,
-                    1
+                    1.0f,
+                    1.0f
                 );
 
                 glVertex3f(
@@ -1650,8 +1793,8 @@ D2D_Text D2D_DrawText_Buf(
 
 
                 glTexCoord2f(
-                    0,
-                    1
+                    0.0f,
+                    1.0f
                 );
 
                 glVertex3f(
@@ -1667,46 +1810,24 @@ D2D_Text D2D_DrawText_Buf(
                 GL_TEXTURE_2D
             );
         }
+
+
+        // ====================================================================
+        // Letter spacing
+        // ====================================================================
+
         else
         {
-            // ============================================================
-            // Letter spacing
-            // ============================================================
+            /*
+             * En este caso generamos cada glifo.
+             *
+             * Cada glifo sigue siendo rasterizado a la fuente base.
+             *
+             * La posición y el tamaño final se escalan mediante floats.
+             */
 
-            float totalWidth =
-                -letterSpacing;
-
-
-            for(char ch : lines[i])
-            {
-                int minx;
-                int maxx;
-                int miny;
-                int maxy;
-                int advance;
-
-
-                if(
-                    TTF_GlyphMetrics(
-                        font->font,
-                        ch,
-                        &minx,
-                        &maxx,
-                        &miny,
-                        &maxy,
-                        &advance
-                    ) == 0
-                )
-                {
-                    totalWidth +=
-                        advance +
-                        letterSpacing;
-                }
-            }
-
-
-            float penX = drawX;
-            float penY = drawY;
+            float penX =
+                drawX;
 
 
             for(char ch : lines[i])
@@ -1743,7 +1864,11 @@ D2D_Text D2D_DrawText_Buf(
                 );
 
 
-                GLuint glyphTex;
+                if(!glyphConv)
+                    continue;
+
+
+                GLuint glyphTex = 0;
 
 
                 glGenTextures(
@@ -1784,14 +1909,27 @@ D2D_Text D2D_DrawText_Buf(
                 );
 
 
-                float x1 = penX;
-                float y1 = penY;
+                const float glyphW =
+                    (float)glyphConv->w *
+                    currentFontScale;
 
-                float x2 =
-                    x1 + glyphConv->w;
+                const float glyphH =
+                    (float)glyphConv->h *
+                    currentFontScale;
 
-                float y2 =
-                    y1 + glyphConv->h;
+
+                const float x1 =
+                    penX;
+
+                const float y1 =
+                    drawY;
+
+
+                const float x2 =
+                    x1 + glyphW;
+
+                const float y2 =
+                    y1 + glyphH;
 
 
                 glEnable(
@@ -1812,8 +1950,8 @@ D2D_Text D2D_DrawText_Buf(
                 );
 
                     glTexCoord2f(
-                        0,
-                        0
+                        0.0f,
+                        0.0f
                     );
 
                     glVertex3f(
@@ -1824,8 +1962,8 @@ D2D_Text D2D_DrawText_Buf(
 
 
                     glTexCoord2f(
-                        1,
-                        0
+                        1.0f,
+                        0.0f
                     );
 
                     glVertex3f(
@@ -1836,8 +1974,8 @@ D2D_Text D2D_DrawText_Buf(
 
 
                     glTexCoord2f(
-                        1,
-                        1
+                        1.0f,
+                        1.0f
                     );
 
                     glVertex3f(
@@ -1848,8 +1986,8 @@ D2D_Text D2D_DrawText_Buf(
 
 
                     glTexCoord2f(
-                        0,
-                        1
+                        0.0f,
+                        1.0f
                     );
 
                     glVertex3f(
@@ -1885,15 +2023,28 @@ D2D_Text D2D_DrawText_Buf(
                     ) == 0
                 )
                 {
+                    /*
+                     * advance es un valor de métrica de SDL y por tanto
+                     * es entero por limitación de SDL_ttf.
+                     *
+                     * Lo convertimos inmediatamente a float y desde
+                     * aquí TODO el layout permanece en float.
+                     */
+
                     penX +=
-                        advance +
-                        letterSpacing;
+                        (float)advance *
+                        currentFontScale;
+
+                    penX +=
+                        letterSpacing *
+                        currentFontScale;
                 }
                 else
                 {
                     penX +=
-                        glyphConv->w +
-                        letterSpacing;
+                        glyphW +
+                        letterSpacing *
+                        currentFontScale;
                 }
 
 
@@ -1927,6 +2078,10 @@ D2D_Text D2D_DrawText_Buf(
         );
 
 
+        /*
+         * drawY utiliza la altura lógica ya escalada.
+         */
+
         drawY +=
             linesSize[i].y +
             lineSpacing;
@@ -1948,6 +2103,7 @@ D2D_Text D2D_DrawText_Buf(
         currentFontSize /
         (float)INITIAL_FONT_SIZE;
 
+
     if(scale <= 0.0f)
         scale = 0.001f;
 
@@ -1961,7 +2117,7 @@ D2D_Text D2D_DrawText_Buf(
         );
 
 
-    drawY =
+    float drawY =
         fieldY +
         (h - totalHeight) *
         textAlignY;
@@ -1969,7 +2125,7 @@ D2D_Text D2D_DrawText_Buf(
 
     for(size_t i = 0;
         i < lines.size();
-        i++)
+        ++i)
     {
         C2D_Text txt;
 
@@ -1987,8 +2143,8 @@ D2D_Text D2D_DrawText_Buf(
         );
 
 
-        float tw;
-        float th;
+        float tw = 0.0f;
+        float th = 0.0f;
 
 
         C2D_TextGetDimensions(
@@ -2009,8 +2165,9 @@ D2D_Text D2D_DrawText_Buf(
             lineWidth +=
                 lines[i].size() > 1
                     ? (
-                        lines[i].size() - 1
-                    ) * letterSpacing
+                        (float)(lines[i].size() - 1) *
+                        letterSpacing
+                    )
                     : 0.0f;
         }
 
@@ -2020,10 +2177,6 @@ D2D_Text D2D_DrawText_Buf(
             (w - lineWidth) *
             textAlignX;
 
-
-        // ================================================================
-        // Sin letter spacing
-        // ================================================================
 
         if(letterSpacing <= 0.0f)
         {
@@ -2040,10 +2193,6 @@ D2D_Text D2D_DrawText_Buf(
         }
         else
         {
-            // ============================================================
-            // Letter spacing
-            // ============================================================
-
             float penX =
                 drawX;
 
@@ -2073,8 +2222,8 @@ D2D_Text D2D_DrawText_Buf(
                 );
 
 
-                float gw;
-                float gh;
+                float gw = 0.0f;
+                float gh = 0.0f;
 
 
                 C2D_TextGetDimensions(
@@ -2129,8 +2278,13 @@ D2D_Text D2D_DrawText_Buf(
 
 void D2D_InitTexts()
 {
-    if(!initialized || textsInitialized)
+    if(
+        !initialized ||
+        textsInitialized
+    )
+    {
         return;
+    }
 
 
     currentCharactersCount = 0;
@@ -2166,8 +2320,13 @@ void D2D_InitTexts()
 
 void D2D_TextsBegin()
 {
-    if(!initialized || !textsInitialized)
+    if(
+        !initialized ||
+        !textsInitialized
+    )
+    {
         return;
+    }
 
 
     currentCharactersCount = 0;
@@ -2176,9 +2335,11 @@ void D2D_TextsBegin()
 #if defined(PLATFORM_3DS)
 
     if(globalBuffer)
+    {
         C2D_TextBufClear(
             globalBuffer
         );
+    }
 
 #endif
 }

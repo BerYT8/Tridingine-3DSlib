@@ -506,7 +506,7 @@ void S2S_BeginFrame()
                         int32_t *height = new int32_t();
                         *width = event.window.data1;
                         *height = event.window.data2;
-                        printf("[WINDOW] Width: %d, Height: %d.\n", *width, *height);
+                        //printf("[WINDOW] Width: %d, Height: %d.\n", *width, *height);
 
                         setScreenValue("window_width", width, SAVE_TYPE_INT32);
                         setScreenValue("window_height", height, SAVE_TYPE_INT32);
@@ -631,6 +631,7 @@ void S2S_EndFrame()
         SDL_GL_SwapWindow(window);
     }
 #elif defined(PLATFORM_3DS)
+    C2D_Flush();
     C3D_FrameEnd(0);
 #endif
     usedTop = false;
