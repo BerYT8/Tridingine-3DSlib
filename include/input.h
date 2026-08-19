@@ -57,7 +57,7 @@ enum
 
     INPUT_KEY_ANY        = 0xFFFFFFFF,
 
-    INPUT_KEY_NONE       = -5
+    INPUT_KEY_NONE       = 0
 };
 
 #if defined(PLATFORM_PC)
@@ -84,6 +84,14 @@ bool input_isKeyUp(InputKey keycode);
 
 void input_bindKey(InputKey virtualKey, AssignPos pos, PlatformKey platformKey);
 
+/*
+ * Returns the current D-Pad direction as a normalized 2D vector.
+ *
+ * X represents the horizontal direction (-1.0 = left, 1.0 = right).
+ * Y represents the vertical direction (-1.0 = up, 1.0 = down).
+ * Returns (0, 0) when no D-Pad direction is pressed.
+ */
+Vec2 input_getCPad();
 Vec2 input_getTouch();
 
 void input_exit();

@@ -16,18 +16,10 @@ bool Player::Init()
 void Player::Update()
 {
     double dt = dt_get();
+    Vec2 cpad = input_getCPad();
 
-    if (input_isKeyDown(INPUT_KEY_CPAD_LEFT))
-        x -= speed * dt;
-
-    if (input_isKeyDown(INPUT_KEY_CPAD_RIGHT))
-        x += speed * dt;
-
-    if (input_isKeyDown(INPUT_KEY_CPAD_UP))
-        y -= speed * dt;
-
-    if (input_isKeyDown(INPUT_KEY_CPAD_DOWN))
-        y += speed * dt;
+    x += speed * dt * cpad.x;
+    y += speed * dt * cpad.y;
 
     // Límites de la pantalla
     if (x < radius)

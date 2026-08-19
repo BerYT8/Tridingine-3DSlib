@@ -7,6 +7,9 @@
 
 #elif defined(PLATFORM_PC)
 #include <SDL2/SDL.h>
+#include "SDL_joystick.h"
+
+static SDL_Joystick *joystick = nullptr;
 #endif
 
 #include "screens/screensValues.h"
@@ -133,6 +136,13 @@ bool input_isKeyUp(InputKey key)
     return (inputIntern::getHidKeys().kHeld & key) == 0;
 }
 
+Vec2 input_getCPad()
+{
+    if(!in)
+        return {0,0};
+    return inputIntern::getCPad();
+}
+
 Vec2 input_getTouch()
 {
     if(!in)
@@ -156,6 +166,25 @@ bool GetMouseBottom(int xt, int yt, float &outX, float &outY)
     return true;
 }
 #endif
+
+static Vec2 applyJoystickDeadzone(float x, float y)
+{
+    const float deadzone = 0.15f;
+
+    float length = sqrtf(x * x + y * y);
+
+    if (length < deadzone)
+        return vec2_create(0.0f, 0.0f);
+
+    // Quitamos la deadzone y remapeamos el resto a 0..1.
+    float amount = (length - deadzone) / (1.0f - deadzone);
+    amount = clampf(amount, 0.0f, 1.0f);
+
+    x = (x / length) * amount;
+    y = (y / length) * amount;
+
+    return vec2_create(x, y);
+}
 
 void input_read()
 {
@@ -187,6 +216,7 @@ void input_read()
     }
     //else
         //printf("[ERROR] Error occurred.\n");
+
 #elif defined(PLATFORM_3DS)
 
     touchPosition touch;
@@ -194,6 +224,16 @@ void input_read()
     hidTouchRead(&touch);
 
     inputIntern::setTouch(vec2_create(touch.px, touch.py));
+
+    circlePosition cpad;
+    hidCircleRead(&cpad);
+
+    float x = clampf(cpad.dx / 156.0f, -1.0f, 1.0f);
+    float y = -clampf(cpad.dy / 156.0f, -1.0f, 1.0f);
+
+    // x = -1 izquierda, 0 centro, 1 derecha
+    // y = -1 abajo,    0 centro, 1 arriba
+    inputIntern::setCPad(applyJoystickDeadzone(x, y));
 
 #endif
 
@@ -229,6 +269,38 @@ void input_read()
     inputIntern::setHidKeysUp(oldKeys & ~current);
 
     oldKeys = current;
+
+#if defined(PLATFORM_PC)
+    float x = 0.0f;
+    float y = 0.0f;
+
+    if(input_isKeyPressed(INPUT_KEY_CPAD_UP) || input_isKeyDown(INPUT_KEY_CPAD_UP))
+        y -= 1.0f;
+    if(input_isKeyPressed(INPUT_KEY_CPAD_DOWN) || input_isKeyDown(INPUT_KEY_CPAD_DOWN))
+        y += 1.0f;
+    if(input_isKeyPressed(INPUT_KEY_CPAD_LEFT) || input_isKeyDown(INPUT_KEY_CPAD_LEFT))
+        x -= 1.0f;
+    if(input_isKeyPressed(INPUT_KEY_CPAD_RIGHT) || input_isKeyDown(INPUT_KEY_CPAD_RIGHT))
+        x += 1.0f;
+
+    if(joystick)
+    {
+        Sint16 rawX = SDL_JoystickGetAxis(joystick, SDL_CONTROLLER_AXIS_LEFTX);
+        Sint16 rawY = SDL_JoystickGetAxis(joystick, SDL_CONTROLLER_AXIS_LEFTY);
+
+        float xp = clampf(rawX / 32767.0f, -1.0f, 1.0f);
+        float yp = clampf(rawY / 32767.0f, -1.0f, 1.0f);
+        Vec2 cpad = applyJoystickDeadzone(xp, yp);
+        if(cpad.x != 0)
+            x = xp;
+        if(cpad.y != 0)
+            y = yp;
+    }
+    
+    // x = -1 izquierda, 0 centro, 1 derecha
+    // y = -1 abajo,    0 centro, 1 arriba
+    inputIntern::setCPad(applyJoystickDeadzone(x, y));
+#endif
 }
 
 void input_init()

@@ -1,6 +1,7 @@
 #pragma once
 
-#include <maths.h>
+#include <fcntl.h>
+#include <input.h>
 
 #define MAX_BINDINGS 64
 
@@ -37,6 +38,7 @@ private:
     inline static hidKeys hidKeysI;
 
     inline static Vec2 touch;
+    inline static Vec2 cpadInput;
 
     inline static InputBinding bindings[MAX_BINDINGS];
 
@@ -88,6 +90,16 @@ public:
     static Vec2 getTouch()
     {
         return touch;
+    }
+
+    static void setCPad(Vec2 cpad)
+    {
+        cpadInput = cpad;
+    }
+
+    static Vec2 getCPad()
+    {
+        return cpadInput;
     }
 
     static void addBinding(InputKey virtualKey, AssignPos pos, PlatformKey platformKey)

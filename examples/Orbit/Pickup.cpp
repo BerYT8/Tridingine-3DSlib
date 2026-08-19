@@ -42,7 +42,7 @@ void Pickup::Draw()
         y,
         r,
         0.0f,
-        0.2f,
+        0.09f,
         0.5f,
         0.5f,
         Color_MakeColor(50,255,120,255));
