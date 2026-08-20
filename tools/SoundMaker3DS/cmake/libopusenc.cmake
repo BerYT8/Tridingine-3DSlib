@@ -6,36 +6,6 @@ project(opusenc
 )
 
 # ------------------------------------------------------------
-# Opus
-# ------------------------------------------------------------
-
-if(WIN32)
-    find_library(OPUS_LIBRARY
-        NAMES opus opus_static libopus
-        PATHS
-            "${CMAKE_CURRENT_SOURCE_DIR}/../lib"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../libopus/build"
-    )
-else()
-    find_library(OPUS_LIBRARY
-        NAMES opus
-        PATHS
-            "${CMAKE_CURRENT_SOURCE_DIR}/../lib"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../libopus/build"
-    )
-endif()
-
-if(NOT OPUS_LIBRARY)
-    message(FATAL_ERROR
-        "No se encontró libopus/opus.lib. "
-        "OPUS_LIBRARY=${OPUS_LIBRARY}"
-    )
-endif()
-
-message(STATUS "Using Opus library: ${OPUS_LIBRARY}")
-
-
-# ------------------------------------------------------------
 # opusenc
 # ------------------------------------------------------------
 
@@ -44,6 +14,7 @@ add_library(opusenc
     src/opus_header.c
     src/opusenc.c
     src/picture.c
+    src/random.c
     src/resample.c
     src/unicode_support.c
 )
@@ -64,5 +35,5 @@ target_include_directories(opusenc PRIVATE
 )
 
 target_link_libraries(opusenc PRIVATE
-    "${OPUS_LIBRARY}"
+    opus
 )
