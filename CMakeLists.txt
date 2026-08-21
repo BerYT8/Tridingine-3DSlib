@@ -44,6 +44,7 @@ set(SOURCES
     src/console/drawConsole.cpp
     src/console/console.cpp
 
+    src/system_memory.cpp
     src/system_language.cpp
     src/system_time.cpp
     src/sys_fonts_gen_funcs.h

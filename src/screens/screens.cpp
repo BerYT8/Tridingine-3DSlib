@@ -35,6 +35,8 @@ static std::string currTitle = "Game";
 #include <3ds.h>
 #include <citro2d.h>
 #include <citro3d.h>
+#include <reent.h>
+#include <unistd.h>
 
 static aptHookCookie hookCookie;
 
@@ -275,6 +277,7 @@ bool S2S_ScreensInit()
     glEnable(GL_TEXTURE_2D);
 
 #elif defined(PLATFORM_3DS)
+    g_heap_start = (u8*)_sbrk_r(_REENT, 0);
     gfxInitDefault();
     if(!C3D_Init(C3D_DEFAULT_CMDBUF_SIZE))
     {

@@ -45,6 +45,9 @@ SHMEM_EXT float topHeight SHMEM_INIT(0.0f);
 SHMEM_EXT float botWidth SHMEM_INIT(0.0f);
 SHMEM_EXT float botHeight SHMEM_INIT(0.0f);
 SHMEM_EXT float windowScale SHMEM_INIT(1.0f);
+#elif defined(PLATFORM_3DS)
+#include "ints_defs.h"
+SHMEM_EXT u8* g_heap_start SHMEM_INIT(NULL);
 #endif
 
 void setDrawRegion(float x, float y, float w, float h);
