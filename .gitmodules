@@ -28,3 +28,6 @@
 [submodule "external/glew"]
 	path = external/glew
 	url = https://github.com/nigels-com/glew.git
+[submodule "tools/FontsConverter/freetype"]
+	path = tools/FontsConverter/freetype
+	url = https://github.com/freetype/freetype

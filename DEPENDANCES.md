@@ -523,7 +523,7 @@ this normally means that the corresponding 3DS portlibs are not installed or tha
 Use:
 ```bash
 chmod +x config.sh
-./congif.sh
+./config.sh
 
 ./build.sh
 ./MakeProjectMaker.sh
@@ -533,7 +533,7 @@ chmod +x config.sh
 
 Use:
 ```bash
-.\congif.bat
+.\config.bat
 
 .\build.bat
 .\MakeProjectMaker.bat
