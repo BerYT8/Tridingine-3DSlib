@@ -1,6 +1,8 @@
 @echo off
 setlocal
 
+copy external\cmake\glew.cmake external\glew\CMakeLists.txt
+
 set "BUILD_DIR=build"
 
 if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"

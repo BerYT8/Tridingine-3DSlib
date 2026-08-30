@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 
 project(
     Tridingine
@@ -154,7 +154,7 @@ else()
 endif()
 
 # =====================================================
-# CONFIGURATION HEADER
+# CONFIGURATION
 # =====================================================
 
 message(STATUS "========================================")
@@ -166,7 +166,7 @@ message(STATUS "========================================")
 
 
 # =====================================================
-# 🖥️ PC
+# PC
 # =====================================================
 
 if(NOT BUILD_3DS)
@@ -179,121 +179,62 @@ if(NOT BUILD_3DS)
 
     find_package(OpenGL REQUIRED)
 
-    # =================================================
-    # GLEW STATIC
-    # =================================================
+    # -------------------------------------------------
+    # GLEW
+    # -------------------------------------------------
     #
-    # GLEW se obtiene EXCLUSIVAMENTE desde:
+    # GLEW se compila directamente como parte del
+    # proyecto mediante add_subdirectory().
     #
-    #     external/glew/include
-    #     external/glew/lib
+    # Esto crea:
     #
-    # No se utiliza find_package(GLEW)
-    # No se utiliza find_path()
-    # No se utiliza find_library()
+    #     GLEW::Static
     #
-    # Linux:
-    #     lib/libGLEW.a
+    # No se utiliza:
     #
-    # Windows:
-    #     lib/glew32s.lib
+    #     find_package(GLEW)
+    #     find_path()
+    #     find_library()
+    #     IMPORTED
     #
-    # =================================================
+    # -------------------------------------------------
 
-    set(GLEW_ROOT
-        "${CMAKE_CURRENT_SOURCE_DIR}/external/glew"
+    set(
+        GLEW_BUILD_SHARED
+        OFF
+        CACHE BOOL
+        "Build the shared GLEW library"
+        FORCE
     )
 
-    set(GLEW_INCLUDE_DIR
-        "${GLEW_ROOT}/include"
+    set(
+        GLEW_BUILD_STATIC
+        ON
+        CACHE BOOL
+        "Build the static GLEW library"
+        FORCE
     )
 
-    if(WIN32)
-
-        set(GLEW_STATIC_LIBRARY
-            "${GLEW_ROOT}/lib/glew32s.lib"
-        )
-
-    elseif(UNIX AND NOT APPLE)
-
-        set(GLEW_STATIC_LIBRARY
-            "${GLEW_ROOT}/lib/libGLEW.a"
-        )
-
-    elseif(APPLE)
-
-        set(GLEW_STATIC_LIBRARY
-            "${GLEW_ROOT}/lib/libGLEW.a"
-        )
-
-    else()
-
-        message(FATAL_ERROR
-            "Unsupported platform for bundled GLEW."
-        )
-
-    endif()
-
-    # -------------------------------------------------
-    # Verificar GLEW
-    # -------------------------------------------------
-
-    if(NOT EXISTS "${GLEW_INCLUDE_DIR}/GL/glew.h")
-
-        message(FATAL_ERROR
-            "GLEW headers not found:\n"
-            "  ${GLEW_INCLUDE_DIR}/GL/glew.h"
-        )
-
-    endif()
-
-    if(NOT EXISTS "${GLEW_STATIC_LIBRARY}")
-
-        message(FATAL_ERROR
-            "Static GLEW library not found:\n"
-            "  ${GLEW_STATIC_LIBRARY}"
-        )
-
-    endif()
-
-    message(STATUS "GLEW root    : ${GLEW_ROOT}")
-    message(STATUS "GLEW include : ${GLEW_INCLUDE_DIR}")
-    message(STATUS "GLEW static  : ${GLEW_STATIC_LIBRARY}")
-
-    # -------------------------------------------------
-    # GLEW::GLEW
-    # -------------------------------------------------
-
-    add_library(
-        GLEW::GLEW
-        STATIC
-        IMPORTED
+    set(
+        GLEW_BUILD_UTILS
+        OFF
+        CACHE BOOL
+        "Build glewinfo and visualinfo"
+        FORCE
     )
 
-    set_target_properties(
-        GLEW::GLEW
-        PROPERTIES
-
-            IMPORTED_LOCATION
-                "${GLEW_STATIC_LIBRARY}"
-
-            INTERFACE_INCLUDE_DIRECTORIES
-                "${GLEW_INCLUDE_DIR}"
+    set(
+        GLEW_NO_GLU
+        ON
+        CACHE BOOL
+        "Disable GLU support in GLEW"
+        FORCE
     )
 
-    # -------------------------------------------------
-    # GLEW Windows
-    # -------------------------------------------------
-
-    if(WIN32)
-
-        target_compile_definitions(
-            GLEW::GLEW
-            INTERFACE
-                GLEW_STATIC
-        )
-
-    endif()
+    add_subdirectory(
+        external/glew
+        EXCLUDE_FROM_ALL
+    )
 
     # -------------------------------------------------
     # SDL2
@@ -421,26 +362,22 @@ if(NOT BUILD_3DS)
     target_include_directories(
         TridingineCore
         PUBLIC
-
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib_include>
-
-            $<INSTALL_INTERFACE:include>
-
-        PRIVATE
-
-            ${OPENGL_INCLUDE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/lib_include
     )
 
     target_link_libraries(
         TridingineCore
         PRIVATE
 
-            GLEW::GLEW
+            # GLEW compilado desde external/glew
+            GLEW::Static
 
+            # OpenGL
             OpenGL::GLU
             OpenGL::GL
 
+            # SDL
             SDL2::SDL2-static
             SDL2_mixer::SDL2_mixer-static
             SDL2_image::SDL2_image-static
@@ -466,11 +403,8 @@ if(NOT BUILD_3DS)
     target_include_directories(
         TridingineEntrypoint
         PUBLIC
-
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib_include>
-
-            $<INSTALL_INTERFACE:include>
+            ${CMAKE_CURRENT_SOURCE_DIR}/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/lib_include
     )
 
     # =================================================
@@ -485,7 +419,6 @@ if(NOT BUILD_3DS)
     target_link_libraries(
         Tridingine
         INTERFACE
-
             TridingineCore
             TridingineEntrypoint
     )
@@ -498,7 +431,7 @@ if(NOT BUILD_3DS)
 
 
 # =====================================================
-# 🎮 NINTENDO 3DS
+# NINTENDO 3DS
 # =====================================================
 
 else()
@@ -548,11 +481,8 @@ else()
     target_include_directories(
         TridingineCore
         PUBLIC
-
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib_include>
-
-            $<INSTALL_INTERFACE:include>
+            ${CMAKE_CURRENT_SOURCE_DIR}/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/lib_include
     )
 
     # =================================================
@@ -584,9 +514,7 @@ else()
     # directorio .dkp-generated al INTERFACE.
     #
     # Ese directorio solamente existe durante el build
-    # y NO puede aparecer en un paquete instalado.
-    #
-    # El archivo .a sí se instala y se exporta.
+    # y no debe aparecer en un paquete instalado.
     #
 
     set_target_properties(
@@ -615,11 +543,8 @@ else()
     target_include_directories(
         TridingineEntrypoint
         PUBLIC
-
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib_include>
-
-            $<INSTALL_INTERFACE:include>
+            ${CMAKE_CURRENT_SOURCE_DIR}/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/lib_include
     )
 
     # =================================================
@@ -678,13 +603,8 @@ message(STATUS "  Version  : ${PROJECT_VERSION}")
 
 if(NOT BUILD_3DS)
 
-    message(STATUS "  GLEW     : bundled static")
-
-    if(WIN32)
-        message(STATUS "  GLEW lib : ${GLEW_STATIC_LIBRARY}")
-    else()
-        message(STATUS "  GLEW lib : ${GLEW_STATIC_LIBRARY}")
-    endif()
+    message(STATUS "  GLEW     : external/glew")
+    message(STATUS "  GLEW     : static")
 
 endif()
 

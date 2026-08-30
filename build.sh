@@ -3,14 +3,11 @@
 # Detener el script si ocurre algún error
 set -e
 
-BUILD_DIR="build"
+ROOT="$(pwd)"
 
-cd external/glew
+BUILD_DIR="$ROOT/build"
 
-make -C auto
-make glew.lib.static
-
-cd ../..
+cp -f "$ROOT/external/cmake/glew.cmake" "$ROOT/external/glew/CMakeLists.txt" 2>/dev/null
 
 # Crear directorio de construcción si no existe
 mkdir -p "$BUILD_DIR"
@@ -30,7 +27,7 @@ cmake ../.. -DBUILD_3DS=OFF -DCMAKE_BUILD_TYPE=Release
 cmake --build . --config Release
 # sudo cmake --install .
 
-cd ../..
+cd "$ROOT"
 
 cp build/Code/compile_commands.json compile_commands.json
 
