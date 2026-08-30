@@ -22,6 +22,7 @@
  */
 #pragma once
 
+#include <cassert>
 #include <functional>
 #include <future>
 #include <queue>

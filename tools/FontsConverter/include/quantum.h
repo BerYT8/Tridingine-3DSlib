@@ -18,56 +18,31 @@
  * along with tex3ds.  If not, see <http://www.gnu.org/licenses/>.
  *----------------------------------------------------------------------------*/
 /** @file quantum.h
- *  @brief Magick::Quantum conversions
+ *  @brief SDL alpha conversion helpers and gamma math
  */
 #pragma once
 
-#include "magick_compat.h"
-
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 
 namespace
 {
-/** @brief Convert Magick::Quantum to an n-bit value
- *  @tparam    bits Number of bits for output value
- *  @param[in] v    Quantum to convert
- *  @returns n-bit quantum
- */
-template <int bits>
-inline uint8_t quantum_to_bits (Magick::Quantum v)
+inline uint8_t clamp_u8 (int value)
 {
-	using Magick::Quantum;
-	return (1 << bits) * v / (QuantumRange + 1);
+	return static_cast<uint8_t> (std::max (0, std::min (255, value)));
 }
 
-/** @brief Convert an n-bit value to a Magick::Quantum
- *  @tparam    bits Number of bits for input value
- *  @param[in] v    Input n-bit value
- *  @returns Magick::Quantum
- */
-template <int bits>
-inline Magick::Quantum bits_to_quantum (uint8_t v)
+inline uint8_t alpha_8_to_4 (uint8_t value)
 {
-	using Magick::Quantum;
-	return v * QuantumRange / ((1 << bits) - 1);
+	return static_cast<uint8_t> ((value * 15u + 127u) / 255u);
 }
 
-/** @brief Quantize a Magick::Quantum to its n-bit equivalent
- *  @tparam    bits Number of significant bits
- *  @param[in] v    Quantum to quantize
- *  @returns quantized Magick::Quantum
- */
-template <int bits>
-inline Magick::Quantum quantize (Magick::Quantum v)
+inline uint8_t alpha_4_to_8 (uint8_t value)
 {
-	return bits_to_quantum<bits> (quantum_to_bits<bits> (v));
+	return static_cast<uint8_t> ((value * 255u + 7u) / 15u);
 }
 
-/** @brief sRGB Gamma inverse
- *  @param[in] v Value to get inverse gamma
- *  @return inverse gamma
- */
 inline double gamma_inverse (double v)
 {
 	if (v <= 0.04045)
@@ -75,10 +50,6 @@ inline double gamma_inverse (double v)
 	return std::pow ((v + 0.055) / 1.055, 2.4);
 }
 
-/** @brief sRGB Gamma
- *  @param[in] v Value to get gamma
- *  @return gamma
- */
 inline double gamma (double v)
 {
 	if (v <= 0.0031308)
@@ -86,25 +57,16 @@ inline double gamma (double v)
 	return 1.055 * std::pow (v, 1.0 / 2.4) - 0.055;
 }
 
-/** @brief Get luminance from RGB with gamma correction
- *  @param[in] c Color to get luminance
- *  @return luminance
- */
-inline Magick::Quantum luminance (const Magick::Color &c)
+inline uint8_t luminance_from_rgb (uint8_t r, uint8_t g, uint8_t b)
 {
-	// ITU Recommendation BT.709
-	const double r = 0.212655;
-	const double g = 0.715158;
-	const double b = 0.072187;
+	const double red   = 0.212655;
+	const double green = 0.715158;
+	const double blue  = 0.072187;
 
-	using Magick::Quantum;
+	double v = gamma (red * gamma_inverse (static_cast<double> (r) / 255.0) +
+	                  green * gamma_inverse (static_cast<double> (g) / 255.0) +
+	                  blue * gamma_inverse (static_cast<double> (b) / 255.0));
 
-	// Gamma correction
-	double v = gamma (r * gamma_inverse (static_cast<double> (quantumRed (c)) / QuantumRange) +
-	                  g * gamma_inverse (static_cast<double> (quantumGreen (c)) / QuantumRange) +
-	                  b * gamma_inverse (static_cast<double> (quantumBlue (c)) / QuantumRange));
-
-	// clamp
-	return std::max (0.0, std::min (1.0, v)) * QuantumRange;
+	return clamp_u8 (static_cast<int> (std::round (std::max (0.0, std::min (1.0, v)) * 255.0)));
 }
 }

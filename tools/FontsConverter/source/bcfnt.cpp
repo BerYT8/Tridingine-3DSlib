@@ -22,8 +22,6 @@
  *  @brief BCFNT definitions
  */
 
-#include "magick_compat.h"
-
 #include "bcfnt.h"
 #include "freetype.h"
 #include "future.h"
@@ -31,7 +29,10 @@
 #include "swizzle.h"
 #include "threadPool.h"
 
+#include <SDL2/SDL.h>
+
 #include <algorithm>
+#include <cassert>
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
@@ -41,28 +42,71 @@
 
 namespace
 {
+Uint8 getSurfaceAlpha (SDL_Surface *surface, int x, int y)
+{
+	if (!surface || x < 0 || y < 0 || x >= surface->w || y >= surface->h)
+		return 0;
+
+	auto *row = static_cast<Uint8 *> (surface->pixels) + static_cast<size_t> (y) * surface->pitch;
+	auto *pixel = row + static_cast<size_t> (x) * static_cast<size_t> (surface->format->BytesPerPixel);
+
+	Uint8 r, g, b, a;
+	const Uint32 value = *reinterpret_cast<Uint32 *> (pixel);
+	SDL_GetRGBA (value, surface->format, &r, &g, &b, &a);
+	return a;
+}
+
+void setSurfaceAlpha (SDL_Surface *surface, int x, int y, Uint8 alpha)
+{
+	if (!surface || x < 0 || y < 0 || x >= surface->w || y >= surface->h)
+		return;
+
+	const Uint32 color = SDL_MapRGBA (surface->format, 0, 0, 0, alpha);
+	auto *row = static_cast<Uint8 *> (surface->pixels) + static_cast<size_t> (y) * surface->pitch;
+	auto *pixel = row + static_cast<size_t> (x) * static_cast<size_t> (surface->format->BytesPerPixel);
+	std::memcpy (pixel, &color, surface->format->BytesPerPixel);
+}
+
+bcfnt::SurfacePtr makeAlphaSurface (int width, int height)
+{
+	auto *surface = SDL_CreateRGBSurfaceWithFormat (0, width, height, 32, SDL_PIXELFORMAT_RGBA32);
+	if (!surface)
+		return nullptr;
+
+	return bcfnt::SurfacePtr (surface, bcfnt::SurfaceDeleter {});
+}
+
 bool allowed (std::uint16_t code, const std::vector<std::uint16_t> &list, bool isBlacklist)
 {
 	return std::binary_search (std::begin (list), std::end (list), code) != isBlacklist;
 }
 
-void appendSheet (std::vector<std::uint8_t>::iterator it, Magick::Image &sheet)
+void appendSheet (std::vector<std::uint8_t>::iterator it, SDL_Surface *sheet)
 {
 	swizzle (sheet, false);
 
-	const unsigned w = sheet.columns ();
-	const unsigned h = sheet.rows ();
+	const unsigned w = sheet->w;
+	const unsigned h = sheet->h;
 
-	Pixels cache (sheet);
 	for (unsigned y = 0; y < h; y += 8)
 	{
 		for (unsigned x = 0; x < w; x += 8)
 		{
-			PixelPacket p = cache.get (x, y, 8, 8);
-			for (unsigned i = 0; i < 8 * 8; i += 2)
+			std::array<std::uint8_t, 64> tile{};
+			for (unsigned row = 0; row < 8; ++row)
 			{
-				*it++ = (quantum_to_bits<4> (quantumAlpha (p[i + 1])) << 4) |
-				        (quantum_to_bits<4> (quantumAlpha (p[i + 0])) << 0);
+				for (unsigned col = 0; col < 8; ++col)
+				{
+					const int sx = static_cast<int> (x) + static_cast<int> (col);
+					const int sy = static_cast<int> (y) + static_cast<int> (row);
+					if (sx < static_cast<int> (w) && sy < static_cast<int> (h))
+						tile[row * 8 + col] = getSurfaceAlpha (sheet, sx, sy);
+				}
+			}
+
+			for (unsigned i = 0; i < 64; i += 2)
+			{
+				*it++ = (alpha_8_to_4 (tile[i + 1]) << 4) | alpha_8_to_4 (tile[i]);
 			}
 		}
 	}
@@ -73,7 +117,7 @@ bcfnt::Glyph renderGlyph (FT_Face face, FT_UInt index)
 	if (FT_Load_Glyph (face, index, FT_LOAD_RENDER) != 0)
 		std::abort ();
 
-	bcfnt::Glyph glyph{Magick::Image (),
+	bcfnt::Glyph glyph{nullptr,
 	    bcfnt::CharWidthInfo{static_cast<std::int8_t> (face->glyph->metrics.horiBearingX >> 6),
 	        static_cast<std::uint8_t> (face->glyph->metrics.width >> 6),
 	        static_cast<std::uint8_t> (face->glyph->metrics.horiAdvance >> 6)},
@@ -85,60 +129,56 @@ bcfnt::Glyph renderGlyph (FT_Face face, FT_UInt index)
 	if (width == 0 || height == 0)
 		return glyph;
 
-	glyph.img = Magick::Image (Magick::Geometry (width, height), transparent ());
-	glyph.img.magick ("A");
+	glyph.img = makeAlphaSurface (static_cast<int> (width), static_cast<int> (height));
+	if (!glyph.img)
+		std::abort ();
 
-	Magick::Color c;
-
-	Pixels cache (glyph.img);
-	PixelPacket out = cache.get (0, 0, width, height);
-	auto in         = face->glyph->bitmap.buffer;
+	auto in = face->glyph->bitmap.buffer;
+	SDL_LockSurface (glyph.img.get ());
+	auto *pixels = static_cast<Uint8 *> (glyph.img->pixels);
 	for (unsigned y = 0; y < height; ++y)
 	{
 		for (unsigned x = 0; x < width; ++x)
 		{
 			const std::uint8_t v = *in++;
-
-			quantumAlpha (c, bits_to_quantum<8> (v));
-
-			*out++ = c;
+			auto *pixel = pixels + static_cast<size_t> (y) * static_cast<size_t> (glyph.img->pitch) +
+			              static_cast<size_t> (x) * static_cast<size_t> (glyph.img->format->BytesPerPixel);
+			const Uint32 color = SDL_MapRGBA (glyph.img->format, 0, 0, 0, v);
+			std::memcpy (pixel, &color, glyph.img->format->BytesPerPixel);
 		}
 	}
+	SDL_UnlockSurface (glyph.img.get ());
 
 	return glyph;
 }
 
-Magick::Image unpackSheet (std::vector<std::uint8_t>::const_iterator &it,
+bcfnt::SurfacePtr unpackSheet (std::vector<std::uint8_t>::const_iterator &it,
     const unsigned WIDTH,
     const unsigned HEIGHT)
 {
-	Magick::Image ret (Magick::Geometry (WIDTH, HEIGHT), transparent ());
-	ret.magick ("A");
+	auto ret = makeAlphaSurface (static_cast<int> (WIDTH), static_cast<int> (HEIGHT));
+	if (!ret)
+		return nullptr;
 
-	Magick::Color c;
-
-	Pixels cache (ret);
 	for (unsigned y = 0; y < HEIGHT; y += 8)
 	{
 		for (unsigned x = 0; x < WIDTH; x += 8)
 		{
-			PixelPacket p = cache.get (x, y, 8, 8);
-			for (unsigned i = 0; i < 8 * 8 / 2; ++i)
+			for (unsigned row = 0; row < 8; ++row)
 			{
-				auto data = *it++;
-
-				quantumAlpha (c, bits_to_quantum<4> ((data >> 0) & 0xF));
-				*p++ = c;
-
-				quantumAlpha (c, bits_to_quantum<4> ((data >> 4) & 0xF));
-				*p++ = c;
+				for (unsigned col = 0; col < 8; col += 2)
+				{
+					auto data = *it++;
+					setSurfaceAlpha (ret.get (), static_cast<int> (x + col), static_cast<int> (y + row),
+					    alpha_4_to_8 ((data >> 0) & 0xF));
+					setSurfaceAlpha (ret.get (), static_cast<int> (x + col + 1), static_cast<int> (y + row),
+					    alpha_4_to_8 ((data >> 4) & 0xF));
+				}
 			}
-
-			cache.sync ();
 		}
 	}
 
-	swizzle (ret, true);
+	swizzle (ret.get (), true);
 
 	return ret;
 }
@@ -432,6 +472,7 @@ BCFNT::BCFNT (const std::vector<std::uint8_t> &data)
 
 	std::uint16_t in16;
 	std::uint32_t in32;
+	const std::uint16_t numCodes = 0;
 
 	auto input = std::begin (data);
 
@@ -585,7 +626,7 @@ bool BCFNT::serialize (const std::string &path)
 		return false;
 	}
 
-	std::vector<Magick::Image> sheetImages = sheetify ();
+	std::vector<bcfnt::SurfacePtr> sheetImages = sheetify ();
 
 	std::vector<std::uint8_t> output;
 
@@ -698,7 +739,7 @@ bool BCFNT::serialize (const std::string &path)
 
 	for (auto &sheet : sheetImages)
 	{
-		auto job = [&, it]() { appendSheet (it, sheet); };
+		auto job = [&, it]() { appendSheet (it, sheet.get ()); };
 
 		futures.emplace_back (ThreadPool::enqueue (job));
 
@@ -835,7 +876,7 @@ bool BCFNT::serialize (const std::string &path)
 	return true;
 }
 
-std::vector<Magick::Image> BCFNT::sheetify ()
+std::vector<SurfacePtr> BCFNT::sheetify ()
 {
 	std::vector<std::map<std::uint16_t, Glyph>::const_iterator> iters;
 	{
@@ -850,14 +891,15 @@ std::vector<Magick::Image> BCFNT::sheetify ()
 		}
 	}
 
-	std::vector<Magick::Image> sheets (numSheets);
+	std::vector<SurfacePtr> sheets (numSheets);
 
 	auto buildSheet = [&](std::uint16_t num) {
 		auto &sheet = sheets[num];
 		auto it     = iters[num];
 
-		sheet = Magick::Image (Magick::Geometry (SHEET_WIDTH, SHEET_HEIGHT), transparent ());
-		sheet.magick ("A");
+		sheet = makeAlphaSurface (SHEET_WIDTH, SHEET_HEIGHT);
+		if (!sheet)
+			return;
 
 		for (unsigned y = 0; y < glyphsPerCol; ++y)
 		{
@@ -867,13 +909,22 @@ std::vector<Magick::Image> BCFNT::sheetify ()
 					return;
 
 				auto &glyph = it->second.img;
-				if (glyph.rows () == 0 || glyph.columns () == 0)
+				if (!glyph || glyph->w == 0 || glyph->h == 0)
 					continue;
 
-				sheet.composite (glyph,
-				    x * glyphWidth + 1,
-				    y * glyphHeight + 1 + ascent - it->second.ascent,
-				    Magick::OverCompositeOp);
+				const int dstX = static_cast<int> (x * glyphWidth + 1);
+				const int dstY = static_cast<int> (y * glyphHeight + 1 + ascent - it->second.ascent);
+				for (int py = 0; py < glyph->h; ++py)
+				{
+					for (int px = 0; px < glyph->w; ++px)
+					{
+						const int sx = dstX + px;
+						const int sy = dstY + py;
+						if (sx >= 0 && sy >= 0 && sx < sheet->w && sy < sheet->h)
+							setSurfaceAlpha (sheet.get (), sx, sy,
+							    getSurfaceAlpha (glyph.get (), px, py));
+					}
+				}
 			}
 		}
 	};
@@ -904,25 +955,29 @@ void BCFNT::readGlyphImages (std::vector<std::uint8_t>::const_iterator &it, int 
 {
 	for (int sheet = 0; sheet < numSheets; ++sheet)
 	{
-		Magick::Image sheetData = unpackSheet (it, SHEET_WIDTH, SHEET_HEIGHT);
+		auto sheetData = unpackSheet (it, SHEET_WIDTH, SHEET_HEIGHT);
+		if (!sheetData)
+			continue;
 
-		Pixels cache (sheetData);
 		for (unsigned y = 0; y < glyphsPerCol; ++y)
 		{
 			for (unsigned x = 0; x < glyphsPerRow; ++x)
 			{
-				PixelPacket glyphData =
-				    cache.get (x * glyphWidth + 1, y * glyphHeight + 1, cellWidth, cellHeight);
+				auto glyph = makeAlphaSurface (glyphWidth, glyphHeight);
+				if (!glyph)
+					continue;
 
-				Magick::Image glyph (Magick::Geometry (glyphWidth, glyphHeight), transparent ());
-				glyph.magick ("A");
-
-				Pixels glyphPixels (glyph);
-				PixelPacket outData = glyphPixels.get (0, 0, cellWidth, cellHeight);
-				for (unsigned pixel = 0; pixel < cellWidth * cellHeight; ++pixel)
-					outData[pixel] = glyphData[pixel];
-
-				glyphPixels.sync ();
+				const int srcX = static_cast<int> (x * glyphWidth + 1);
+				const int srcY = static_cast<int> (y * glyphHeight + 1);
+				for (unsigned row = 0; row < cellHeight; ++row)
+				{
+					for (unsigned col = 0; col < cellWidth; ++col)
+					{
+						setSurfaceAlpha (glyph.get (), static_cast<int> (col), static_cast<int> (row),
+						    getSurfaceAlpha (sheetData.get (), srcX + static_cast<int> (col),
+						        srcY + static_cast<int> (row)));
+					}
+				}
 
 				const std::uint16_t code =
 				    codepoint (sheet * glyphsPerSheet + y * glyphsPerRow + x);

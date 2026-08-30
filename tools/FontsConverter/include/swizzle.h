@@ -18,14 +18,14 @@
  * along with tex3ds.  If not, see <http://www.gnu.org/licenses/>.
  *----------------------------------------------------------------------------*/
 /** @file swizzle.h
- *  @brief Swizzle routines
+ *  @brief Swizzle routines for SDL surfaces
  */
 #pragma once
 
-#include <Magick++.h>
+#include <SDL2/SDL.h>
 
 /** @brief Swizzle an image (Morton order)
- *  @param[in] img     Image to swizzle
+ *  @param[in] surface Image surface to swizzle
  *  @param[in] reverse Whether to unswizzle
  */
-void swizzle (Magick::Image &img, bool reverse);
+void swizzle (SDL_Surface *surface, bool reverse);

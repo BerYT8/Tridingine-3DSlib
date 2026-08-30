@@ -24,14 +24,27 @@
 #pragma once
 
 #include "freetype.h"
-#include "magick_compat.h"
+
+#include <SDL2/SDL.h>
 
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <vector>
 
 namespace bcfnt
 {
+struct SurfaceDeleter
+{
+	void operator() (SDL_Surface *surface) const
+	{
+		if (surface)
+			SDL_FreeSurface (surface);
+	}
+};
+
+using SurfacePtr = std::shared_ptr<SDL_Surface>;
+
 /** @brief Character width information. */
 struct CharWidthInfo
 {
@@ -109,7 +122,7 @@ struct CMAP
 
 struct Glyph
 {
-	Magick::Image img;
+	SurfacePtr img;
 	CharWidthInfo info;
 	std::uint8_t ascent;
 };
@@ -132,7 +145,7 @@ public:
 
 private:
 	void readGlyphImages (std::vector<std::uint8_t>::const_iterator &bcfnt, int sheetNum);
-	std::vector<Magick::Image> sheetify ();
+	std::vector<SurfacePtr> sheetify ();
 	std::uint16_t codepoint (std::uint16_t index) const;
 	void refreshCMAPs ();
 

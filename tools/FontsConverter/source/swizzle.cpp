@@ -18,89 +18,128 @@
  * along with tex3ds.  If not, see <http://www.gnu.org/licenses/>.
  *----------------------------------------------------------------------------*/
 /** @file swizzle.cpp
- *  @brief Swizzle routines
+ *  @brief Swizzle routines for SDL alpha surfaces
  */
 
 #include "swizzle.h"
-#include "magick_compat.h"
+
+#include <array>
+#include <cstdint>
+#include <cstring>
+#include <utility>
 
 namespace
 {
-/** @brief Swizzle an 8x8 tile (Morton order)
- *  @param[in] p       Tile to swizzle
- *  @param[in] reverse Whether to unswizzle
- */
-void swizzle (PixelPacket p, bool reverse)
-{
-	// swizzle foursome table
-	static const unsigned char table[][4] = {
-	    /* clang-format off */
-		{  2,  8, 16,  4, },
-		{  3,  9, 17,  5, },
-		{  6, 10, 24, 20, },
-		{  7, 11, 25, 21, },
-		{ 14, 26, 28, 22, },
-		{ 15, 27, 29, 23, },
-		{ 34, 40, 48, 36, },
-		{ 35, 41, 49, 37, },
-		{ 38, 42, 56, 52, },
-		{ 39, 43, 57, 53, },
-		{ 46, 58, 60, 54, },
-		{ 47, 59, 61, 55, },
-	    /* clang-format on */
-	};
+using Tile = std::array<std::uint8_t, 64>;
 
+static const unsigned char table[][4] = {
+    /* clang-format off */
+    {  2,  8, 16,  4, },
+    {  3,  9, 17,  5, },
+    {  6, 10, 24, 20, },
+    {  7, 11, 25, 21, },
+    { 14, 26, 28, 22, },
+    { 15, 27, 29, 23, },
+    { 34, 40, 48, 36, },
+    { 35, 41, 49, 37, },
+    { 38, 42, 56, 52, },
+    { 39, 43, 57, 53, },
+    { 46, 58, 60, 54, },
+    { 47, 59, 61, 55, },
+    /* clang-format on */
+};
+
+Uint8 getAlpha (SDL_Surface *surface, int x, int y)
+{
+	if (!surface || x < 0 || y < 0 || x >= surface->w || y >= surface->h)
+		return 0;
+
+	const auto bytesPerPixel = surface->format->BytesPerPixel;
+	auto *row = static_cast<Uint8 *> (surface->pixels) + static_cast<size_t> (y) * surface->pitch;
+	auto *pixel = row + static_cast<size_t> (x) * bytesPerPixel;
+
+	Uint8 r, g, b, a;
+	const Uint32 value = *(reinterpret_cast<Uint32 *> (pixel));
+	SDL_GetRGBA (value, surface->format, &r, &g, &b, &a);
+	return a;
+}
+
+void setAlpha (SDL_Surface *surface, int x, int y, Uint8 alpha)
+{
+	if (!surface || x < 0 || y < 0 || x >= surface->w || y >= surface->h)
+		return;
+
+	const Uint32 color = SDL_MapRGBA (surface->format, 0, 0, 0, alpha);
+	auto *row = static_cast<Uint8 *> (surface->pixels) + static_cast<size_t> (y) * surface->pitch;
+	auto *pixel = row + static_cast<size_t> (x) * surface->format->BytesPerPixel;
+	std::memcpy (pixel, &color, surface->format->BytesPerPixel);
+}
+
+void swizzleTile (Tile &tile, bool reverse)
+{
 	if (!reverse)
 	{
-		// swizzle each foursome
 		for (const auto &entry : table)
 		{
-			Magick::Color tmp = p[entry[0]];
-			p[entry[0]]       = p[entry[1]];
-			p[entry[1]]       = p[entry[2]];
-			p[entry[2]]       = p[entry[3]];
-			p[entry[3]]       = tmp;
+			std::uint8_t tmp = tile[entry[0]];
+			tile[entry[0]] = tile[entry[1]];
+			tile[entry[1]] = tile[entry[2]];
+			tile[entry[2]] = tile[entry[3]];
+			tile[entry[3]] = tmp;
 		}
 	}
 	else
 	{
-		// unswizzle each foursome
 		for (const auto &entry : table)
 		{
-			Magick::Color tmp = p[entry[3]];
-			p[entry[3]]       = p[entry[2]];
-			p[entry[2]]       = p[entry[1]];
-			p[entry[1]]       = p[entry[0]];
-			p[entry[0]]       = tmp;
+			std::uint8_t tmp = tile[entry[3]];
+			tile[entry[3]] = tile[entry[2]];
+			tile[entry[2]] = tile[entry[1]];
+			tile[entry[1]] = tile[entry[0]];
+			tile[entry[0]] = tmp;
 		}
 	}
 
-	// (un)swizzle each pair
-	swapPixel (p[12], p[18]);
-	swapPixel (p[13], p[19]);
-	swapPixel (p[44], p[50]);
-	swapPixel (p[45], p[51]);
+	std::swap (tile[12], tile[18]);
+	std::swap (tile[13], tile[19]);
+	std::swap (tile[44], tile[50]);
+	std::swap (tile[45], tile[51]);
 }
 }
 
-/** @brief Swizzle an image (Morton order)
- *  @param[in] img     Image to swizzle
- *  @param[in] reverse Whether to unswizzle
- */
-void swizzle (Magick::Image &img, bool reverse)
+void swizzle (SDL_Surface *surface, bool reverse)
 {
-	Pixels cache (img);
-	size_t height = img.rows ();
-	size_t width  = img.columns ();
+	if (!surface)
+		return;
 
-	// (un)swizzle each tile
-	for (size_t j = 0; j < height; j += 8)
+	for (int j = 0; j < surface->h; j += 8)
 	{
-		for (size_t i = 0; i < width; i += 8)
+		for (int i = 0; i < surface->w; i += 8)
 		{
-			PixelPacket p = cache.get (i, j, 8, 8);
-			swizzle (p, reverse);
-			cache.sync ();
+			Tile tile{};
+			for (int y = 0; y < 8; ++y)
+			{
+				for (int x = 0; x < 8; ++x)
+				{
+					const int sx = i + x;
+					const int sy = j + y;
+					if (sx < surface->w && sy < surface->h)
+						tile[y * 8 + x] = getAlpha (surface, sx, sy);
+				}
+			}
+
+			swizzleTile (tile, reverse);
+
+			for (int y = 0; y < 8; ++y)
+			{
+				for (int x = 0; x < 8; ++x)
+				{
+					const int sx = i + x;
+					const int sy = j + y;
+					if (sx < surface->w && sy < surface->h)
+						setAlpha (surface, sx, sy, tile[y * 8 + x]);
+				}
+			}
 		}
 	}
 }
