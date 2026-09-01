@@ -10,6 +10,7 @@ chmod +x ./tools/LocalizationMaker
 chmod +x ./tools/PakMaker
 chmod +x ./tools/bannertool
 chmod +x ./tools/makerom
+chmod +x ./tools/3dstool
 
 CONTENT_DIR="content"
 ROMFS_DIR_3DS="romfs/3ds"
