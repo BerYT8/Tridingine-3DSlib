@@ -29,12 +29,34 @@ set "ROMFS_DIR_PC=romfs\pc"
 :: ============================================================
 
 if /I "%~1"=="3ds" (
-    echo Iniciando compilacion para 3DS...
+    echo Iniciando compilacion para 3DS... 
 
-    call "C:\devkitPro\msys2\msys2_shell.bat" -here -defterm -no-start -msys -c "./tools/build_3ds.sh"
+    call :build3ds %2 %3 %4 %5 %6 %7 %8 %9
 
     goto :end
 )
+
+goto :next
+
+
+:build3ds
+set "CONTENT_DIR=content" 
+set "ROMFS_DIR_3DS=romfs/3ds"
+
+rem FontsConverter 
+.\tools\FontsConverter.exe --all -3ds -i "%CONTENT_DIR%" -o "%ROMFS_DIR_3DS%" 
+rem 3DModelsConverter 
+.\tools\3DModelsConverter.exe --all -i "%CONTENT_DIR%" -o "%ROMFS_DIR_3DS%" 
+rem SoundMaker3DS 
+.\tools\SoundMaker3DS.exe --all -i "%CONTENT_DIR%" -o "%ROMFS_DIR_3DS%" 
+rem LocalizationMaker 
+.\tools\LocalizationMaker.exe --all -i "%CONTENT_DIR%" -o "%ROMFS_DIR_3DS%"
+
+call "C:\devkitPro\msys2\msys2_shell.bat" -here -defterm -no-start -msys -c "./tools/build_3ds.sh %*"
+
+goto :end
+
+:next
 
 :: ============================================================
 :: COMPILACION PC / NATIVO
@@ -143,7 +165,7 @@ if errorlevel 1 goto :error
 
 echo Creando game.pak...
 
-"tools\PakMaker.exe" -c "%ROMFS_DIR_PC%" -o "%BUILD_DIR%\game.pak"
+"tools\PakMaker.exe" -c "%ROMFS_DIR_PC%" -o "%BUILD_DIR%\Release\game.pak"
 
 if errorlevel 1 goto :error
 

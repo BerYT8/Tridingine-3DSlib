@@ -31,6 +31,7 @@
 
 #include <SDL2/SDL.h>
 
+#include <array>
 #include <algorithm>
 #include <cassert>
 #include <cerrno>

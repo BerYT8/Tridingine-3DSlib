@@ -3,7 +3,7 @@
 #include "Game.h"
 #include "input.h"
 
-int app_main()
+int app_main(int argc, char* argv[])
 {
     S2S_ScreensInit();
 

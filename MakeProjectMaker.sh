@@ -98,6 +98,8 @@ cmake -S "$ROOT/tools/3dstool" -B "$ROOT/tools/3dstool/build" -DCMAKE_BUILD_TYPE
 cmake --build "$ROOT/tools/3dstool/build"
 cp "$ROOT/tools/3dstool/bin/Release/3dstool" "$LIB_DIR/tools/" 2>/dev/null
 
+cd "$ROOT"
+
 # Generar el paquete PAK indispensable
 "$LIB_DIR/tools/PakMaker" -c "$LIB_DIR" -o "$ROOT/tools/ProjectMaker/template.pak" -e "build" "build_3ds" "romfs" \
                           "examples"

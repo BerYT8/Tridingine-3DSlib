@@ -10,8 +10,10 @@ This document explains the dependencies required to build Tridingine for PC and 
   - [Linux](#linux)
 - [PC — Windows](#pc--windows)
   - [Microsoft Visual Studio](#microsoft-visual-studio)
+  - [GLEW](#glew)
   - [CMAKE_PREFIX_PATH](#cmake_prefix_path)
 - [PC — Linux](#pc--linux)
+  - [GLEW](#glew-1)
 - [Building Tridingine](#building-tridingine)
 - [Building a Game](#building-a-game)
 - [Troubleshooting](#troubleshooting)
@@ -279,7 +281,7 @@ To build Tridingine for Windows, the following are required:
 - SDL2_mixer
 - SDL2_ttf
 
-GLEW, SDL2 and its related libraries are included in the Tridingine source tree under:
+SDL2 and its related libraries are included in the Tridingine source tree under:
 
 ```text
 external/
@@ -307,6 +309,74 @@ Make sure the C++ development workload is installed.
 The exact Visual Studio version is not mandatory as long as a compatible MSVC compiler is available.
 
 
+## GLEW
+
+Tridingine requires GLEW for the PC OpenGL build.
+
+Windows users can download GLEW from the official releases:
+
+https://github.com/nigels-com/glew/releases
+
+For example, download:
+
+```text
+glew-2.3.1-win32
+```
+
+Extract it to:
+
+```text
+C:\glew-2.3.1
+```
+
+The resulting directory should contain the GLEW installation files.
+
+
+## CMAKE_PREFIX_PATH
+
+CMake needs to know where GLEW is installed.
+
+On Windows, create the following environment variable:
+
+```text
+CMAKE_PREFIX_PATH
+```
+
+Set its value to:
+
+```text
+C:\glew-2.3.1
+```
+
+If you already have other CMake package paths in this variable, separate them with:
+
+```text
+;
+```
+
+For example:
+
+```text
+C:\glew-2.3.1;C:\other\cmake\packages
+```
+
+After creating or modifying `CMAKE_PREFIX_PATH`, **close and reopen your terminal**.
+
+This is important because existing terminal sessions may not see newly created environment variables.
+
+You can verify the variable with:
+
+```powershell
+echo %CMAKE_PREFIX_PATH%
+```
+
+Then CMake should be able to find GLEW using:
+
+```cmake
+find_package(GLEW REQUIRED)
+```
+
+
 # PC — Linux
 
 Linux users also need:
@@ -316,6 +386,28 @@ Linux users also need:
 - OpenGL development libraries
 - GLEW
 - The required SDL2 development dependencies
+
+The exact installation commands depend on your Linux distribution.
+
+For Debian/Ubuntu-based distributions, GLEW can generally be installed using the distribution package manager.
+
+For example:
+
+```bash
+sudo apt update
+sudo apt install libglew-dev
+```
+
+You may also need the OpenGL development packages required by your distribution.
+
+For example:
+
+```bash
+sudo apt install libgl1-mesa-dev libglu1-mesa-dev
+```
+
+SDL2 dependencies are handled by the project where applicable, but the system may still require additional development packages depending on your configuration.
+
 
 # OpenGL
 
@@ -392,6 +484,7 @@ The required packages are:
 
 ```text
 3ds-libogg
+3ds-opus
 3ds-opusfile
 ```
 
@@ -489,6 +582,49 @@ verify that:
 - `DEVKITPRO` is correctly configured
 - You are building with the devkitPro 3DS toolchain
 
+
+## GLEW cannot be found on Windows
+
+Verify that GLEW is installed, for example:
+
+```text
+C:\glew-2.3.1
+```
+
+Then verify:
+
+```powershell
+echo %CMAKE_PREFIX_PATH%
+```
+
+It should contain:
+
+```text
+C:\glew-2.3.1
+```
+
+Close and reopen the terminal after changing the environment variable.
+
+
+# Official Resources
+
+## devkitPro
+
+Getting Started:
+
+https://devkitpro.org/wiki/Getting_Started
+
+## GLEW
+
+Official repository:
+
+https://github.com/nigels-com/glew
+
+Official releases:
+
+https://github.com/nigels-com/glew/releases
+
+
 # Summary
 
 ## PC — Windows
@@ -504,7 +640,21 @@ Install:
 - SDL2_mixer
 - SDL2_ttf
 
-GLEW, SDL2 and its related libraries are included in the Tridingine repository.
+SDL2 and its related libraries are included in the Tridingine repository.
+
+For GLEW:
+
+```text
+C:\glew-2.3.1
+```
+
+and configure:
+
+```text
+CMAKE_PREFIX_PATH=C:\glew-2.3.1
+```
+
+Restart the terminal after modifying the environment variables.
 
 
 ## PC — Linux
@@ -516,6 +666,13 @@ Install:
 - OpenGL development libraries
 - GLEW
 - Required system dependencies
+
+For Debian/Ubuntu:
+
+```bash
+sudo apt update
+sudo apt install libglew-dev
+```
 
 Additional OpenGL development packages may be required depending on the distribution.
 

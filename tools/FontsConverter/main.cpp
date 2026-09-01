@@ -25,45 +25,57 @@
 #include "freetype.h"
 #include "future.h"
 
-#include <getopt.h>
-
-#include <algorithm>
-#include <cerrno>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <string>
+#include <cstdint>
 #include <filesystem>
 #include <iostream>
+#include <string>
+#include <vector>
 
 namespace fs = std::filesystem;
 
 bool convert3DS(const fs::path& input, const fs::path& output)
 {
     auto library = freetype::Library::makeLibrary();
+
     if (!library)
         return false;
 
-    auto face = freetype::Face::makeFace(library, input.string(), 24.0);
+    auto face = freetype::Face::makeFace(
+        library,
+        input.string(),
+        24.0
+    );
+
     if (!face)
         return false;
 
     bcfnt::BCFNT font;
     std::vector<uint16_t> list;
 
-    font.addFont(std::move(face), list, true);
+    font.addFont(
+        std::move(face),
+        list,
+        true
+    );
 
     return font.serialize(output.string());
 }
 
-bool convertPC(const fs::path& input, const fs::path& output)
+bool convertPC(
+    const fs::path& input,
+    const fs::path& output
+)
 {
     std::error_code ec;
-    fs::copy_file(input, output,
-                  fs::copy_options::overwrite_existing,
-                  ec);
 
-    if(ec)
+    fs::copy_file(
+        input,
+        output,
+        fs::copy_options::overwrite_existing,
+        ec
+    );
+
+    if (ec)
     {
         std::cerr << ec.message() << '\n';
         return false;
@@ -72,73 +84,91 @@ bool convertPC(const fs::path& input, const fs::path& output)
     return true;
 }
 
-int main(int argc,char** argv)
+int main(int argc, char** argv)
 {
     std::string input;
     std::string output;
 
-    bool mode3ds=false;
-    bool modePc=false;
-    bool recursive=false;
+    bool mode3ds = false;
+    bool modePc = false;
+    bool recursive = false;
 
-    for(int i=1;i<argc;i++)
+    for (int i = 1; i < argc; i++)
     {
-        std::string arg=argv[i];
+        std::string arg = argv[i];
 
-        if(arg=="-i" && i+1<argc)
-            input=argv[++i];
-
-        else if(arg=="-o" && i+1<argc)
-            output=argv[++i];
-
-        else if(arg=="-3ds")
-            mode3ds=true;
-
-        else if(arg=="-pc")
-            modePc=true;
-
-        else if(arg=="--all")
-            recursive=true;
+        if (arg == "-i" && i + 1 < argc)
+        {
+            input = argv[++i];
+        }
+        else if (arg == "-o" && i + 1 < argc)
+        {
+            output = argv[++i];
+        }
+        else if (arg == "-3ds")
+        {
+            mode3ds = true;
+        }
+        else if (arg == "-pc")
+        {
+            modePc = true;
+        }
+        else if (arg == "--all")
+        {
+            recursive = true;
+        }
     }
 
-    if(input.empty() || output.empty() || (!mode3ds && !modePc) || (mode3ds && modePc))
+    if (
+        input.empty() ||
+        output.empty() ||
+        (!mode3ds && !modePc) ||
+        (mode3ds && modePc)
+    )
     {
         std::cout
             << "Usage:\n"
             << "FontsConverter [-3ds|-pc] -i input -o output [--all]\n";
+
         return 1;
     }
 
     fs::path in(input);
     fs::path out(output);
 
-    if(recursive)
+    if (recursive)
     {
-        if(!fs::is_directory(in))
+        if (!fs::is_directory(in))
         {
-            std::cerr<<"Input debe ser un directorio\n";
+            std::cerr
+                << "Input debe ser un directorio\n";
+
             return 1;
         }
 
         fs::create_directories(out);
 
-        for(auto& file:fs::recursive_directory_iterator(in))
+        for (const auto& file :
+             fs::recursive_directory_iterator(in))
         {
-            if(!file.is_regular_file())
+            if (!file.is_regular_file())
                 continue;
 
-            if(file.path().extension()!=".ttf")
+            if (file.path().extension() != ".ttf")
                 continue;
 
-            auto relative=fs::relative(file.path(),in);
+            auto relative =
+                fs::relative(file.path(), in);
 
-            auto dstDir=out/relative.parent_path();
+            auto dstDir =
+                out / relative.parent_path();
 
             fs::create_directories(dstDir);
 
-            auto dst=dstDir/file.path().stem();
+            auto dst =
+                dstDir / file.path().stem();
 
-            if(mode3ds)
+            if (mode3ds)
             {
                 dst.replace_extension(".bcfnt");
 
@@ -148,7 +178,8 @@ int main(int argc,char** argv)
                     << dst
                     << '\n';
 
-                convert3DS(file.path(),dst);
+                if (!convert3DS(file.path(), dst))
+                    return 1;
             }
             else
             {
@@ -160,28 +191,29 @@ int main(int argc,char** argv)
                     << dst
                     << '\n';
 
-                convertPC(file.path(),dst);
+                if (!convertPC(file.path(), dst))
+                    return 1;
             }
         }
     }
     else
     {
-        fs::path dst=out;
+        fs::path dst = out;
 
-        if(fs::is_directory(out))
+        if (fs::is_directory(out))
         {
-            dst/=in.stem();
+            dst /= in.stem();
 
-            if(mode3ds)
+            if (mode3ds)
                 dst.replace_extension(".bcfnt");
             else
                 dst.replace_extension(".ttf");
         }
 
-        if(mode3ds)
-            return convert3DS(in,dst)?0:1;
-        else
-            return convertPC(in,dst)?0:1;
+        if (mode3ds)
+            return convert3DS(in, dst) ? 0 : 1;
+
+        return convertPC(in, dst) ? 0 : 1;
     }
 
     return 0;

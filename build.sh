@@ -7,8 +7,6 @@ ROOT="$(pwd)"
 
 BUILD_DIR="$ROOT/build"
 
-cp -f "$ROOT/external/cmake/glew.cmake" "$ROOT/external/glew/CMakeLists.txt" 2>/dev/null
-
 # Crear directorio de construcción si no existe
 mkdir -p "$BUILD_DIR"
 

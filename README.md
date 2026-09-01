@@ -175,7 +175,7 @@ A basic game follows this structure:
 ```c
 #include <Tridingine.h>
 
-int app_main()
+int app_main(int argc, char* argv[])
 {
     S2S_ScreensInit();
 

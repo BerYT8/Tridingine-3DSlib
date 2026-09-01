@@ -788,7 +788,7 @@ The following example demonstrates sound effects and looping music:
 ```c
 #include <Tridingine.h>
 
-int app_main()
+int app_main(int argc, char* argv[])
 {
     S2S_ScreensInit();
 

@@ -4,6 +4,7 @@ setlocal enabledelayedexpansion
 for %%D in (
   build
   build_3ds
+  tools/FontsConverter/build
   tools/3DModelsConverter/build
   tools/LocalizationMaker/build
   tools/PakMaker/build
@@ -11,8 +12,6 @@ for %%D in (
   tools/SoundMaker3DS/build
   tools/SoundMaker3DS/libopus/build
   tools/SoundMaker3DS/libopusenc/build
-  tools/3dstool/build
-  tools/3dstool/bin
   tools/bannertool/build
   tools/bannertool/output
   tools/Project_CTR/ctrtool/build

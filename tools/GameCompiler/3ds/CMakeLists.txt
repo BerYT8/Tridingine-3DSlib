@@ -303,12 +303,6 @@ endif()
 # Herramientas
 # ------------------------------------------------------------------
 
-find_program(THREEDSTOOL_EXE
-    3dstool
-    PATHS "${CMAKE_SOURCE_DIR}/../tools"
-    REQUIRED
-)
-
 find_program(MAKEROM_EXE
     makerom
     PATHS "${CMAKE_SOURCE_DIR}/../tools"

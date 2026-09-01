@@ -219,21 +219,7 @@ files.
 
 ---
 
-## 10. 3dstools
-
-**Location:** `tools/3dstool`
-
-**Upstream:** https://github.com/devkitPro/3dstools
-
-The exact license and copyright notices must be taken from the exact
-commit of 3dstools used by the project.
-
-When distributing the submodule, retain its original license and notice
-files.
-
----
-
-## 11. bannertool
+## 12. bannertool
 
 **Location:** `tools/bannertool`
 
@@ -248,34 +234,7 @@ files.
 
 ---
 
-## 12. FreeType
-
-**Usage:** external dependency of `FontsConverter`
-
-**License:** FreeType License (FTL), with GPLv2 also available as an
-alternative licensing option from the upstream project.
-
-**Upstream:** https://freetype.org/license.html
-
-If FreeType itself is redistributed with a release, its applicable license
-and copyright notices must also be redistributed.
-
----
-
-## 13. ImageMagick
-
-**Usage:** external dependency of `FontsConverter`
-
-**License:** ImageMagick License
-
-**Upstream:** https://imagemagick.org/license/
-
-If ImageMagick itself is redistributed with a release, its applicable
-license and copyright notices must also be redistributed.
-
----
-
-## 14. GLEW
+## 13. GLEW
 
 **Usage:** external dependency for desktop/PC builds
 
@@ -287,7 +246,7 @@ exact version being distributed must be retained.
 
 ---
 
-## 15. License compliance
+## 14. License compliance
 
 When redistributing Tridingine-3DSlib or a product containing it:
 

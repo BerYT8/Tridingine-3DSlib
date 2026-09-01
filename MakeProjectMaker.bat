@@ -51,14 +51,21 @@ echo [3/6] Copying PC libs...
 
 REM DLL principal
 if exist "%BUILD_DIR%\Code\Release\Tridingine.dll" (
-    copy /y "%BUILD_DIR%\Code\Release\Tridingine.dll" "%LIB_DIR%\lib\pc\libTridingine.dll" >nul
+    copy /y "%BUILD_DIR%\Code\Release\Tridingine.dll" "%LIB_DIR%\lib\pc\Tridingine.dll" >nul
+) else (
+    echo WARNING: Tridingine.dll not found.
+)
+
+REM DLL principal
+if exist "%BUILD_DIR%\Code\Release\Tridingine.lib" (
+    copy /y "%BUILD_DIR%\Code\Release\Tridingine.lib" "%LIB_DIR%\lib\pc\libTridingine.lib" >nul
 ) else (
     echo WARNING: Tridingine.dll not found.
 )
 
 REM Import/static library de la DLL
 if exist "%BUILD_DIR%\Code\Release\TridingineEntrypoint.lib" (
-    copy /y "%BUILD_DIR%\Code\Release\TridingineEntrypoint.lib" "%LIB_DIR%\lib\pc\libTridingineEntrypoint.lib" >nul
+    copy /y "%BUILD_DIR%\Code\Release\TridingineEntrypoint.lib" "%LIB_DIR%\lib\pc\libEntrypoint.lib" >nul
 ) else (
     echo WARNING: TridingineEntrypoint.lib not found.
 )
@@ -325,55 +332,74 @@ REM bannertool
 REM =========================
 echo Building bannertool...
 
+set "MSYS2_BASH=%DEVKITPRO%\msys2\msys2_shell.bat"
+
 if exist "%ROOT%\tools\bannertool" (
-    pushd "%ROOT%\tools\bannertool"
+    cd "%ROOT%\tools\bannertool"
 
-    make
+    echo Installing GCC, G++ and Make...
 
-    if !errorlevel! neq 0 (
-        echo ERROR: bannertool build failed.
-        popd
-        exit /b !errorlevel!
-    )
+    call "%MSYS2_BASH%" -defterm -here -no-start -c "pacman -Sy --needed --noconfirm gcc make" >nul
 
-    popd
+    echo Compiling bannertool...
 
-    REM Buscar binario Windows
+    cd "%ROOT%\tools\bannertool"
+    call "%MSYS2_BASH%" -defterm -here -no-start -c "make TARGET=WIN64" >nul 2>&1
+
     if exist "%ROOT%\tools\bannertool\output\windows-x86_64\bannertool.exe" (
         copy /y "%ROOT%\tools\bannertool\output\windows-x86_64\bannertool.exe" "%LIB_DIR%\tools\" >nul
-    ) else if exist "%ROOT%\tools\bannertool\output\windows\bannertool.exe" (
-        copy /y "%ROOT%\tools\bannertool\output\windows\bannertool.exe" "%LIB_DIR%\tools\" >nul
-    ) else if exist "%ROOT%\tools\bannertool\bannertool.exe" (
-        copy /y "%ROOT%\tools\bannertool\bannertool.exe" "%LIB_DIR%\tools\" >nul
+        echo bannertool built successfully.
+    ) else (
+        echo ERROR: bannertool.exe not found.
+        exit /b !errorlevel!
     )
+    cd "%ROOT%"
 )
 
 REM =========================
 REM makerom
 REM =========================
+echo.
 echo Building makerom...
 
 if exist "%ROOT%\tools\Project_CTR\makerom" (
-    pushd "%ROOT%\tools\Project_CTR\makerom"
+    cd "%ROOT%\tools\Project_CTR\makerom"
 
-    make deps
-    if !errorlevel! neq 0 (
-        echo ERROR: makerom dependencies failed.
-        popd
+    echo Installing MinGW-w64 GCC and Make...
+
+    call "%MSYS2_BASH%" -defterm -here -no-start -c "pacman -Sy --noconfirm" >nul
+    call "%MSYS2_BASH%" -defterm -here -no-start -c "pacman -S --needed --noconfirm mingw-w64-x86_64-gcc make" >nul
+
+    echo Checking MinGW-w64 compiler...
+
+    call "%MSYS2_BASH%" -defterm -here -no-start -c "export PATH=/mingw64/bin:$PATH && x86_64-w64-mingw32-gcc --version" >nul
+
+    if errorlevel 1 (
+        echo ERROR: MinGW-w64 GCC not found.
         exit /b !errorlevel!
-    )
+    ) else (
+        echo Building makerom dependencies...
 
-    make
-    if !errorlevel! neq 0 (
-        echo ERROR: makerom build failed.
-        popd
-        exit /b !errorlevel!
-    )
+        call "%MSYS2_BASH%" -defterm -here -no-start -c "export PATH=/mingw64/bin:$PATH && make deps" >nul
 
-    popd
+        if errorlevel 1 (
+            echo ERROR: Failed to build makerom dependencies.
+            exit /b !errorlevel!
+        ) else (
+            echo Compiling makerom...
 
-    if exist "%ROOT%\tools\Project_CTR\makerom\bin\makerom.exe" (
-        copy /y "%ROOT%\tools\Project_CTR\makerom\bin\makerom.exe" "%LIB_DIR%\tools\" >nul
+            call "%MSYS2_BASH%" -defterm -here -no-start -c "export PATH=/mingw64/bin:$PATH && make" >nul
+
+            if errorlevel 1 (
+                echo ERROR: Failed to compile makerom.
+            ) else if exist "%ROOT%\tools\Project_CTR\makerom\bin\makerom.exe" (
+                copy /y "%ROOT%\tools\Project_CTR\makerom\bin\makerom.exe" "%LIB_DIR%\tools\" >nul
+                echo makerom built successfully.
+            ) else (
+                echo ERROR: makerom.exe not found.
+                exit /b !errorlevel!
+            )
+        )
     )
 )
 
@@ -406,6 +432,9 @@ if exist "%ROOT%\tools\3dstool" (
         copy /y "%ROOT%\tools\3dstool\bin\3dstool.exe" "%LIB_DIR%\tools\" >nul
     )
 )
+
+echo.
+echo All tools processed.
 
 REM =========================
 REM Generar PAK

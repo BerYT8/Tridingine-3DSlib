@@ -1,8 +1,6 @@
 @echo off
 setlocal
 
-copy external\cmake\glew.cmake external\glew\CMakeLists.txt
-
 set "BUILD_DIR=build"
 
 if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
@@ -68,7 +66,7 @@ if not exist "%MSYS2_BASH%" (
 )
 
 REM Ejecutar build_3ds.sh directamente
-"%MSYS2_BASH%" -defterm -here -no-start -c "chmod +x ./build_3ds.sh && ./build_3ds.sh build_3ds"
+call "%MSYS2_BASH%" -defterm -here -no-start -c "chmod +x ./build_3ds.sh && ./build_3ds.sh build_3ds"
 
 if errorlevel 1 (
     echo ERROR: 3DS build failed.

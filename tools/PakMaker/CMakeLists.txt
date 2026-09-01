@@ -21,16 +21,3 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE PLATFORM_PC)
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
 )
-
-# ---------------- SELECCIÓN DE LIBRERÍAS POR PLATAFORMA ----------------
-if(WIN32)
-    # Si es Windows, busca archivos .lib
-    file(GLOB_RECURSE libs "lib/x64/*.lib")
-else()
-    # Si es Linux / WSL / macOS, busca archivos .a o .so
-    file(GLOB_RECURSE libs "lib/x64/*.a" "lib/x64/*.so")
-endif()
-
-target_link_libraries(${PROJECT_NAME} PRIVATE 
-    ${libs}
-)

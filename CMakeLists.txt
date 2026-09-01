@@ -183,58 +183,206 @@ if(NOT BUILD_3DS)
     # GLEW
     # -------------------------------------------------
     #
-    # GLEW se compila directamente como parte del
-    # proyecto mediante add_subdirectory().
+    # Windows:
+    #   Busca una instalación precompilada indicada mediante
+    #   la variable de entorno CMAKE_PREFIX_PATH.
     #
-    # Esto crea:
+    # Ejemplo PowerShell:
     #
-    #     GLEW::Static
+    #   $env:CMAKE_PREFIX_PATH="C:/glew-2.3.1"
     #
-    # No se utiliza:
-    #
-    #     find_package(GLEW)
-    #     find_path()
-    #     find_library()
-    #     IMPORTED
+    # Linux / macOS:
+    #   Usa find_package(GLEW).
     #
     # -------------------------------------------------
 
-    set(
-        GLEW_BUILD_SHARED
-        OFF
-        CACHE BOOL
-        "Build the shared GLEW library"
-        FORCE
-    )
+    if(WIN32)
 
-    set(
-        GLEW_BUILD_STATIC
-        ON
-        CACHE BOOL
-        "Build the static GLEW library"
-        FORCE
-    )
+        message(STATUS "Searching for precompiled GLEW...")
 
-    set(
-        GLEW_BUILD_UTILS
-        OFF
-        CACHE BOOL
-        "Build glewinfo and visualinfo"
-        FORCE
-    )
+        # -------------------------------------------------
+        # Obtener CMAKE_PREFIX_PATH del entorno
+        # -------------------------------------------------
 
-    set(
-        GLEW_NO_GLU
-        ON
-        CACHE BOOL
-        "Disable GLU support in GLEW"
-        FORCE
-    )
+        if(DEFINED ENV{CMAKE_PREFIX_PATH})
 
-    add_subdirectory(
-        external/glew
-        EXCLUDE_FROM_ALL
-    )
+            set(GLEW_PREFIX_PATH
+                "$ENV{CMAKE_PREFIX_PATH}"
+            )
+
+        else()
+
+            set(GLEW_PREFIX_PATH "")
+
+        endif()
+
+        message(
+            STATUS
+            "CMAKE_PREFIX_PATH: ${GLEW_PREFIX_PATH}"
+        )
+
+        # -------------------------------------------------
+        # Detectar arquitectura
+        # -------------------------------------------------
+
+        if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+
+            set(GLEW_ARCH "x64")
+
+        elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+
+            set(GLEW_ARCH "Win32")
+
+        else()
+
+            message(FATAL_ERROR
+                "Unable to determine target architecture."
+            )
+
+        endif()
+
+        message(
+            STATUS
+            "GLEW architecture: ${GLEW_ARCH}"
+        )
+
+        # -------------------------------------------------
+        # Buscar GLEW
+        # -------------------------------------------------
+
+        set(GLEW_ROOT "")
+
+        # CMAKE_PREFIX_PATH puede contener varios paths
+        # separados por ';'
+        foreach(PREFIX ${GLEW_PREFIX_PATH})
+
+            if(EXISTS
+                "${PREFIX}/include/GL/glew.h"
+            )
+
+                set(GLEW_ROOT
+                    "${PREFIX}"
+                )
+
+                break()
+
+            endif()
+
+        endforeach()
+
+        # -------------------------------------------------
+        # Comprobar headers
+        # -------------------------------------------------
+
+        if(NOT GLEW_ROOT)
+
+            message(FATAL_ERROR
+                "GLEW headers not found.\n\n"
+                "CMAKE_PREFIX_PATH:\n"
+                "  ${GLEW_PREFIX_PATH}\n\n"
+                "Expected:\n"
+                "  <prefix>/include/GL/glew.h\n\n"
+                "Example:\n"
+                "  CMAKE_PREFIX_PATH=C:/glew-2.3.1"
+            )
+
+        endif()
+
+        message(
+            STATUS
+            "GLEW root: ${GLEW_ROOT}"
+        )
+
+        # -------------------------------------------------
+        # Buscar glew32s.lib
+        # -------------------------------------------------
+
+        find_library(
+            GLEW_STATIC_LIBRARY
+            NAMES
+                glew32s
+            PATHS
+                "${GLEW_ROOT}/lib/Release/${GLEW_ARCH}"
+            NO_DEFAULT_PATH
+            REQUIRED
+        )
+
+        message(
+            STATUS
+            "GLEW static library: ${GLEW_STATIC_LIBRARY}"
+        )
+
+        # -------------------------------------------------
+        # Crear target compatible con el resto del proyecto
+        # -------------------------------------------------
+
+        if(NOT TARGET GLEW::Static)
+
+            add_library(
+                GLEW::Static
+                STATIC
+                IMPORTED GLOBAL
+            )
+
+            set_target_properties(
+                GLEW::Static
+                PROPERTIES
+
+                    IMPORTED_LOCATION
+                        "${GLEW_STATIC_LIBRARY}"
+
+                    INTERFACE_INCLUDE_DIRECTORIES
+                        "${GLEW_ROOT}/include"
+
+                    INTERFACE_COMPILE_DEFINITIONS
+                        GLEW_STATIC
+            )
+
+        endif()
+
+    else()
+
+        # -------------------------------------------------
+        # Linux / macOS
+        # -------------------------------------------------
+
+        message(STATUS "Searching for system GLEW...")
+
+        find_package(
+            GLEW
+            REQUIRED
+        )
+
+        # Normalizar el nombre del target
+        if(TARGET GLEW::Static)
+
+            # Ya existe
+
+        elseif(TARGET GLEW::GLEW)
+
+            add_library(
+                GLEW::Static
+                ALIAS
+                GLEW::GLEW
+            )
+
+        elseif(TARGET GLEW::glew)
+
+            add_library(
+                GLEW::Static
+                ALIAS
+                GLEW::glew
+            )
+
+        else()
+
+            message(FATAL_ERROR
+                "GLEW was found, but no compatible GLEW target exists."
+            )
+
+        endif()
+
+    endif()
 
     # -------------------------------------------------
     # SDL2
@@ -306,6 +454,14 @@ if(NOT BUILD_3DS)
         FORCE
     )
 
+    set(
+        SDL2IMAGE_AVIF 
+        OFF 
+        CACHE BOOL 
+        "" 
+        FORCE
+    )
+
     add_subdirectory(
         external/sdl2-image
         EXCLUDE_FROM_ALL
@@ -351,6 +507,7 @@ if(NOT BUILD_3DS)
         PROPERTIES
             OUTPUT_NAME
                 ${TRIDINGINE_OUTPUT_NAME}
+            WINDOWS_EXPORT_ALL_SYMBOLS ON
     )
 
     target_compile_definitions(
@@ -467,8 +624,7 @@ else()
     set_target_properties(
         TridingineCore
         PROPERTIES
-            OUTPUT_NAME
-                ${TRIDINGINE_OUTPUT_NAME}
+            OUTPUT_NAME "${TRIDINGINE_OUTPUT_NAME}"
     )
 
     target_compile_definitions(

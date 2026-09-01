@@ -8,6 +8,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# ---------------- PYTHON ----------------
+
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
 # ---------------- PAK EMBEBIDO ----------------
 
 set(PAK_FILE
@@ -33,7 +37,7 @@ add_custom_command(
         "${PAK_HEADER}"
 
     COMMAND
-        python3
+        "${Python3_EXECUTABLE}"
         "${PAK_GENERATOR}"
         "${PAK_FILE}"
         "${PAK_HEADER}"
