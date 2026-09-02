@@ -1544,7 +1544,7 @@ D2D_Text D2D_DrawText_Buf(
         ++i)
     {
         SDL_Surface* surface =
-            TTF_RenderText_Blended(
+            TTF_RenderUTF8_Blended(
                 font->font,
                 lines[i].c_str(),
                 c
@@ -1840,7 +1840,7 @@ D2D_Text D2D_DrawText_Buf(
 
 
                 SDL_Surface* glyph =
-                    TTF_RenderText_Blended(
+                    TTF_RenderUTF8_Blended(
                         font->font,
                         txt,
                         c
