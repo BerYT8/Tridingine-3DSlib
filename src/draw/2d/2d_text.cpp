@@ -22,7 +22,7 @@
  * considerar su anchura ligeramente mayor durante el cálculo.
  */
 #ifndef PC_WRAP_WIDTH_SCALE
-#define PC_WRAP_WIDTH_SCALE 1.2385f
+#define PC_WRAP_WIDTH_SCALE 1.2f
 #endif
 
 #if defined(PLATFORM_PC)
@@ -779,7 +779,7 @@ D2D_Text D2D_DrawText_Buf(
         currScreen == TOP
             ? topInitialPointY
             : bottomInitialPointY;
-    fontSize += fontSize / 30; // 1.0f; // Ajuste para que el texto se vea más grande en PC
+    fontSize += fontSize / INITIAL_FONT_SIZE; // 1.0f; // Ajuste para que el texto se vea más grande en PC
     fontSize *= scaleFactor;
 
 #endif

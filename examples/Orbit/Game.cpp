@@ -4,6 +4,7 @@
 #include <Tridingine.h>
 
 #include <cmath>
+#include <iostream>
 
 static float posY = 0.0f;
 static float floatTime = 0.0f;
@@ -12,6 +13,8 @@ const float amplitude = 10.0f;
 const float speed = 2.2f;
 
 static AsyncSaveData data;
+
+std::string responseText;
 
 Game::Game()
 {
