@@ -22,7 +22,7 @@
  * considerar su anchura ligeramente mayor durante el cálculo.
  */
 #ifndef PC_WRAP_WIDTH_SCALE
-#define PC_WRAP_WIDTH_SCALE 1.27f
+#define PC_WRAP_WIDTH_SCALE 1.2385f
 #endif
 
 #if defined(PLATFORM_PC)

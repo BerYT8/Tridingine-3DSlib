@@ -1,12 +1,9 @@
 #include <Tridingine.h>
 
 #include <iostream>
-#include <string>
 
 #include "Game.h"
 #include "input.h"
-
-std::string responseText;
 
 int app_main(int argc, char* argv[])
 {
