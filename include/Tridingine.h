@@ -24,6 +24,11 @@
 #include "sys/system_language.h"
 #include "sys/system_time.h"
 #include "sys/system_memory.h"
+
+#include "sys/net/net.h"
+#include "sys/net/socket.h"
+#include "sys/net/tcp.h"
+#include "sys/net/http.h"
 // #include "html/html-ds.h"
 
 Vec3 getVersion();

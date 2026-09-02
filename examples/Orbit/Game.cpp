@@ -13,6 +13,8 @@ const float speed = 2.2f;
 
 static AsyncSaveData data;
 
+extern std::string responseText;
+
 Game::Game()
 {
     enemySpawnTimer = 0.0f;
@@ -300,7 +302,7 @@ void Game::DrawBot()
     {
         D2D_DrawRectSolid(0, 0, sSize.x, sSize.y, 0, 1.0f, 0, 0, Color_MakeColor(0,0,0,230));
 
-        D2D_DrawText(std::string("Pulse SELECT to replay the game.").c_str(), 
+        D2D_DrawText(responseText.c_str(), 
                         font, 30, Color_White, 
                         0, 0, 1.0f, 
                         sSize.x, sSize.y, 

@@ -44,6 +44,10 @@ set(SOURCES
     src/console/drawConsole.cpp
     src/console/console.cpp
 
+    src/net/socket.cpp
+    src/net/tcp.cpp
+    src/net/http.cpp
+
     src/system_memory.cpp
     src/system_language.cpp
     src/system_time.cpp

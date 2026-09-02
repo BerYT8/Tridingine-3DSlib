@@ -1,7 +1,12 @@
 #include <Tridingine.h>
 
+#include <iostream>
+#include <string>
+
 #include "Game.h"
 #include "input.h"
+
+std::string responseText;
 
 int app_main(int argc, char* argv[])
 {
@@ -30,6 +35,7 @@ int app_main(int argc, char* argv[])
         S2S_ScreensExit();
         return -1;
     }
+
     dt_init();
 
     while (S2S_ScreensRunning())
@@ -38,21 +44,25 @@ int app_main(int argc, char* argv[])
 
         input_read();
 
-        if(input_isKeyPressed(INPUT_KEY_A) || input_isKeyPressed(INPUT_KEY_B) || input_isKeyPressed(INPUT_KEY_X) || input_isKeyPressed(INPUT_KEY_Y))
+        if (input_isKeyPressed(INPUT_KEY_A) ||
+            input_isKeyPressed(INPUT_KEY_B) ||
+            input_isKeyPressed(INPUT_KEY_X) ||
+            input_isKeyPressed(INPUT_KEY_Y))
         {
             S2S_StopRunning();
         }
 
         S2S_BeginFrame();
 
-        if(input_isKeyPressed(INPUT_KEY_SELECT) || input_isKeyPressed(INPUT_KEY_TOUCH))
+        if (input_isKeyPressed(INPUT_KEY_SELECT) ||
+            input_isKeyPressed(INPUT_KEY_TOUCH))
         {
             S2S_SetGamePaused(!S2S_IsGamePaused());
         }
 
         S2S_SetCurrentScreen(TOP);
 
-        if(!S2S_IsGamePaused())
+        if (!S2S_IsGamePaused())
         {
             game.Update();
         }
