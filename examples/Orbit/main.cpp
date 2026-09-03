@@ -1,9 +1,8 @@
 #include <Tridingine.h>
 
-#include <iostream>
-
 #include "Game.h"
 #include "input.h"
+
 
 int app_main(int argc, char* argv[])
 {

@@ -23,6 +23,9 @@ if [ "$1" == "3ds" ]; then
     ./tools/SoundMaker3DS --all -i "$CONTENT_DIR" -o "$ROMFS_DIR_3DS"
     ./tools/LocalizationMaker --all -i "$CONTENT_DIR" -o "$ROMFS_DIR_3DS"
 
+    mkdir -p "$ROMFS_DIR_3DS/certs"
+    cp "$CONTENT_DIR/certs/ca-bundle.crt" "$ROMFS_DIR_3DS/certs/ca-bundle.crt" || exit 1
+
     ./tools/build_3ds.sh "${@:2}"
     exit 0
 fi
@@ -68,6 +71,9 @@ cd ..
 ./tools/3DModelsConverter --all -i "$CONTENT_DIR" -o "$ROMFS_DIR"
 ./tools/SoundMaker3DS --all -i "$CONTENT_DIR" -o "$ROMFS_DIR"
 ./tools/LocalizationMaker --all -i "$CONTENT_DIR" -o "$ROMFS_DIR"
+
+mkdir -p "$ROMFS_DIR/certs"
+cp "$CONTENT_DIR/certs/ca-bundle.crt" "$ROMFS_DIR/certs/ca-bundle.crt" || exit 1
 
 ./tools/PakMaker -c "$ROMFS_DIR" -o "$BUILD_DIR/game.pak"
 

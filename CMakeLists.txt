@@ -45,6 +45,7 @@ set(SOURCES
     src/console/console.cpp
 
     src/net/socket.cpp
+    src/net/tls.cpp
     src/net/tcp.cpp
     src/net/http.cpp
 
@@ -182,6 +183,12 @@ if(NOT BUILD_3DS)
     # -------------------------------------------------
 
     find_package(OpenGL REQUIRED)
+
+    # -------------------------------------------------
+    # OpenSSL
+    # -------------------------------------------------
+
+    find_package(OpenSSL REQUIRED)
 
     # -------------------------------------------------
     # GLEW
@@ -543,6 +550,9 @@ if(NOT BUILD_3DS)
             SDL2_mixer::SDL2_mixer-static
             SDL2_image::SDL2_image-static
             SDL2_ttf::SDL2_ttf-static
+
+            OpenSSL::SSL
+            OpenSSL::Crypto
     )
 
     # =================================================
@@ -643,6 +653,13 @@ else()
         PUBLIC
             ${CMAKE_CURRENT_SOURCE_DIR}/include
             ${CMAKE_CURRENT_SOURCE_DIR}/lib_include
+            $ENV{DEVKITPRO}/portlibs/3ds/include
+    )
+
+    target_link_directories(
+        TridingineCore
+        PUBLIC
+            $ENV{DEVKITPRO}/portlibs/3ds/lib
     )
 
     # =================================================
@@ -720,7 +737,12 @@ else()
             citro2d
             citro3d
             ctru
+
             m
+
+            mbedtls
+            mbedx509
+            mbedcrypto
 
             opusfile
             opus

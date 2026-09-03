@@ -5,6 +5,29 @@ set -e
 
 ROOT="$(pwd)"
 
+# =========================
+# Comprobar certificado CA
+# =========================
+
+CONTENT_DIR="$ROOT/content"
+
+CA_URL="https://curl.se/ca/cacert.pem"
+CA_FILE="$CONTENT_DIR/certs/ca-bundle.crt"
+
+if [ ! -f "$CA_FILE" ]; then
+    echo
+    echo "ERROR: El certificado CA no existe."
+    echo
+    exit 1
+fi
+
+if [ ! -s "$CA_FILE" ]; then
+    echo
+    echo "ERROR: El certificado CA está vacío."
+    echo
+    exit 1
+fi
+
 BUILD_DIR="$ROOT/build"
 
 # Crear directorio de construcción si no existe

@@ -154,7 +154,12 @@ if(BUILD_3DS)
             citro2d
             citro3d
             ctru
+
             m
+
+            mbedtls
+            mbedx509
+            mbedcrypto
 
             opusfile
             opus

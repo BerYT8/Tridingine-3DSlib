@@ -6,6 +6,28 @@ set "BUILD_DIR=build"
 if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 
 REM =========================
+REM Comprobar certificado CA
+REM =========================
+
+set "CONTENT_DIR=content"
+
+set "CA_FILE=%CONTENT_DIR%\certs\ca-bundle.crt"
+
+if not exist "%CA_FILE%" (
+    echo.
+    echo ERROR: El certificado CA no existe.
+    echo.
+    exit /b 1
+)
+
+for %%A in ("%CA_FILE%") do if %%~zA==0 (
+    echo.
+    echo ERROR: El certificado CA esta vacio.
+    echo.
+    exit /b 1
+)
+
+REM =========================
 REM PC BUILD
 REM =========================
 echo =========================
