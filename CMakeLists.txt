@@ -562,6 +562,8 @@ if(NOT BUILD_3DS)
     add_library(
         TridingineEntrypoint
         STATIC
+        src/config.c
+        src/config.h
         src/entrypoint.cpp
     )
 
@@ -707,6 +709,8 @@ else()
     add_library(
         TridingineEntrypoint
         STATIC
+        src/config.c
+        src/config.h
         src/entrypoint.cpp
     )
 

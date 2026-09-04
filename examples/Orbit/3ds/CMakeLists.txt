@@ -44,7 +44,6 @@ ctr_generate_smdh(
     NAME ${NAME}
     DESCRIPTION ${DESCRIPTION}
     AUTHOR ${AUTHOR}
-    ICON "${CMAKE_SOURCE_DIR}/../icon.png"
 )
 
 set(ROMFS_DIR "${CMAKE_SOURCE_DIR}/../romfs/3ds")
@@ -304,18 +303,6 @@ endif()
 # Herramientas
 # ------------------------------------------------------------------
 
-find_program(THREEDSTOOL_EXE
-    3dstool
-    PATHS "${CMAKE_SOURCE_DIR}/../tools"
-    REQUIRED
-)
-
-find_program(BANNERTOOL_EXE
-    bannertool
-    PATHS "${CMAKE_SOURCE_DIR}/../tools"
-    REQUIRED
-)
-
 find_program(MAKEROM_EXE
     makerom
     PATHS "${CMAKE_SOURCE_DIR}/../tools"
@@ -336,10 +323,6 @@ set(BINARY_ROMFS_FILE
 # Generar RomFS IVFC y crear CIA
 # ------------------------------------------------------------------
 
-set(BINARY_BANNER_FILE
-    "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.bnr"
-)
-
 add_custom_command(
     TARGET ${TARGET_NAME}
     POST_BUILD
@@ -351,22 +334,16 @@ add_custom_command(
         "${BINARY_ROMFS_FILE}"
         --romfs-dir "${ROMFS_DIR}"
 
-    COMMAND
-        ${BANNERTOOL_EXE}
-        makebanner
-        -i "${CMAKE_SOURCE_DIR}/../banner_def.png"
-        -a "${CMAKE_SOURCE_DIR}/../banner_audio.wav"
-        -o "${BINARY_BANNER_FILE}"
-
     # Genera el CIA
     COMMAND
         ${MAKEROM_EXE}
         -f cia
+        -v
+        -target t
+        -desc app:2
+        -o "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.cia"
         -rsf "${RSF_PATH}"
         -elf "${CODE}"
-        -icon "${CMAKE_CURRENT_BINARY_DIR}/${GAME_NAME}.smdh"
-        -banner "${BINARY_BANNER_FILE}"
-        -o "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.cia"
         -romfs "${BINARY_ROMFS_FILE}"
 
     COMMENT "Generando RomFS IVFC y creando CIA..."

@@ -31,7 +31,6 @@ bool S2S_IsGamePaused();
 void S2S_WaitTime(float seconds);
 
 bool S2S_ScreensInit();
-void SetWindowTitle(const char* new_title);
 
 void S2S_StopRunning();
 bool S2S_ScreensRunning();

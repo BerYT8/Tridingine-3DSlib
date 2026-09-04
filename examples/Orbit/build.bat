@@ -92,24 +92,27 @@ set "GAME_TITLE="
 set "GAME_NAME="
 
 if exist "game.json" (
+
     echo Detectado game.json. Leyendo informacion...
 
-    :: Extraer title
-    for /f "tokens=2 delims=:," %%A in ('findstr /C:"\"title\"" game.json') do (
-        set "GAME_TITLE=%%~A"
-        set "GAME_TITLE=!GAME_TITLE:"=!"
-        set "GAME_TITLE=!GAME_TITLE: =!"
+    :: --------------------------------------------------------
+    :: TITLE
+    :: --------------------------------------------------------
+
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw 'game.json' | ConvertFrom-Json).title"`) do (
+        set "GAME_TITLE=%%A"
     )
 
     if defined GAME_TITLE (
         echo Titulo detectado en game.json: "!GAME_TITLE!"
     )
 
-    :: Extraer file
-    for /f "tokens=2 delims=:," %%A in ('findstr /C:"\"file\"" game.json') do (
-        set "GAME_NAME=%%~A"
-        set "GAME_NAME=!GAME_NAME:"=!"
-        set "GAME_NAME=!GAME_NAME: =!"
+    :: --------------------------------------------------------
+    :: FILE
+    :: --------------------------------------------------------
+
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw 'game.json' | ConvertFrom-Json).file"`) do (
+        set "GAME_NAME=%%A"
     )
 
     if defined GAME_NAME (
@@ -117,6 +120,56 @@ if exist "game.json" (
         set "GAME_NAME=!GAME_NAME: =_!"
 
         echo Nombre de archivo detectado en game.json: "!GAME_NAME!"
+    )
+
+    :: --------------------------------------------------------
+    :: AUTHOR
+    :: --------------------------------------------------------
+
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw 'game.json' | ConvertFrom-Json).author"`) do (
+        set "GAME_AUTHOR=%%A"
+    )
+
+    if defined GAME_AUTHOR (
+        echo Autor detectado en game.json: "!GAME_AUTHOR!"
+    )
+
+    :: --------------------------------------------------------
+    :: DESCRIPTION
+    :: --------------------------------------------------------
+
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw 'game.json' | ConvertFrom-Json).description"`) do (
+        set "GAME_DESC=%%A"
+    )
+
+    if defined GAME_DESC (
+        echo Descripcion detectada en game.json: "!GAME_DESC!"
+    )
+
+    :: --------------------------------------------------------
+    :: SOURCES
+    :: --------------------------------------------------------
+
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw 'game.json' | ConvertFrom-Json).sources -join ';'"`) do (
+        set "GAME_SOURCES=%%A"
+    )
+
+    if defined GAME_SOURCES (
+        echo Sources detectados en game.json:
+        echo   !GAME_SOURCES!
+    )
+
+    :: --------------------------------------------------------
+    :: INCLUDES
+    :: --------------------------------------------------------
+
+    for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw 'game.json' | ConvertFrom-Json).includes -join ';'"`) do (
+        set "GAME_INCLUDES=%%A"
+    )
+
+    if defined GAME_INCLUDES (
+        echo Includes detectados en game.json:
+        echo   !GAME_INCLUDES!
     )
 )
 
@@ -126,19 +179,41 @@ if exist "game.json" (
 
 cd "%BUILD_DIR%" || goto :error
 
+:: ------------------------------------------------------------
+:: Construir flags dinámicamente
+:: ------------------------------------------------------------
+
+set "CMAKE_FLAGS="
+
 if defined GAME_TITLE (
-    if defined GAME_NAME (
-        cmake .. -DGAME_TITLE="!GAME_TITLE!" -DGAME_NAME="!GAME_NAME!"
-    ) else (
-        cmake .. -DGAME_TITLE="!GAME_TITLE!"
-    )
-) else (
-    if defined GAME_NAME (
-        cmake .. -DGAME_NAME="!GAME_NAME!"
-    ) else (
-        cmake ..
-    )
+    set CMAKE_FLAGS=!CMAKE_FLAGS! -DGAME_TITLE="!GAME_TITLE!"
 )
+
+if defined GAME_NAME (
+    set CMAKE_FLAGS=!CMAKE_FLAGS! -DGAME_NAME="!GAME_NAME!"
+)
+
+if defined GAME_AUTHOR (
+    set CMAKE_FLAGS=!CMAKE_FLAGS! -DGAME_AUTHOR="!GAME_AUTHOR!"
+)
+
+if defined GAME_DESC (
+    set CMAKE_FLAGS=!CMAKE_FLAGS! -DGAME_DESC="!GAME_DESC!"
+)
+
+if defined GAME_SOURCES (
+    set CMAKE_FLAGS=!CMAKE_FLAGS! -DGAME_SOURCES="!GAME_SOURCES!"
+)
+
+if defined GAME_INCLUDES (
+    set CMAKE_FLAGS=!CMAKE_FLAGS! -DGAME_INCLUDES="!GAME_INCLUDES!"
+)
+
+echo Flags CMake:
+echo !CMAKE_FLAGS!
+echo.
+
+cmake .. !CMAKE_FLAGS!
 
 if errorlevel 1 goto :error
 

@@ -3,7 +3,7 @@
 #include "maths/vector3.h"
 #define TRIDINGINE_VERSION_MAJOR 0
 #define TRIDINGINE_VERSION_MINOR 1
-#define TRIDINGINE_VERSION_MICRO 1
+#define TRIDINGINE_VERSION_MICRO 2
 
 #include "screens.h"
 #include "maths.h"
@@ -31,4 +31,19 @@
 #include "sys/net/http.h"
 // #include "html/html-ds.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 Vec3 getVersion();
+
+const char* getGameName();
+
+const char* getGameDescription();
+
+const char* getGameAuthor();
+
+
+#ifdef __cplusplus
+}
+#endif

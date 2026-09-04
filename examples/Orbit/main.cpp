@@ -8,10 +8,6 @@ int app_main(int argc, char* argv[])
 {
     S2S_ScreensInit();
 
-#if defined(GAME_TITLE)
-    SetWindowTitle(GAME_TITLE);
-#endif
-
     if (!D2D_Init())
     {
         S2S_ScreensExit();

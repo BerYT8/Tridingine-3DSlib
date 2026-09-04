@@ -275,8 +275,7 @@ int main(int argc, char* argv[])
 
             std::string name = p.filename().string();
 
-            if (name == "CMakeLists.txt" ||
-                name == "game.json" ||
+            if (name == "game.json" ||
                 name == "main.cpp" ||
                 name == "icon.png" ||
                 name == "banner_def.png" ||

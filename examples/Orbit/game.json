@@ -2,5 +2,15 @@
     "file": "orbit_game",
     "title": "Orbit Game",
     "author": "Orbit Man",
-    "description": "You are an orbit that's pursued by squares."
+    "description": "You are an orbit that's pursued by squares.",
+    "sources": [
+        "main.cpp",
+        "Game.cpp",
+        "Enemy.cpp",
+        "Player.cpp",
+        "Pickup.cpp"
+    ],
+    "includes":[
+        "include"
+    ]
 }

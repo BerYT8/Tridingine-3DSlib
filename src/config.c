@@ -13,32 +13,24 @@ bool isAppCia()
     return appType == CIA;
 }
 
-const char *
-getAppUniqueID()
+extern const char* TRIDINGINE_GAME_NAME_TEXT;
+extern const char* TRIDINGINE_GAME_DESCRIPTION_TEXT;
+extern const char* TRIDINGINE_GAME_AUTHOR_TEXT;
+
+const char* getGameName()
 {
-    return "3DSLIBS";
+    return TRIDINGINE_GAME_NAME_TEXT;
 }
 
-const char *getAppName()
+const char* getGameDescription()
 {
-    return "3DSLibs";
+    return TRIDINGINE_GAME_DESCRIPTION_TEXT;
 }
 
-const char *getAppVersion()
+const char* getGameAuthor()
 {
-    return "0.1.0";
+    return TRIDINGINE_GAME_AUTHOR_TEXT;
 }
-
-const char *getAppAuthor()
-{
-    return "Ber";
-}
-
-const char *getAppDescription()
-{
-    return "A collection of libraries for 3DS homebrew development.";
-}
-
 
 Vec3 getVersion()
 {

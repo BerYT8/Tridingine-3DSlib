@@ -43,20 +43,73 @@ JSON_FILE="game.json"
 if [ -f "$JSON_FILE" ]; then
     # Extrae el valor de "title"
     TITLE=$(grep -o '"title": "[^"]*' "$JSON_FILE" | grep -o '[^"]*$')
-    if [ ! -z "$TITLE" ]; then
+    if [ -n "$TITLE" ]; then
         echo "Título detectado en $JSON_FILE: '$TITLE'"
         CMAKE_FLAGS+=(-DGAME_TITLE="$TITLE")
     fi
 
     # Extrae el valor de "file"
     GAME_FILE=$(grep -o '"file": "[^"]*' "$JSON_FILE" | grep -o '[^"]*$')
-    if [ ! -z "$GAME_FILE" ]; then
-        # Reemplazar espacios por guiones bajos para evitar problemas en nombres de archivos/binarios
+    if [ -n "$GAME_FILE" ]; then
+        # Reemplazar espacios por guiones bajos
         GAME_FILE="${GAME_FILE// /_}"
+
         echo "Nombre de archivo detectado en $JSON_FILE: '$GAME_FILE'"
         CMAKE_FLAGS+=(-DGAME_NAME="$GAME_FILE")
     fi
+
+    # Extrae el valor de "author"
+    AUTHOR=$(grep -o '"author": "[^"]*' "$JSON_FILE" | grep -o '[^"]*$')
+    if [ -n "$AUTHOR" ]; then
+        echo "Autor detectado en $JSON_FILE: '$AUTHOR'"
+        CMAKE_FLAGS+=(-DGAME_AUTHOR="$AUTHOR")
+    fi
+
+    # Extrae el valor de "description"
+    DESCRIPTION=$(grep -o '"description": "[^"]*' "$JSON_FILE" | grep -o '[^"]*$')
+    if [ -n "$DESCRIPTION" ]; then
+        echo "Descripción detectada en $JSON_FILE: '$DESCRIPTION'"
+        CMAKE_FLAGS+=(-DGAME_DESC="$DESCRIPTION")
+    fi
+
+    # Extrae los sources
+    SOURCES=$(
+        sed -n '/"sources"[[:space:]]*:/,/]/p' "$JSON_FILE" \
+        | tail -n +2 \
+        | grep -o '"[^"]*"' \
+        | sed 's/"//g' \
+        | tr '\n' ';'
+    )
+
+    if [ -n "$SOURCES" ]; then
+        SOURCES="${SOURCES%;}"
+
+        echo "Sources detectados en $JSON_FILE:"
+        echo "  $SOURCES"
+
+        CMAKE_FLAGS+=(-DGAME_SOURCES="$SOURCES")
+    fi
+
+    # Extrae los includes
+    INCLUDES=$(
+        sed -n '/"includes"[[:space:]]*:/,/]/p' "$JSON_FILE" \
+        | tail -n +2 \
+        | grep -o '"[^"]*"' \
+        | sed 's/"//g' \
+        | tr '\n' ';'
+    )
+
+    if [ -n "$INCLUDES" ]; then
+        INCLUDES="${INCLUDES%;}"
+
+        echo "Includes detectados en $JSON_FILE:"
+        echo "  $INCLUDES"
+
+        CMAKE_FLAGS+=(-DGAME_INCLUDES="$INCLUDES")
+    fi
+
 fi
+
 # -----------------------------------------------------
 
 cd "$BUILD_DIR" || exit 1

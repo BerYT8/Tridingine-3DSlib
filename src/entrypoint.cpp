@@ -13,6 +13,10 @@ static void showHelp()
     std::cout << "  -h, --help                    Show this help message." << std::endl;
     std::cout << "  -v, --version                 Show version information." << std::endl;
     std::cout << "  -ns, --no-start               Do not start the application." << std::endl;
+    std::cout << "  -n, --name                    Show the game name." << std::endl;
+    std::cout << "  -d, --description             Show the game description." << std::endl;
+    std::cout << "  -a, --author                  Show the game author." << std::endl;
+    std::cout << "  -e, --engine                  Show the engine information." << std::endl;
     std::cout << std::endl;
 }
 
@@ -97,6 +101,18 @@ static int call_app_main(int argc, char** argv)
         }
         else if (arg == "-ns" || arg == "--no-start") {
             stopCode = true;
+        }
+        else if (arg == "-n" || arg == "--name") {
+            std::cout << getGameName() << std::endl;
+        }
+        else if (arg == "-d" || arg == "--description") {
+            std::cout << getGameDescription() << std::endl;
+        }
+        else if (arg == "-a" || arg == "--author") {
+            std::cout << getGameAuthor() << std::endl;
+        }
+        else if (arg == "-e" || arg == "--engine") {
+            std::cout << "Made with Tridingine." << std::endl;
         }
     }
 

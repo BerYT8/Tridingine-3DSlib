@@ -1,3 +1,4 @@
+#include "Tridingine.h"
 #define ALLOCATE_SHMEM
 #include "screensValues.h"
 
@@ -121,16 +122,6 @@ void S2S_ClearScreen(Color color)
 #endif
 }
 
-void SetWindowTitle(const char* new_title) {
-#if defined(PLATFORM_PC)
-    currTitle = new_title;
-    if (window) {
-        SDL_SetWindowTitle(window, currTitle.c_str());
-    }
-#endif
-    return;
-}
-
 bool S2S_ScreensInit()
 {
     if(screensInitialized)
@@ -207,7 +198,7 @@ bool S2S_ScreensInit()
         //printf("[WINDOW] X: %d, Y: %d.\n", saved_x, saved_y);
 
         window = SDL_CreateWindow(
-                currTitle.c_str(),
+                getGameName(),
                 has_pos ? saved_x : SDL_WINDOWPOS_CENTERED,
                 has_pos ? saved_y : SDL_WINDOWPOS_CENTERED,
                 has_size ? saved_w : wwidth,

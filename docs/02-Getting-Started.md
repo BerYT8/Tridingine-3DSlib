@@ -51,11 +51,6 @@ int main(int argc, char *argv[])
 {
     S2S_ScreensInit();
 
-#if defined(GAME_TITLE)
-    const char* title = GAME_TITLE;
-    SetWindowTitle(title);
-#endif
-
     // Initialization
 
     while (S2S_ScreensRunning())
@@ -122,12 +117,6 @@ This function presents the image on screen and prepares the next frame.
 Releases all resources used by the screen system.
 
 It should be called before the program terminates.
-
----
-
-## SetWindowTitle()
-
-This is a **PC-only function** used to set the window title using the title defined in `game.json`.
 
 ---
 
