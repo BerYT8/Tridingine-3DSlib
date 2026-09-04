@@ -1,3 +1,4 @@
+#include <Tridingine.h>
 #include "types.h"
 
 #if defined(PLATFORM_PC)
@@ -230,20 +231,45 @@ const char* getPath(const char* path, bool create)
 
 #elif defined(PLATFORM_3DS)
 
-    if (envIsHomebrew()) 
+    if (envIsHomebrew())
     {
-        const char* in = "sdmc:/";
+        const char* in = "sdmc:/3ds/Tridingine/games";
 
-        // Copia segura en el búfer estático
-        snprintf(finalPath,
-                sizeof(finalPath),
-                "%s%s%s",
-                in,
-                prefijx,
-                path);
+        /*
+         * Primero construimos el directorio del juego.
+         */
+        int n = snprintf(finalPath,
+                         sizeof(finalPath),
+                         "%s/%s/%s",
+                         in,
+                         getGameName(),
+                        prefijx);
 
-        // Opcional: Aquí puedes añadir mkdir() si 'create' es true para la 3DS
-        mkdir_recursive(finalPath);
+        if (n < 0 || (size_t)n >= sizeof(finalPath))
+            return NULL;
+
+        /*
+         * Creamos las carpetas si se ha solicitado.
+         */
+        if (create)
+        {
+            if (mkdir_recursive(finalPath) != 0)
+                return NULL;
+        }
+
+        /*
+         * Ahora construimos el path del archivo.
+         */
+        n = snprintf(finalPath,
+                     sizeof(finalPath),
+                     "%s/%s/%s%s",
+                     in,
+                     getGameName(),
+                     prefijx,
+                     path);
+
+        if (n < 0 || (size_t)n >= sizeof(finalPath))
+            return NULL;
 
         return finalPath;
     }
