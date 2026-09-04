@@ -1,33 +1,151 @@
 #!/bin/bash
+
 # Ir a la raíz del proyecto desde la carpeta tools
 cd "$(dirname "$0")/.." || exit 1
 
-# Variables por defecto
+# ============================================================
+# VALORES POR DEFECTO
+# ============================================================
+
 VAL_GAME3DS="Game3DS"
 VAL_TITLE="Juego 3DS"
 VAL_DESC="Juego hecho con 3DSLIB."
 VAL_AUTHOR="Tú"
 
-# Leer JSON si existe (usando herramientas nativas de bash/sed/grep para evitar dependencias)
-if [ -f "game.json" ]; then
-    echo "Leyendo datos desde game.json..."
+GAME_SOURCES="main.cpp"
+GAME_INCLUDES=""
 
-    VAL_GAME3DS=$(grep -o '"file": "[^"]*' game.json | grep -o '[^"]*$')
-    VAL_TITLE=$(grep -o '"title": "[^"]*' game.json | grep -o '[^"]*$')
-    VAL_AUTHOR=$(grep -o '"author": "[^"]*' game.json | grep -o '[^"]*$')
-    VAL_DESC=$(grep -o '"description": "[^"]*' game.json | grep -o '[^"]*$')
+JSON_FILE="game.json"
 
-    # Reemplazar espacios por guiones bajos en el nombre del archivo
-    VAL_GAME3DS="${VAL_GAME3DS// /_}"
+# ============================================================
+# LEER GAME.JSON
+# ============================================================
+
+if [ -f "$JSON_FILE" ]; then
+
+    echo "Leyendo datos desde $JSON_FILE..."
+
+    # --------------------------------------------------------
+    # File
+    # --------------------------------------------------------
+
+    VAL_GAME3DS=$(grep -o '"file": "[^"]*' "$JSON_FILE" | grep -o '[^"]*$')
+
+    if [ -n "$VAL_GAME3DS" ]; then
+        VAL_GAME3DS="${VAL_GAME3DS// /_}"
+
+        echo "Nombre de archivo detectado: '$VAL_GAME3DS'"
+    fi
+
+    # --------------------------------------------------------
+    # Title
+    # --------------------------------------------------------
+
+    VAL_TITLE=$(grep -o '"title": "[^"]*' "$JSON_FILE" | grep -o '[^"]*$')
+
+    if [ -n "$VAL_TITLE" ]; then
+        echo "Título detectado: '$VAL_TITLE'"
+    fi
+
+    # --------------------------------------------------------
+    # Author
+    # --------------------------------------------------------
+
+    VAL_AUTHOR=$(grep -o '"author": "[^"]*' "$JSON_FILE" | grep -o '[^"]*$')
+
+    if [ -n "$VAL_AUTHOR" ]; then
+        echo "Autor detectado: '$VAL_AUTHOR'"
+    fi
+
+    # --------------------------------------------------------
+    # Description
+    # --------------------------------------------------------
+
+    VAL_DESC=$(grep -o '"description": "[^"]*' "$JSON_FILE" | grep -o '[^"]*$')
+
+    if [ -n "$VAL_DESC" ]; then
+        echo "Descripción detectada: '$VAL_DESC'"
+    fi
+
+    # --------------------------------------------------------
+    # Sources
+    # --------------------------------------------------------
+
+    SOURCES=$(
+        sed -n '/"sources"[[:space:]]*:/,/]/p' "$JSON_FILE" \
+        | tail -n +2 \
+        | grep -o '"[^"]*"' \
+        | sed 's/"//g' \
+        | tr '\n' ';'
+    )
+
+    if [ -n "$SOURCES" ]; then
+
+        SOURCES="${SOURCES%;}"
+
+        echo "Sources detectados:"
+        echo "  $SOURCES"
+
+        GAME_SOURCES="$SOURCES"
+
+    fi
+
+    # --------------------------------------------------------
+    # Includes
+    # --------------------------------------------------------
+
+    INCLUDES=$(
+        sed -n '/"includes"[[:space:]]*:/,/]/p' "$JSON_FILE" \
+        | tail -n +2 \
+        | grep -o '"[^"]*"' \
+        | sed 's/"//g' \
+        | tr '\n' ';'
+    )
+
+    if [ -n "$INCLUDES" ]; then
+
+        INCLUDES="${INCLUDES%;}"
+
+        echo "Includes detectados:"
+        echo "  $INCLUDES"
+
+        GAME_INCLUDES="$INCLUDES"
+
+    fi
+
 fi
 
-# Ajustar valores vacíos a los por defecto
+# ============================================================
+# APLICAR VALORES POR DEFECTO
+# ============================================================
+
 VAL_GAME3DS=${VAL_GAME3DS:-Game3DS}
 VAL_TITLE=${VAL_TITLE:-Juego 3DS}
 VAL_DESC=${VAL_DESC:-Juego hecho con 3DSLIB.}
 VAL_AUTHOR=${VAL_AUTHOR:-Tú}
+GAME_SOURCES=${GAME_SOURCES:-main.cpp}
 
-# Configurar directorios de compilación fijos para reutilizar caché
+# ============================================================
+# MOSTRAR CONFIGURACIÓN
+# ============================================================
+
+echo ""
+echo "========================================"
+echo " Configuración del juego"
+echo "========================================"
+echo " Game name : ${VAL_GAME3DS}"
+echo " Title     : ${VAL_TITLE}"
+echo " Author    : ${VAL_AUTHOR}"
+echo " Desc      : ${VAL_DESC}"
+echo " Sources   : ${GAME_SOURCES}"
+echo " Includes  : ${GAME_INCLUDES}"
+echo "========================================"
+echo ""
+
+# ============================================================
+# DIRECTORIOS DE COMPILACIÓN
+# ============================================================
+
 BUILD_DIR="build_3ds"
 CODE_DIR="${BUILD_DIR}/code"
 FINAL_DIR="${BUILD_DIR}/${VAL_GAME3DS}/compiled_game"
@@ -36,7 +154,7 @@ mkdir -p "$CODE_DIR"
 mkdir -p "$FINAL_DIR"
 
 # ============================================================
-# 1. Compilación del código base
+# 1. COMPILACIÓN DEL CÓDIGO BASE
 # ============================================================
 
 echo ""
@@ -48,9 +166,14 @@ echo ""
 cd "$CODE_DIR" || exit 1
 
 cmake ../.. \
-  -DBUILD_3DS=ON \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_TOOLCHAIN_FILE="${DEVKITPRO}/cmake/3DS.cmake"
+    -DBUILD_3DS=ON \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_TOOLCHAIN_FILE="${DEVKITPRO}/cmake/3DS.cmake" \
+    -DGAME_TITLE="${VAL_TITLE}" \
+    -DGAME_DESCRIPTION="${VAL_DESC}" \
+    -DGAME_AUTHOR="${VAL_AUTHOR}" \
+    -DGAME_SOURCES="${GAME_SOURCES}" \
+    -DGAME_INCLUDES="${GAME_INCLUDES}"
 
 cmake --build . || exit 1
 
@@ -61,7 +184,7 @@ cp code.elf "../code.elf"
 cd "../.." || exit 1
 
 # ============================================================
-# 2. Generación del ejecutable final
+# 2. GENERACIÓN DEL EJECUTABLE FINAL
 # ============================================================
 
 echo ""
@@ -73,16 +196,16 @@ echo ""
 cd "$FINAL_DIR" || exit 1
 
 cmake ../../../3ds \
-  -DCODE="../../code.elf" \
-  -DGAME_NAME="${VAL_GAME3DS}" \
-  -DNAME="${VAL_TITLE}" \
-  -DDESCRIPTION="${VAL_DESC}" \
-  -DAUTHOR="${VAL_AUTHOR}" \
-  -DCMAKE_TOOLCHAIN_FILE="${DEVKITPRO}/cmake/3DS.cmake"
+    -DCODE="../../code.elf" \
+    -DGAME_NAME="${VAL_GAME3DS}" \
+    -DNAME="${VAL_TITLE}" \
+    -DDESCRIPTION="${VAL_DESC}" \
+    -DAUTHOR="${VAL_AUTHOR}" \
+    -DCMAKE_TOOLCHAIN_FILE="${DEVKITPRO}/cmake/3DS.cmake"
 
 cmake --build . || exit 1
 
-# Mover los resultados a la raíz de build_3ds
+# Mover resultados a la raíz de build_3ds
 cp "${VAL_GAME3DS}.3dsx" "../${VAL_GAME3DS}.3dsx"
 cp "${VAL_GAME3DS}.cia" "../${VAL_GAME3DS}.cia"
 
@@ -99,13 +222,11 @@ echo "CIA:  ${BUILD_DIR}/${VAL_GAME3DS}/${VAL_GAME3DS}.cia"
 echo ""
 
 # ============================================================
-# 3. Link opcional a Nintendo 3DS
+# 3. LINK OPCIONAL A NINTENDO 3DS
 # ============================================================
 
 if [ "$1" = "link" ]; then
 
-    # Eliminar "link" de los argumentos.
-    # Todo lo que quede se pasa directamente a 3dslink.
     shift
 
     GAME_3DSX="${BUILD_DIR}/${VAL_GAME3DS}/${VAL_GAME3DS}.3dsx"
@@ -125,15 +246,12 @@ if [ "$1" = "link" ]; then
 
     echo ""
 
-    # Comprobar que 3dslink existe
     if ! command -v 3dslink >/dev/null 2>&1; then
         echo "ERROR: No se encontró '3dslink'."
         echo "Comprueba que devkitPro/3dslink está instalado y disponible en PATH."
         exit 1
     fi
 
-    # Ejecutar 3dslink.
-    # "$@" permite pasar cualquier argumento adicional.
     3dslink "$GAME_3DSX" "$@"
 
     LINK_RESULT=$?
@@ -146,4 +264,5 @@ if [ "$1" = "link" ]; then
 
     echo ""
     echo "Juego enviado correctamente a la Nintendo 3DS."
+
 fi

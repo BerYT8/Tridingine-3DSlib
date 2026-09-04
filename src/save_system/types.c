@@ -240,8 +240,9 @@ const char* getPath(const char* path, bool create)
          */
         int n = snprintf(finalPath,
                          sizeof(finalPath),
-                         "%s/%s/%s",
+                         "%s/%s/%s/%s",
                          in,
+                         getGameAuthor(),
                          getGameName(),
                         prefijx);
 
@@ -262,8 +263,9 @@ const char* getPath(const char* path, bool create)
          */
         n = snprintf(finalPath,
                      sizeof(finalPath),
-                     "%s/%s/%s%s",
+                     "%s/%s/%s/%s%s",
                      in,
+                     getGameAuthor(),
                      getGameName(),
                      prefijx,
                      path);
