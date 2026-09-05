@@ -309,6 +309,12 @@ find_program(MAKEROM_EXE
     REQUIRED
 )
 
+find_program(THREEDSTOOL_EXE
+    3dstool
+    PATHS "${CMAKE_SOURCE_DIR}/../tools"
+    REQUIRED
+)
+
 # ------------------------------------------------------------------
 # Archivos
 # ------------------------------------------------------------------
@@ -330,7 +336,7 @@ add_custom_command(
     # Genera un RomFS IVFC a partir del directorio romfs
     COMMAND
         ${THREEDSTOOL_EXE}
-        -cvtf romfs
+        -cvtf romfs 
         "${BINARY_ROMFS_FILE}"
         --romfs-dir "${ROMFS_DIR}"
 

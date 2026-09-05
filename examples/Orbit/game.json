@@ -1,16 +1,10 @@
 {
-    "file": "orbit_game",
-    "title": "Orbit Game",
-    "author": "Orbit Man",
-    "description": "You are an orbit that's pursued by squares.",
+    "file": "name_of_file",
+    "title": "Game Title",
+    "author": "You",
+    "description": "Description.",
     "sources": [
-        "main.cpp",
-        "Game.cpp",
-        "Enemy.cpp",
-        "Player.cpp",
-        "Pickup.cpp"
+        "main.cpp"
     ],
-    "includes":[
-        "include"
-    ]
+    "includes":[]
 }
