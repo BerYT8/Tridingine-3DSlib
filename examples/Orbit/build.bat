@@ -92,12 +92,11 @@ set "GAME_TITLE="
 set "GAME_NAME="
 
 if exist "game.json" (
-
     echo Detectado game.json. Leyendo informacion...
 
-    :: --------------------------------------------------------
-    :: TITLE
-    :: --------------------------------------------------------
+    rem --------------------------------------------------------
+    rem TITLE
+    rem --------------------------------------------------------
 
     for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw 'game.json' | ConvertFrom-Json).title"`) do (
         set "GAME_TITLE=%%A"
@@ -107,24 +106,24 @@ if exist "game.json" (
         echo Titulo detectado en game.json: "!GAME_TITLE!"
     )
 
-    :: --------------------------------------------------------
-    :: FILE
-    :: --------------------------------------------------------
+    rem --------------------------------------------------------
+    rem FILE
+    rem --------------------------------------------------------
 
     for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw 'game.json' | ConvertFrom-Json).file"`) do (
         set "GAME_NAME=%%A"
     )
 
     if defined GAME_NAME (
-        :: Reemplazar espacios por guiones bajos
+        rem Reemplazar espacios por guiones bajos
         set "GAME_NAME=!GAME_NAME: =_!"
 
         echo Nombre de archivo detectado en game.json: "!GAME_NAME!"
     )
 
-    :: --------------------------------------------------------
-    :: AUTHOR
-    :: --------------------------------------------------------
+    rem --------------------------------------------------------
+    rem AUTHOR
+    rem --------------------------------------------------------
 
     for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw 'game.json' | ConvertFrom-Json).author"`) do (
         set "GAME_AUTHOR=%%A"
@@ -134,9 +133,9 @@ if exist "game.json" (
         echo Autor detectado en game.json: "!GAME_AUTHOR!"
     )
 
-    :: --------------------------------------------------------
-    :: DESCRIPTION
-    :: --------------------------------------------------------
+    rem --------------------------------------------------------
+    rem DESCRIPTION
+    rem --------------------------------------------------------
 
     for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw 'game.json' | ConvertFrom-Json).description"`) do (
         set "GAME_DESC=%%A"
@@ -146,9 +145,9 @@ if exist "game.json" (
         echo Descripcion detectada en game.json: "!GAME_DESC!"
     )
 
-    :: --------------------------------------------------------
-    :: SOURCES
-    :: --------------------------------------------------------
+    rem --------------------------------------------------------
+    rem SOURCES
+    rem --------------------------------------------------------
 
     for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw 'game.json' | ConvertFrom-Json).sources -join ';'"`) do (
         set "GAME_SOURCES=%%A"
@@ -159,9 +158,9 @@ if exist "game.json" (
         echo   !GAME_SOURCES!
     )
 
-    :: --------------------------------------------------------
-    :: INCLUDES
-    :: --------------------------------------------------------
+    rem --------------------------------------------------------
+    rem INCLUDES
+    rem --------------------------------------------------------
 
     for /f "usebackq delims=" %%A in (`powershell -NoProfile -Command "(Get-Content -Raw 'game.json' | ConvertFrom-Json).includes -join ';'"`) do (
         set "GAME_INCLUDES=%%A"
@@ -172,6 +171,7 @@ if exist "game.json" (
         echo   !GAME_INCLUDES!
     )
 )
+
 
 :: ============================================================
 :: CMAKE

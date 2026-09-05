@@ -10,6 +10,10 @@ set "CONTENT_DIR=content"
 set "CA_URL=https://curl.se/ca/cacert.pem"
 set "CA_FILE=%CONTENT_DIR%\certs\ca-bundle.crt"
 
+if not exist "%CONTENT_DIR%\certs" (
+    mkdir "%CONTENT_DIR%\certs"
+)
+
 curl -L --fail "%CA_URL%" -o "%CA_FILE%"
 
 if errorlevel 1 (
@@ -39,5 +43,8 @@ echo %CA_FILE%
 
 git submodule sync --recursive
 git submodule update --init --recursive
+
+set "MSYS2_BASH=%DEVKITPRO%\msys2\msys2_shell.bat"
+call "%MSYS2_BASH%" -defterm -here -no-start -c "pacman -Syu 3ds-libogg 3ds-opusfile 3ds-mbedtls"
 
 endlocal

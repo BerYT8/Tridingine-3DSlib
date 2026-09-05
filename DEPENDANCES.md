@@ -282,7 +282,7 @@ These libraries should be installed through the devkitPro package manager rather
 Install the required packages with:
 
 ```bash
-pacman -S 3ds-libogg 3ds-opus 3ds-opusfile 3ds-mbedtls
+pacman -S 3ds-libogg 3ds-opusfile 3ds-mbedtls
 ```
 
 Depending on the devkitPro environment and package versions, some dependencies may be installed automatically.
@@ -634,7 +634,7 @@ They must be installed separately before building Tridingine for Nintendo 3DS.
 On Linux, install the required 3DS portlibs using pacman:
 
 ```bash
-pacman -S 3ds-libogg 3ds-opus 3ds-opusfile
+pacman -S 3ds-libogg 3ds-opusfile 3ds-mbedtls
 ```
 
 Depending on the devkitPro package repository and installed environment, additional dependencies may be installed automatically.

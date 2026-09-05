@@ -16,6 +16,31 @@
 #include "../console/drawConsole.h"
 #define ALLOCATE_SHMEM
 
+#if defined(PLATFORM_PC) && defined(_WIN32)
+#define TRIDINGINE_API __declspec(dllexport)
+#else
+#define TRIDINGINE_API
+#endif
+
+TRIDINGINE_API std::string TRIDINGINE_GAME_NAME_TEXT_STRING = "Title";
+TRIDINGINE_API std::string TRIDINGINE_GAME_DESCRIPTION_TEXT_STRING = "Description";
+TRIDINGINE_API std::string TRIDINGINE_GAME_AUTHOR_TEXT_STRING = "Author";
+
+const char *getGameName()
+{
+    return TRIDINGINE_GAME_NAME_TEXT_STRING.c_str();
+}
+
+const char* getGameDescription()
+{
+    return TRIDINGINE_GAME_DESCRIPTION_TEXT_STRING.c_str();
+}
+
+const char* getGameAuthor()
+{
+    return TRIDINGINE_GAME_AUTHOR_TEXT_STRING.c_str();
+}
+
 void S2S_WaitTime(float seconds)
 {
 #if defined(PLATFORM_PC)
@@ -198,7 +223,7 @@ bool S2S_ScreensInit()
         //printf("[WINDOW] X: %d, Y: %d.\n", saved_x, saved_y);
 
         window = SDL_CreateWindow(
-                getGameName(),
+                TRIDINGINE_GAME_NAME_TEXT_STRING.c_str(),
                 has_pos ? saved_x : SDL_WINDOWPOS_CENTERED,
                 has_pos ? saved_y : SDL_WINDOWPOS_CENTERED,
                 has_size ? saved_w : wwidth,

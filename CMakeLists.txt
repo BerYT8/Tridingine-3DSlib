@@ -27,6 +27,28 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # =====================================================
+# MSVC RUNTIME
+# =====================================================
+#
+# FIX:
+# Evita mezclar /MT con /MD en el build de Windows.
+# Usamos el runtime dinámico (/MD).
+#
+# =====================================================
+
+if(WIN32 AND MSVC)
+
+    set(
+        CMAKE_MSVC_RUNTIME_LIBRARY
+        "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
+        CACHE STRING
+        "MSVC runtime library"
+        FORCE
+    )
+
+endif()
+
+# =====================================================
 # OUTPUT
 # =====================================================
 
@@ -65,8 +87,8 @@ set(SOURCES
 
     src/delta_time.c
 
-    src/config.h
-    src/config.c
+    src/config/config.c
+    src/config/config.h
 
     src/screens/screensLoadingStart.h
     src/screens/screensLoadingStart.cpp
@@ -124,6 +146,12 @@ set(SOURCES
     src/sound/sound.c
 
     src/animation/animation.c
+)
+
+set(ENTRYPOINT_SOURCES
+    src/config/config.c
+    src/config/config.h
+    src/entrypoint.cpp
 )
 
 # =====================================================
@@ -193,37 +221,24 @@ if(NOT BUILD_3DS)
     # -------------------------------------------------
     # GLEW
     # -------------------------------------------------
-    #
-    # Windows:
-    #   Busca una instalación precompilada indicada mediante
-    #   la variable de entorno CMAKE_PREFIX_PATH.
-    #
-    # Ejemplo PowerShell:
-    #
-    #   $env:CMAKE_PREFIX_PATH="C:/glew-2.3.1"
-    #
-    # Linux / macOS:
-    #   Usa find_package(GLEW).
-    #
-    # -------------------------------------------------
 
     if(WIN32)
 
         message(STATUS "Searching for precompiled GLEW...")
 
-        # -------------------------------------------------
-        # Obtener CMAKE_PREFIX_PATH del entorno
-        # -------------------------------------------------
-
         if(DEFINED ENV{CMAKE_PREFIX_PATH})
 
-            set(GLEW_PREFIX_PATH
+            set(
+                GLEW_PREFIX_PATH
                 "$ENV{CMAKE_PREFIX_PATH}"
             )
 
         else()
 
-            set(GLEW_PREFIX_PATH "")
+            set(
+                GLEW_PREFIX_PATH
+                ""
+            )
 
         endif()
 
@@ -263,15 +278,14 @@ if(NOT BUILD_3DS)
 
         set(GLEW_ROOT "")
 
-        # CMAKE_PREFIX_PATH puede contener varios paths
-        # separados por ';'
         foreach(PREFIX ${GLEW_PREFIX_PATH})
 
             if(EXISTS
                 "${PREFIX}/include/GL/glew.h"
             )
 
-                set(GLEW_ROOT
+                set(
+                    GLEW_ROOT
                     "${PREFIX}"
                 )
 
@@ -280,10 +294,6 @@ if(NOT BUILD_3DS)
             endif()
 
         endforeach()
-
-        # -------------------------------------------------
-        # Comprobar headers
-        # -------------------------------------------------
 
         if(NOT GLEW_ROOT)
 
@@ -324,7 +334,7 @@ if(NOT BUILD_3DS)
         )
 
         # -------------------------------------------------
-        # Crear target compatible con el resto del proyecto
+        # Target GLEW
         # -------------------------------------------------
 
         if(NOT TARGET GLEW::Static)
@@ -364,7 +374,6 @@ if(NOT BUILD_3DS)
             REQUIRED
         )
 
-        # Normalizar el nombre del target
         if(TARGET GLEW::Static)
 
             # Ya existe
@@ -466,10 +475,10 @@ if(NOT BUILD_3DS)
     )
 
     set(
-        SDL2IMAGE_AVIF 
-        OFF 
-        CACHE BOOL 
-        "" 
+        SDL2IMAGE_AVIF
+        OFF
+        CACHE BOOL
+        ""
         FORCE
     )
 
@@ -518,7 +527,9 @@ if(NOT BUILD_3DS)
         PROPERTIES
             OUTPUT_NAME
                 ${TRIDINGINE_OUTPUT_NAME}
-            WINDOWS_EXPORT_ALL_SYMBOLS ON
+
+            WINDOWS_EXPORT_ALL_SYMBOLS
+                ON
     )
 
     target_compile_definitions(
@@ -534,18 +545,55 @@ if(NOT BUILD_3DS)
             ${CMAKE_CURRENT_SOURCE_DIR}/lib_include
     )
 
+    # =================================================
+    # WINDOWS SOCKETS
+    # =================================================
+    #
+    # FIX:
+    #
+    # socket.cpp utiliza:
+    #
+    #   accept
+    #   bind
+    #   closesocket
+    #   connect
+    #   htonl
+    #   htons
+    #   listen
+    #   recv
+    #   send
+    #   socket
+    #   getaddrinfo
+    #   freeaddrinfo
+    #   inet_pton
+    #
+    # Todas pertenecen a Ws2_32.lib.
+    #
+    # =================================================
+
+    if(WIN32)
+
+        target_link_libraries(
+            TridingineCore
+            PRIVATE
+                ws2_32
+        )
+
+    endif()
+
+    # =================================================
+    # LIBRARIES
+    # =================================================
+
     target_link_libraries(
         TridingineCore
         PRIVATE
 
-            # GLEW compilado desde external/glew
             GLEW::Static
 
-            # OpenGL
             OpenGL::GLU
             OpenGL::GL
 
-            # SDL
             SDL2::SDL2-static
             SDL2_mixer::SDL2_mixer-static
             SDL2_image::SDL2_image-static
@@ -562,9 +610,7 @@ if(NOT BUILD_3DS)
     add_library(
         TridingineEntrypoint
         STATIC
-        src/config.c
-        src/config.h
-        src/entrypoint.cpp
+        ${ENTRYPOINT_SOURCES}
     )
 
     target_compile_definitions(
@@ -688,13 +734,6 @@ else()
     # =================================================
     # FIX CMAKE EXPORT
     # =================================================
-    #
-    # dkp_add_embedded_binary_library() añade el
-    # directorio .dkp-generated al INTERFACE.
-    #
-    # Ese directorio solamente existe durante el build
-    # y no debe aparecer en un paquete instalado.
-    #
 
     set_target_properties(
         3dlibrary
@@ -709,9 +748,7 @@ else()
     add_library(
         TridingineEntrypoint
         STATIC
-        src/config.c
-        src/config.h
-        src/entrypoint.cpp
+        ${ENTRYPOINT_SOURCES}
     )
 
     target_compile_definitions(
@@ -791,6 +828,13 @@ if(NOT BUILD_3DS)
 
     message(STATUS "  GLEW     : external/glew")
     message(STATUS "  GLEW     : static")
+
+    if(WIN32)
+
+        message(STATUS "  Winsock  : Ws2_32.lib")
+        message(STATUS "  MSVC CRT : /MD")
+
+    endif()
 
 endif()
 

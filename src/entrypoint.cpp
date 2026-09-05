@@ -4,6 +4,20 @@
 #include <iostream>
 #include <string>
 
+extern const char* TRIDINGINE_GAME_NAME_TEXT;
+extern const char* TRIDINGINE_GAME_DESCRIPTION_TEXT;
+extern const char* TRIDINGINE_GAME_AUTHOR_TEXT;
+
+#if defined(PLATFORM_PC) && defined(_WIN32)
+#define TRIDINGINE_API __declspec(dllimport)
+#else
+#define TRIDINGINE_API
+#endif
+
+extern TRIDINGINE_API std::string TRIDINGINE_GAME_NAME_TEXT_STRING;
+extern TRIDINGINE_API std::string TRIDINGINE_GAME_DESCRIPTION_TEXT_STRING;
+extern TRIDINGINE_API std::string TRIDINGINE_GAME_AUTHOR_TEXT_STRING;
+
 extern int app_main(int argc, char* argv[]);
 
 static void showHelp()
@@ -103,13 +117,13 @@ static int call_app_main(int argc, char** argv)
             stopCode = true;
         }
         else if (arg == "-n" || arg == "--name") {
-            std::cout << getGameName() << std::endl;
+            std::cout << TRIDINGINE_GAME_NAME_TEXT << std::endl;
         }
         else if (arg == "-d" || arg == "--description") {
-            std::cout << getGameDescription() << std::endl;
+            std::cout << TRIDINGINE_GAME_DESCRIPTION_TEXT << std::endl;
         }
         else if (arg == "-a" || arg == "--author") {
-            std::cout << getGameAuthor() << std::endl;
+            std::cout << TRIDINGINE_GAME_AUTHOR_TEXT << std::endl;
         }
         else if (arg == "-e" || arg == "--engine") {
             std::cout << "Made with Tridingine." << std::endl;
@@ -119,6 +133,10 @@ static int call_app_main(int argc, char** argv)
     if (stopCode)
         return 0;
 
+    TRIDINGINE_GAME_NAME_TEXT_STRING = TRIDINGINE_GAME_NAME_TEXT;
+    TRIDINGINE_GAME_DESCRIPTION_TEXT_STRING = TRIDINGINE_GAME_DESCRIPTION_TEXT;
+    TRIDINGINE_GAME_AUTHOR_TEXT_STRING = TRIDINGINE_GAME_AUTHOR_TEXT;
+    
     return app_main(argc, argv);
 }
 
