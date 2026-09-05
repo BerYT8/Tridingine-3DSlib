@@ -124,7 +124,7 @@ AccessControlInfo:
    #- ExportImportIvs
    #- DirectSdmcWrite
    #- SwitchCleanup
-   #- SaveDataMove
+   - SaveDataMove
    #- Shop
    #- Shell
    #- CategoryHomeMenu
@@ -144,7 +144,7 @@ AccessControlInfo:
   CanUseNonAlphabetAndNumber    : true
   PermitMainFunctionArgument    : true
   CanShareDeviceMemory          : true
-  RunnableOnSleep               : false
+  RunnableOnSleep               : true
   SpecialMemoryArrange          : true
 
   # New3DS Exclusive Process Settings
@@ -250,7 +250,7 @@ AccessControlInfo:
 
 
 SystemControlInfo:
-  SaveDataSize: 0K
+  SaveDataSize: 5MB
   RemasterVersion: 0
   StackSize: 0x40000
 

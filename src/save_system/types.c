@@ -352,7 +352,7 @@ SVFILE *svOpen(const char *path, const char *mode)
         FS_Path archivePath = fsMakePath(PATH_EMPTY, "");
 
         if (R_FAILED(FSUSER_OpenArchive(&f->fs.archive,
-                                        ARCHIVE_SDMC,
+                                        ARCHIVE_SAVEDATA,
                                         archivePath)))
         {
             free(f);

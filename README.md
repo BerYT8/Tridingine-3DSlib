@@ -121,7 +121,7 @@ Current experimental functionality includes:
 
 | Platform | Status |
 |----------|--------|
-| Windows | 🚧 Experimental |
+| Windows | 🟢 Supported |
 | Linux | 🟢 Supported |
 | macOS | 🚧 In development |
 | Nintendo 3DS | 🟢 Supported |
