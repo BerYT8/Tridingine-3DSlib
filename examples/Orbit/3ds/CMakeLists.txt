@@ -44,6 +44,7 @@ ctr_generate_smdh(
     NAME ${NAME}
     DESCRIPTION ${DESCRIPTION}
     AUTHOR ${AUTHOR}
+    ICON "${CMAKE_SOURCE_DIR}/../icon.png"
 )
 
 set(ROMFS_DIR "${CMAKE_SOURCE_DIR}/../romfs/3ds")
