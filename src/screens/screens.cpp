@@ -1,4 +1,7 @@
 #include "Tridingine.h"
+
+static bool canPauseOnCoverClose = true;
+
 #define ALLOCATE_SHMEM
 #include "screensValues.h"
 
@@ -55,9 +58,8 @@ void S2S_WaitTime(float seconds)
 #endif
 }
 
-#if defined(PLATFORM_PC)
-static std::string currTitle = "Game";
-#elif defined(PLATFORM_3DS)
+#if defined(PLATFORM_3DS)
+
 #include <3ds.h>
 #include <citro2d.h>
 #include <citro3d.h>
@@ -68,31 +70,60 @@ static aptHookCookie hookCookie;
 
 void SystemCallback(APT_HookType hook, void *param)
 {
-    switch (hook)
+    (void)param;
+
+    switch(hook)
     {
         case APTHOOK_ONSUSPEND:
-            consoleGamePaused = true;
+            /*
+             * La aplicación está siendo suspendida.
+             * No necesariamente significa que la tapa se haya cerrado.
+             */
+            if(canPauseOnCoverClose)
+                S2S_SetGamePaused(true);
             break;
 
         case APTHOOK_ONRESTORE:
-            consoleGamePaused = false;
+            /*
+             * La aplicación vuelve de un estado de suspensión
+             * que no necesariamente fue provocado por la tapa.
+             */
             break;
 
         case APTHOOK_ONSLEEP:
+            /*
+             * La 3DS entra en sleep.
+             *
+             * El caso habitual al cerrar la tapa es llegar aquí.
+             */
             closedCover = true;
-            consoleGamePaused = true;
+            if(canPauseOnCoverClose)
+                S2S_SetGamePaused(true);
             break;
 
         case APTHOOK_ONWAKEUP:
+            /*
+             * La consola sale del estado de sleep.
+             *
+             * En el flujo normal de cierre/apertura de tapa,
+             * esto significa que la tapa ha vuelto a abrirse.
+             */
             closedCover = false;
-            consoleGamePaused = false;
             break;
+
         default:
             break;
     }
 }
 
 #endif
+
+void S2S_SetCanPauseOnCoverClose(bool canPause)
+{
+    canPauseOnCoverClose = canPause;
+}
+
+
 #include <color.h>
 #include <maths.h>
 #include <string.h>
@@ -132,7 +163,7 @@ void S2S_SetGamePaused(bool paused)
 
 bool S2S_IsGamePaused()
 {
-    return gamePaused && !consoleGamePaused;
+    return gamePaused;
 }
 
 void S2S_ClearScreen(Color color)
@@ -309,9 +340,10 @@ bool S2S_ScreensInit()
     aptInit();
     srvInit();
     fsInit();
-    
+
     amInit();
     romfsInit();
+
     aptHook(&hookCookie, SystemCallback, NULL);
 #endif
 
@@ -324,8 +356,6 @@ bool S2S_ScreensInit()
     currScreen = (S2S_Screen)-1;
 
     closedCover = false;
-
-    consoleGamePaused = false;
 
     // Idioma por defecto
     System_SetCurrentLang("en-US");

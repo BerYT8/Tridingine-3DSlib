@@ -22,6 +22,7 @@ extern "C" {
 bool PlatformPC();
 bool Platform3DS();
 
+void S2S_SetCanPauseOnCoverClose(bool canPause);
 bool S2S_IsCoverClosed();
 
 void S2S_SetGamePaused(bool paused);
