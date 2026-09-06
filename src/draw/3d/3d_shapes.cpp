@@ -327,7 +327,7 @@ void D3D_Prepare()
     glCullFace(GL_BACK);
 #elif defined(PLATFORM_3DS)
     P200S_LinkProgram(shader);
-    C3D_DepthTest(true, GPU_GEQUAL, GPU_WRITE_ALL);
+    //C3D_DepthTest(true, GPU_GEQUAL, GPU_WRITE_ALL);
 
 	C3D_CullFace(GPU_CULL_BACK_CCW);
 #endif

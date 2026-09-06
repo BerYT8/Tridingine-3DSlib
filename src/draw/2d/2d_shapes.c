@@ -209,16 +209,6 @@ bool D2D_Init()
     bool r = C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
     if(!r)
         initialized = false;
-    C3D_DepthTest(true, GPU_GEQUAL, GPU_WRITE_COLOR | GPU_WRITE_DEPTH);
-    C3D_AlphaBlend(
-        GPU_BLEND_ADD,              // Operación: Sumar los colores
-        GPU_BLEND_ADD,              // Operación: Sumar los canales alfa
-        GPU_SRC_ALPHA,              // Factor fuente: Usar el alfa del cuadrado de arriba (rojo)
-        GPU_ONE_MINUS_SRC_ALPHA,    // Factor destino: 1 menos el alfa del de arriba
-        GPU_SRC_ALPHA,              // Factor alfa fuente
-        GPU_ONE_MINUS_SRC_ALPHA     // Factor alfa destino
-    );
-    //C3D_AlphaTest(false, GPU_ALWAYS, 0);
     D2D_InitTexts();
     return r;
 #endif

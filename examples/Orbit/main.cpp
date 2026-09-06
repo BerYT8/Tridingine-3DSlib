@@ -28,13 +28,22 @@ int app_main(int argc, char* argv[])
     }
     dt_init();
 
+    InputAction *exit = input_createAction();
+
+    input_setAction_type(exit, INPUT_ACTION_OR);
+
+    input_addKey_action(exit, INPUT_KEY_A);
+    input_addKey_action(exit, INPUT_KEY_B);
+    input_addKey_action(exit, INPUT_KEY_X);
+    input_addKey_action(exit, INPUT_KEY_Y);
+
     while (S2S_ScreensRunning())
     {
         dt_update();
 
         input_read();
 
-        if(input_isKeyPressed(INPUT_KEY_A) || input_isKeyPressed(INPUT_KEY_B) || input_isKeyPressed(INPUT_KEY_X) || input_isKeyPressed(INPUT_KEY_Y))
+        if(input_isActionTriggered(exit))
         {
             S2S_StopRunning();
         }
@@ -61,6 +70,8 @@ int app_main(int argc, char* argv[])
 
         S2S_EndFrame();
     }
+
+    input_destroyAction(exit);
 
     game.Exit();
 
